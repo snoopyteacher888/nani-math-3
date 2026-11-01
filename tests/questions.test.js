@@ -24,7 +24,7 @@ for (const u of Q.UNITS) for (const s of u.stages) {
         assert.ok(q.options.length >= 2, s.id + ' options');
         assert.strictEqual(new Set(q.options).size, q.options.length, s.id + ' dup ' + q.options);
         assert.ok(q.options.includes(q.answer), s.id + ' no answer');
-        if (!/^(可以|不可以|奇數|偶數)$/.test(q.answer)) assert.strictEqual(q.options.length, 3, s.id + ' needs 3 options ' + q.text);
+        if (!/^(可以|不可以|奇數|偶數|毫升|公升)$/.test(q.answer)) assert.ok(q.options.length >= 3, s.id + ' needs 3+ options ' + q.text);
       }
       if (k === 'sort') assert.ok(q.bins.includes(q.answer), s.id + ' bin');
       if (k === 'tap') assert.ok(q.svg.includes('data-hit="' + q.answer + '"'), s.id + ' hit');

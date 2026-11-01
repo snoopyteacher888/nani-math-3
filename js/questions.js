@@ -417,18 +417,31 @@
     if (label) h += '<text x="' + x + '" y="' + (y + 42) + '" text-anchor="middle" font-size="30" font-weight="700" fill="#2A63A8">' + label + '</text>';
     return h;
   }
-  function genAngleQuick() { // 5-1 ⭕❌ 兩個角哪一個大（小的角故意畫長邊）
-    var same = Math.random() < .22, d1 = R(35, 140), d2;
-    if (same) d2 = d1; else { d2 = d1 + pick([-1, 1]) * R(20, 45); if (d2 < 25 || d2 > 165) d2 = d1 + (d1 > 90 ? -30 : 30); }
-    var bigger = d1 === d2 ? 0 : d1 > d2 ? 1 : 2, longFirst = bigger === 2 || (bigger === 0 && Math.random() < .5);
-    var L1 = longFirst ? 150 : 80, L2 = longFirst ? 80 : 150;
-    var svg = svgOpen(560, 240, '甲、乙兩個角') + angleSVG(95, 175, d1, R(-5, 20), L1, L1 * (.85 + Math.random() * .3), '甲') +
-      angleSVG(360, 175, d2, R(-5, 20), L2, L2 * (.85 + Math.random() * .3), '乙') + '</svg>';
-    var ans = ['一樣大', '甲', '乙'][bigger];
-    return { kind: 'quiz', text: '哪一個角比較大？', say: '甲和乙，哪一個角比較大？', visual: svg, wide: true,
-      answer: ans, options: ['甲', '一樣大', '乙'], review: '甲 ' + d1 + ' 度、乙 ' + d2 + ' 度',
+  function genAngleQuick() { // 5-1 ⭕❌ 比角的大小：2～4 個角（甲乙丙丁），邊的長短故意跟角的大小相反
+    var n = pick([2, 3, 3, 4, 4]), names = ['甲', '乙', '丙', '丁'].slice(0, n), degs, same = n === 2 && Math.random() < .2;
+    do { // 角度彼此至少差 15 度
+      degs = names.map(function () { return R(25, 160); });
+      if (same) degs[1] = degs[0];
+    } while (!same && degs.some(function (d, i) { return degs.some(function (e, j) { return i !== j && Math.abs(d - e) < 15; }); }));
+    var askMax = n === 2 || Math.random() < .6, target = askMax ? Math.max.apply(null, degs) : Math.min.apply(null, degs);
+    var ans = same ? '一樣大' : names[degs.indexOf(target)];
+    // 邊長：角越大邊越短（最常見的誤會是「邊長的角比較大」），偶爾打亂
+    var order = degs.slice().sort(function (x, y) { return x - y; }), cols = 2, cw = 280, chH = 200;
+    var svg = svgOpen(cols * cw, Math.ceil(n / cols) * chH, '幾個角');
+    names.forEach(function (nm, i) {
+      var rank = order.indexOf(degs[i]) / Math.max(1, n - 1), L = cw * (.44 - rank * .22);
+      if (Math.random() < .2) L = cw * (.2 + Math.random() * .24);
+      // 頂點放在格子中間：張很開的角往左邊伸也不會被切掉
+      var col = i % cols, row = Math.floor(i / cols), x = col * cw + cw * .5, y = row * chH + chH * .7;
+      svg += angleSVG(x, y, degs[i], R(-5, 15), L, L * (.85 + Math.random() * .15), nm);
+    });
+    svg += '</svg>';
+    var q = askMax ? (n === 2 ? '哪一個角比較大？' : '哪一個角最大？') : '哪一個角最小？';
+    return { kind: 'quiz', text: q, say: names.join('、') + '，' + q, visual: svg, wide: true,
+      answer: ans, options: n === 2 ? ['甲', '一樣大', '乙'] : names.slice(), review: names.map(function (nm, i) { return nm + ' ' + degs[i] + ' 度'; }).join('、') + '：' + q.replace('？', ''),
       hint: '角的大小，看兩條邊「張開」多少，跟邊畫得長或短沒有關係！',
-      explain: '<p class="ex-line">看紅色弧線：兩條邊張開得越大，角就越大；邊畫得長，角不會變大。答案是 <b>' + ans + '</b>。</p>' };
+      explain: '<p class="ex-line">看紅色弧線：兩條邊張開得越大，角就越大；邊畫得長，角不會變大。</p><p class="ex-line">' +
+        names.map(function (nm, i) { return nm + ' ' + degs[i] + '°'; }).join('、') + '，答案是 <b>' + ans + '</b>。</p>' };
   }
   function angleCard() {
     var kind = R(0, 2), deg = kind === 0 ? 90 : kind === 1 ? R(115, 155) : R(30, 65), rot = R(0, 359);
@@ -639,6 +652,86 @@
     return head + zh(p);
   }
 
+  /* =====================================================
+   * 題庫擴充：跑酷每關再多幾種題型（開始時會從很多題裡隨機挑 10 題）
+   * ===================================================== */
+  function pickUnit(ans, units) { return { answer: ans, options: shuffle(units.slice()) }; }
+  function more1() { // 1-1：位值、比大小
+    var n = zeroNumber();
+    if (Math.random() < .5) {
+      var places = ['個位', '十位', '百位', '千位'], i = R(0, 3), d = dig(n, i);
+      return { text: n + ' 的' + places[i] + '數字是多少？', say: n + '的' + places[i] + '數字是多少？', big: String(n),
+        answer: String(d), options: opts(d, [dig(n, (i + 1) % 4), dig(n, (i + 3) % 4), d + 1, d === 0 ? 2 : d - 1, (d + 5) % 10]),
+        hint: '從右邊數過來：個位、十位、百位、千位。', explain: placeTable(n) };
+    }
+    var sh = shifts(n), m = sh.length ? sh[0] : n + pick([10, 100, -10]);
+    var big = Math.max(n, m), ans = String(big);
+    return { text: n + ' 和 ' + m + '，哪一個比較大？', say: zh(n) + '，和' + zh(m) + '，哪一個比較大？',
+      answer: ans, options: opts(ans, [String(Math.min(n, m)), '一樣大']),
+      hint: '從最大的位（千位）開始比，一樣就比下一位。', explain: placeTable(big) };
+  }
+  var MM_EST = [['一枝鉛筆大約長 15 ＿', '公分'], ['一隻螞蟻大約長 5 ＿', '毫米'], ['一元硬幣大約厚 2 ＿', '毫米'], ['數學課本大約長 26 ＿', '公分'],
+    ['大拇指的指甲大約寬 1 ＿', '公分'], ['教室的門大約高 2 ＿', '公尺'], ['橡皮擦大約厚 1 ＿', '公分'], ['一粒米大約長 5 ＿', '毫米']];
+  function more4() { // 4-1：估一估用哪個單位
+    var e = pick(MM_EST), q = pickUnit(e[1], ['毫米', '公分', '公尺']);
+    return { text: e[0] + '，＿ 要填哪一個單位？', say: e[0].replace('＿', '什麼') + '？', answer: q.answer, options: q.options, cls: 'zh', review: e[0],
+      hint: '想一想實際有多長：1 毫米很短（像一粒沙），1 公分像指甲那麼寬，1 公尺像大人張開手臂。',
+      explain: '<p class="ex-line">' + e[0].replace('＿', '<b>' + e[1] + '</b>') + '</p>' };
+  }
+  function more6() { // 6-1：餘數可能是幾、□ ÷ b ＝ q … r
+    var b = R(3, 9), q = R(2, 9), r = R(1, b - 1);
+    if (Math.random() < .5) {
+      var ok = R(1, b - 1);
+      return { text: '除數是 ' + b + '，餘數可能是幾？', say: '除數是' + b + '，餘數可能是幾？', answer: String(ok), options: opts(ok, [b, b + R(1, 3), b + 4]),
+        hint: '餘數一定要比除數小！除數是 ' + b + '，餘數只能是 0 到 ' + (b - 1) + '。',
+        explain: '<p class="ex-line">餘數比 ' + b + ' 小才對，答案是 <b>' + ok + '</b>。</p>' };
+    }
+    var a = b * q + r;
+    return { text: '□ ÷ ' + b + ' ＝ ' + q + ' … ' + r + '，□ 是多少？', say: '方格除以' + b + '，等於' + q + '餘' + r + '，方格是多少？',
+      answer: String(a), options: opts(a, [b * q, b * q - r, b + q + r, a + b]),
+      hint: '用驗算的方法：除數 × 商 ＋ 餘數 ＝ 被除數。',
+      explain: '<p class="ex-line">' + b + ' × ' + q + ' ＋ ' + r + ' ＝ <b>' + a + '</b></p>' };
+  }
+  var L_EST = [['一瓶養樂多大約 100 ＿', '毫升'], ['一桶水大約 10 ＿', '公升'], ['一湯匙藥水大約 5 ＿', '毫升'], ['一大瓶鮮奶大約 2 ＿', '公升'],
+    ['一杯水大約 250 ＿', '毫升'], ['浴缸的水大約 200 ＿', '公升'], ['一罐飲料大約 330 ＿', '毫升']];
+  function more7() { // 7-1：估一估、1 公升減一些
+    if (Math.random() < .5) {
+      var e = pick(L_EST), u = pickUnit(e[1], ['毫升', '公升']);
+      return { text: e[0] + '，＿ 要填哪一個單位？', say: e[0].replace('＿', '什麼') + '？', answer: u.answer, options: u.options, cls: 'zh', review: e[0],
+        hint: '1 毫升很少（像幾滴水），1 公升是一大瓶。', explain: '<p class="ex-line">' + e[0].replace('＿', '<b>' + e[1] + '</b>') + '</p>' };
+    }
+    var used = R(1, 9) * 100 + pick([0, 50]), left = 1000 - used;
+    return { text: '1 公升的水，喝掉 ' + used + ' 毫升，還剩幾毫升？', say: '1公升的水，喝掉' + used + '毫升，還剩幾毫升？',
+      answer: String(left), options: opts(left, [1000 + used, 100 - used > 0 ? 100 - used : left + 100, left - 100, used]),
+      hint: '先把 1 公升換成 1000 毫升，再減。', explain: '<p class="ex-line">1 公升 ＝ 1000 毫升，1000 － ' + used + ' ＝ <b>' + left + '</b> 毫升</p>' };
+  }
+  function more8() { // 8-2：同分母比大小、1 個整個是幾分之幾
+    var n = R(4, 12), a = R(1, n - 1), b = R(1, n - 1);
+    if (Math.random() < .6) {
+      if (a === b) b = a === 1 ? 2 : a - 1;
+      var ans = frac(Math.max(a, b), n);
+      return { text: frac(a, n) + ' 和 ' + frac(b, n) + '，哪一個比較大？', say: n + '分之' + a + '，和' + n + '分之' + b + '，哪一個比較大？',
+        answer: ans, options: opts(ans, [frac(Math.min(a, b), n), '一樣大']), hint: '分母一樣（都平分成 ' + n + ' 份），分子越大，拿的份數越多，就越大。',
+        explain: '<p class="ex-line">' + Math.max(a, b) + ' 個 ' + frac(1, n) + ' 比 ' + Math.min(a, b) + ' 個 ' + frac(1, n) + ' 多，<b>' + ans + '</b> 比較大。</p>' };
+    }
+    return { text: '1 個整個披薩，平分成 ' + n + ' 片，是幾分之幾？', say: '1個整個披薩，平分成' + n + '片，是幾分之幾？',
+      answer: frac(n, n), options: opts(frac(n, n), [frac(1, n), frac(n, 1), frac(n - 1, n)]), hint: '平分成 ' + n + ' 份，全部 ' + n + ' 份都拿，就是 ' + frac(n, n) + '，也就是 1。',
+      explain: '<p class="ex-line">' + n + ' 個 ' + frac(1, n) + ' ＝ <b>' + frac(n, n) + '</b> ＝ 1</p>' };
+  }
+  function more9() { // 9-1：圓規
+    if (Math.random() < .5) {
+      var r = R(2, 9);
+      return { text: '圓規張開 ' + r + ' 公分畫圓，這個圓的半徑是幾公分？', say: '圓規張開' + r + '公分畫圓，這個圓的半徑是幾公分？',
+        answer: String(r), options: opts(r, [r * 2, r + 1, Math.max(1, r - 1)]), hint: '圓規兩隻腳張開的長度，就是畫出來的圓的半徑。',
+        explain: '<p class="ex-line">圓規張開 ' + r + ' 公分，半徑就是 <b>' + r + '</b> 公分（直徑是 ' + r * 2 + ' 公分）。</p>' };
+    }
+    return { text: '用圓規畫圓，有針的那一腳要放在哪裡？', say: '用圓規畫圓，有針的那一腳要放在哪裡？', answer: '圓心', options: shuffle(['圓心', '圓上', '圓的外面']), cls: 'zh',
+      hint: '針固定在中間不動，另一腳轉一圈，針的位置就是圓心。', explain: '<p class="ex-line">針放在<b>圓心</b>，筆的那一腳轉一圈。</p>' };
+  }
+  function bank(base, extra, p) { return function () { return Math.random() < (p || .3) ? extra() : base(); }; }
+  var genReadWriteB = bank(genReadWrite, more1), genMmB = bank(genMm, more4), genDivRunB = bank(genDivRun, more6, .35),
+      genLiterB = bank(genLiter, more7), genFracRunB = bank(genFracRun, more8), genCircleRunB = bank(genCircleRun, more9, .35);
+
   /* ---------- 加油小站：混合闖關 ---------- */
   function mix(list) { return function () { var q = pick(list)(); q.kind = undefined; return q; }; }
 
@@ -653,7 +746,7 @@
       { id: '99', mode: 'nine', ic: '🗺️', label: '九九大冒險', name: '九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！' }
     ] },
     { id: 1, name: '數到 10000', ic: '🔢', stages: [
-      { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite },
+      { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWriteB },
       { id: '1-2', mode: 'round', tut: 'frog', ic: '📏', label: '數線跳跳', name: '數線跳跳', desc: '1 小格是多少？點刻度讓青蛙跳過去', gen: genFrog }
     ] },
     { id: 2, name: '四位數的加減', ic: '➕', stages: [
@@ -666,7 +759,7 @@
       { id: '3-2', mode: 'spot', name: '找出乘法的錯', desc: '同學忘記進位了嗎？', make: spotFrom(makeMul) }
     ] },
     { id: 4, name: '幾毫米', ic: '📏', stages: [
-      { id: '4-1', mode: 'run', name: '公分和毫米', desc: '1 公分 ＝ 10 毫米，互相換一換', gen: genMm },
+      { id: '4-1', mode: 'run', name: '公分和毫米', desc: '1 公分 ＝ 10 毫米，互相換一換', gen: genMmB },
       { id: '4-2', mode: 'round', tut: 'fill', ic: '📏', label: '看尺量長度', name: '看尺量長度', desc: '鉛筆不一定從 0 開始量喔', gen: genRulerFill }
     ] },
     { id: 5, name: '角、正方形和長方形', ic: '📐', stages: [
@@ -674,26 +767,26 @@
       { id: '5-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '直角分類', desc: '直角、比直角大、比直角小', gen: genAngleSort }
     ] },
     { id: 'p1', name: '加油小站一', ic: '⛽', stages: [
-      { id: 'p1', mode: 'run', name: '闖關：1～5 單元', desc: '數字讀寫、數線、公分毫米、量長度、角', gen: mix([genReadWrite, genNumberLine, genMm, genRulerPick, genAngleRun]) }
+      { id: 'p1', mode: 'run', name: '闖關：1～5 單元', desc: '數字讀寫、數線、公分毫米、量長度、角', gen: mix([genReadWriteB, genNumberLine, genMmB, genRulerPick, genAngleRun]) }
     ] },
     { id: 6, name: '除法', ic: '➗', stages: [
-      { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRun },
+      { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRunB },
       { id: '6-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '奇數和偶數', desc: '只要看個位', gen: genOddEven },
       { id: '6-3', mode: 'round', tut: 'quiz', ic: '🧩', label: '選對答案', name: '剩下的怎麼辦？', desc: '要幾輛車？剩下的人也要坐', gen: genLeftover }
     ] },
     { id: 7, name: '公升和毫升', ic: '🥛', stages: [
-      { id: '7-1', mode: 'run', name: '公升和毫升', desc: '1 公升 ＝ 1000 毫升，中間的 0 別漏掉', gen: genLiter }
+      { id: '7-1', mode: 'run', name: '公升和毫升', desc: '1 公升 ＝ 1000 毫升，中間的 0 別漏掉', gen: genLiterB }
     ] },
     { id: 8, name: '分數', ic: '🍕', stages: [
       { id: '8-1', mode: 'round', tut: 'paint', ic: '🍕', label: '塗塗看', name: '分數塗色', desc: '分母是平分幾份，分子是塗幾份', gen: genPaint },
-      { id: '8-2', mode: 'run', name: '看圖說分數', desc: '幾分之幾？幾個幾分之一？', gen: genFracRun }
+      { id: '8-2', mode: 'run', name: '看圖說分數', desc: '幾分之幾？幾個幾分之一？', gen: genFracRunB }
     ] },
     { id: 9, name: '圓', ic: '⭕', stages: [
-      { id: '9-1', mode: 'run', name: '半徑和直徑', desc: '直徑 ＝ 半徑 × 2', gen: genCircleRun },
+      { id: '9-1', mode: 'run', name: '半徑和直徑', desc: '直徑 ＝ 半徑 × 2', gen: genCircleRunB },
       { id: '9-2', mode: 'round', tut: 'find', ic: '🔍', label: '找找看', name: '找出半徑、直徑', desc: '在圓上點出來', gen: genCircleFind }
     ] },
     { id: 'p2', name: '加油小站二', ic: '⛽', stages: [
-      { id: 'p2', mode: 'run', name: '闖關：5～9 單元', desc: '角、除法、公升毫升、分數、圓', gen: mix([genAngleRun, genDivRun, genLiter, genFracRun, genCircleRun]) }
+      { id: 'p2', mode: 'run', name: '闖關：5～9 單元', desc: '角、除法、公升毫升、分數、圓', gen: mix([genAngleRun, genDivRunB, genLiterB, genFracRunB, genCircleRunB]) }
     ] }
   ];
 

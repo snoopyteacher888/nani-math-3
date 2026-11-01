@@ -439,3 +439,14 @@ html.zhuyin .n-q, html.zhuyin .tile { font-family: var(--font); }
 
 /* 九九：數字不加注音 */
 html.zhuyin .n-msg b, html.zhuyin .n-q, html.zhuyin .island b, html.zhuyin #n-left { font-family: var(--font); }
+
+/* 跑酷：手機版用手指滑，不用按鈕；提示幾秒後淡掉 */
+html.dev-phone #game .moves { display: none; }
+#track { touch-action: none; }
+.key-hint { font-size: 1em; padding: 4px 16px; }
+.key-hint.fade { animation: hintFade 6s ease-in forwards; }
+@keyframes hintFade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* 跑酷題目：選項 2～4 個，排得下就並排 */
+.q-opts { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.q-opts .qa[hidden] { display: none; }

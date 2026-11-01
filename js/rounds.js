@@ -253,7 +253,7 @@
   document.addEventListener('keydown', function (e) {
     if (!Q || $('round').hidden || !$('ov-pause').hidden || !$('ov-end').hidden || !$('ov-tut').hidden) return;
     if (Q.phase === 'fb' && !$('r-fb').hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); Q.frogX = null; next(); return; }
-    if (Q.q.kind === 'quiz' && /^[1-3]$/.test(e.key)) { var b = document.querySelector('#r-opts [data-o="' + (+e.key - 1) + '"]'); if (b) b.click(); }
+    if (Q.q.kind === 'quiz' && /^[1-4]$/.test(e.key)) { var b = document.querySelector('#r-opts [data-o="' + (+e.key - 1) + '"]'); if (b) b.click(); }
     if (Q.q.kind === 'sort' && /^[1-3]$/.test(e.key)) dropTo(+e.key - 1);
     if (Q.q.kind === 'fill') { if (/^[0-9]$/.test(e.key)) fillKey(e.key); else if (e.key === 'Backspace') { e.preventDefault(); fillKey('del'); } else if (e.key === 'Enter') { e.preventDefault(); fillKey('ok'); } }
     if (e.key === 'Escape') pause();

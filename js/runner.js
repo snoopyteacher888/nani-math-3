@@ -3,20 +3,21 @@
  *
  * 直向畫面：小橘從下面往上跑，左右換跑道。
  *   🪙 金幣：吃到 +1
- *   🪨 障礙物：撞到會跌倒、掉 3 個金幣
- *   Q  題目方塊：撞到就停下來出題，不限時間；答對 +10 金幣（連對再多）
- * 答錯會看提示，這題等一下會再出現。答完 10 題跑到終點就結束。
+ *   🪨 障礙物（石頭、三角錐、木箱）：撞到就停下來答一題，不限時間；答對 +10 金幣（連對再多），答錯看說明
+ *   🚧 柵欄：太久沒撞到障礙物會出現，擋住整條路，一定要答題才能過（遊戲才會結束）
+ * 撞到 10 個障礙物（答完 10 題）跑到終點就結束；題目是開始時從題庫隨機挑出的 10 題，不重複。
  * 開始和每次答完題都會倒數 3、2、1。
- * 操作：◀ ▶ 按鈕、點畫面左半邊／右半邊、左右滑、鍵盤 ← →（A、D）。
+ * 操作：手機版用手指左右滑；網頁版 ◀ ▶ 按鈕、鍵盤 ← →（A、D）。點畫面左半邊／右半邊也可以。
  */
 (function () {
   'use strict';
 
   var App = window.App, store = App.store, save = App.save, $ = App.$, esc = App.esc,
       speak = App.speak, SFX = App.SFX, show = App.show, hide = App.hide, STAGES = App.STAGES;
-  var ROUND = 10;                 // 每局新題目數（答錯的會再加回來）
-  var SPEEDS = { slow: { name: '🐢 慢慢跑', f: .42, obs: .3 }, normal: { name: '🐇 一般', f: .58, obs: .42 }, fast: { name: '🐆 挑戰', f: .78, obs: .55 } };
-  var Q_EVERY = 7;                // 每幾排出一個 Q
+  var ROUND = 10;                 // 一局撞 10 個障礙物＝答 10 題
+  var BANK = 60;                  // 題庫：開始時先出這麼多題，再隨機挑 10 題不重複的
+  /* obs：每一排出現障礙物的機會（老師說太多，調少）；fence：幾秒沒撞到就放柵欄 */
+  var SPEEDS = { slow: { name: '🐢 慢慢跑', f: .42, obs: .16, fence: 15 }, normal: { name: '🐇 一般', f: .58, obs: .22, fence: 12 }, fast: { name: '🐆 挑戰', f: .78, obs: .28, fence: 10 } };
   var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
 
@@ -25,19 +26,19 @@
   function slides() {
     var web = App.device === 'web';
     return [
-      { img: IMG + 'run-1.webp', text: web ? '小橘會一直往上跑。按鍵盤的 ← →，或按下面的「左」「右」，換跑道。' : '小橘會一直往上跑。按下面的「左」「右」，或點畫面的左邊、右邊，換跑道。',
-        say: web ? '小橘會一直往上跑。按鍵盤的左右鍵，或按下面的左、右，換跑道。' : '小橘會一直往上跑。按下面的左、右，或點畫面的左邊、右邊，換跑道。' },
+      { img: IMG + (web ? 'run-1w.webp' : 'run-1.webp'), text: web ? '小橘會一直往上跑。按鍵盤的 ← →，或按下面的「左」「右」，換跑道。' : '小橘會一直往上跑。用手指在畫面上往左、往右滑，就能換跑道。',
+        say: web ? '小橘會一直往上跑。按鍵盤的左右鍵，或按下面的左、右，換跑道。' : '小橘會一直往上跑。用手指在畫面上往左、往右滑，就能換跑道。' },
       { img: IMG + 'run-2.webp', text: '吃到金幣，就得到 1 個金幣。' },
-      { img: IMG + 'run-3.webp', text: '看到石頭、三角錐、木箱要閃開！撞到會跌倒，還會掉 3 個金幣。' },
-      { img: IMG + 'run-4.webp', text: '撞到 Q 的方塊，就會出題目。' },
+      { img: IMG + 'run-3.webp', text: '撞到石頭、三角錐、木箱，就要回答一題！' },
       { img: IMG + 'run-5.webp', text: '題目不限時間，慢慢想，點正確的答案。答對多拿 10 個金幣；答錯會告訴你為什麼。' },
-      { img: IMG + 'run-6.webp', text: '答完 10 題，跑到終點就完成了！答錯越少，星星越多。' }
+      { img: IMG + 'run-4.webp', text: '很久沒撞到的話，柵欄會擋住整條路，一定要答題才能過去。' },
+      { img: IMG + 'run-6.webp', text: '撞到 10 個、答完 10 題，跑到終點就完成了！答錯越少，星星越多。' }
     ];
   }
   var SPEED_BTNS = '<p class="tut-start-title">選一個速度，開始跑！</p><div class="speed-list">' +
     '<button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>跑得慢，比較好閃</small></button>' +
     '<button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>' +
-    '<button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快，障礙物也很多！</small></button></div>';
+    '<button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快！</small></button></div>';
   function openSpeed(s) {
     App.intro({
       mode: 'run', title: '🏃 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(),
@@ -69,13 +70,15 @@
     var s = STAGES[id];
     G = {
       stage: s, speedKey: speedKey, sp: SPEEDS[speedKey],
-      newCount: 0, retry: [], wrong: 0, wrongList: [], combo: 0, coins: 0, answered: 0,
-      lane: 1, laneX: 1, objs: [], dist: 0, rowAcc: 0, rows: 0, nextQ: 4, qOnField: false, finishing: false,
+      bank: pickTen(s), wrong: 0, wrongList: [], combo: 0, coins: 0, answered: 0, sinceHit: 0, safeRows: 3,
+      lane: 1, laneX: 1, objs: [], dist: 0, rowAcc: 0, rows: 0, finishing: false,
       phase: 'count', t: 0, stunT: 0, invT: 0, boost: 1, particles: [], floats: [], q: null
     };
     App.showScreen('game');
     $('hud-stage').textContent = s.id + ' ' + s.name + '・' + G.sp.name;
-    $('key-hint').hidden = App.device !== 'web';
+    $('key-hint').hidden = false;
+    $('key-hint').textContent = App.device === 'web' ? '⌨️ 鍵盤 ← → 也可以移動' : '👈 用手指左右滑 👉';
+    $('key-hint').classList.remove('fade'); void $('key-hint').offsetWidth; $('key-hint').classList.add('fade');
     resize();
     // 一開始先放幾排金幣，讓孩子知道要吃金幣
     for (var i = 0; i < 4; i++) addObj('coin', 1, -i * rowGap() * .5 + H * .35);
@@ -85,10 +88,20 @@
     App.countdown(function () { if (G) G.phase = 'run'; });
   }
 
+  /* 題庫：先出一大批題目，去掉重複的，再隨機挑 10 題 */
+  function pickTen(s) {
+    var seen = {}, list = [], tries = 0;
+    while (list.length < BANK && tries++ < BANK * 6) {
+      var q = s.gen(), k = q.text + '|' + (q.big || '') + '|' + (q.review || '') + '|' + q.answer;
+      if (!seen[k]) { seen[k] = 1; list.push(q); }
+    }
+    for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = list[i]; list[i] = list[j]; list[j] = t; }
+    return list.slice(0, ROUND);
+  }
+
   function renderHud() {
     $('score').textContent = G.coins;
-    var left = Math.max(0, ROUND - G.newCount) + G.retry.length;
-    $('hud-left').textContent = G.finishing ? '🏁 衝向終點！' : '還有 ' + left + ' 個 Q';
+    $('hud-left').textContent = G.finishing ? '🏁 衝向終點！' : '第 ' + Math.min(ROUND, G.answered + 1) + ' / ' + ROUND + ' 題';
     var c = $('combo'); c.hidden = G.combo < 2; c.textContent = '🔥' + G.combo;
   }
 
@@ -104,22 +117,17 @@
   function spawnRow() {
     G.rows++;
     var y = -40, lanes = [0, 1, 2].sort(function () { return Math.random() - .5; });
-    var needQ = !G.finishing && !G.qOnField && G.rows >= G.nextQ && (G.newCount < ROUND || G.retry.length);
     if (G.finishing) {
       if (!G.finishSpawned && G.rows >= G.finishRow) { G.finishSpawned = true; addObj('finish', 1, y); }
       else if (!G.finishSpawned) addObj('coin', lanes[0], y);
       return;
     }
-    if (needQ) {
-      addObj('q', lanes[0], y); G.qOnField = true;
+    if (G.safeRows > 0) { G.safeRows--; addObj('coin', G.coinLane != null ? G.coinLane : lanes[0], y); return; } // 剛答完題，先給幾排金幣
+    if (G.sinceHit > G.sp.fence && !G.fenceOnField) { addObj('fence', 1, y); G.fenceOnField = true; G.safeRows = 1; return; } // 太久沒撞到：柵欄擋整條路
+    if (Math.random() < G.sp.obs) {
+      addObj('obs', lanes[0], y, Math.floor(Math.random() * 3)); // 一排最多一個障礙物
       if (Math.random() < .6) addObj('coin', lanes[1], y);
-      return;
-    }
-    var r = Math.random();
-    if (r < G.sp.obs) {
-      var n = Math.random() < .3 ? 2 : 1; // 一定留一條路
-      for (var i = 0; i < n; i++) addObj('obs', lanes[i], y, Math.floor(Math.random() * 3));
-      if (Math.random() < .7) addObj('coin', lanes[2], y);
+      G.safeRows = 1; // 障礙物後面空一排，不會連續
     } else {
       // 一排金幣：沿用上一排的跑道，看起來是一條金幣線
       var l = G.coinLane != null && Math.random() < .75 ? G.coinLane : lanes[0];
@@ -136,38 +144,41 @@
   document.querySelectorAll('.move').forEach(function (b) {
     b.addEventListener('pointerdown', function (e) { e.preventDefault(); move(+b.dataset.dir); });
   });
-  var downX = null, downY = null;
-  cv.addEventListener('pointerdown', function (e) { downX = e.clientX; downY = e.clientY; });
-  cv.addEventListener('pointerup', function (e) {
+  /* 手指滑：移動超過 28px 就換跑道（不用等放開，比較跟手）；滑很長可以連換兩條 */
+  var downX = null, downY = null, swiped = false, track = $('track');
+  track.addEventListener('pointerdown', function (e) { downX = e.clientX; downY = e.clientY; swiped = false; });
+  track.addEventListener('pointermove', function (e) {
     if (downX == null) return;
     var dx = e.clientX - downX, dy = e.clientY - downY;
-    if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1); // 左右滑
-    else { var r = cv.getBoundingClientRect(); move(e.clientX - r.left < r.width / 2 ? -1 : 1); } // 點左半邊／右半邊
-    downX = null;
+    if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy) * .8) { move(dx > 0 ? 1 : -1); swiped = true; downX = e.clientX; downY = e.clientY; }
   });
+  function endTouch(e) {
+    if (downX == null) return;
+    if (!swiped && e.type === 'pointerup') { var r = cv.getBoundingClientRect(); move(e.clientX - r.left < r.width / 2 ? -1 : 1); } // 點左半邊／右半邊
+    downX = null;
+  }
+  track.addEventListener('pointerup', endTouch);
+  track.addEventListener('pointercancel', endTouch);
   document.addEventListener('keydown', function (e) {
     if (!G || $('game').hidden) return;
     if (!$('ov-pause').hidden || !$('ov-end').hidden || !$('ov-count').hidden) return;
     if (!$('ov-explain').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ex-next').click(); } return; }
-    if (!$('ov-q').hidden) { if (/^[1-3]$/.test(e.key)) answer(+e.key - 1); return; }
+    if (!$('ov-q').hidden) { if (/^[1-4]$/.test(e.key)) answer(+e.key - 1); return; }
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); move(-1); }
     else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); move(1); }
     else if (e.key === 'Escape') pause();
   });
 
-  /* ---------- 撞到 Q：出題（不限時間） ---------- */
-  function nextQuestion() {
-    var due = G.retry.findIndex(function (r) { return r.due <= G.answered; });
-    var q;
-    if (due >= 0 || G.newCount >= ROUND) {
-      q = G.retry.splice(due >= 0 ? due : 0, 1)[0].q;
-      q.options = q.options.slice().sort(function () { return Math.random() - .5; }); // 換個位置
-      q.again = true;
-    } else { q = G.stage.gen(); G.newCount++; }
-    return q;
+  /* ---------- 撞到障礙物：出題（不限時間） ---------- */
+  function hitObstacle(cx, cy) {
+    G.stunT = .5; G.invT = 1.2; G.sinceHit = 0;
+    G.floats.push({ x: cx, y: cy - 50, t: 0, text: '答一題！', bad: true });
+    SFX.bad(); burst(cx, cy - 30, 14, false);
+    G.phase = 'hit';
+    setTimeout(function () { if (G && G.phase === 'hit') openQuestion(); }, 450); // 先看到撞到，再出題
   }
   function openQuestion() {
-    G.phase = 'question'; G.q = nextQuestion();
+    G.phase = 'question'; G.q = G.bank[G.answered];
     var q = G.q;
     $('q-text').innerHTML = (q.again ? '🔁 ' : '') + App.fmt(q.text);
     $('q-big').hidden = !q.big; $('q-big').textContent = q.big || '';
@@ -200,8 +211,7 @@
       G.floats.push({ x: laneCX(G.laneX), y: charY() - 60, t: 0, text: '答對 +' + pts });
       setTimeout(function () { hide('ov-q'); afterQuestion(); }, 700);
     } else {
-      G.combo = 0; G.wrong++; G.wrongList.push(q);
-      G.retry.push({ q: q, due: G.answered + 2 });
+      G.combo = 0; G.wrong++; G.wrongList.push(q); // 一局固定 10 題，答錯的列在結算畫面
       SFX.bad();
       setTimeout(function () { hide('ov-q'); showExplain(); }, 600);
     }
@@ -223,9 +233,9 @@
 
   function afterQuestion() {
     if (!G) return;
-    G.qOnField = false; G.nextQ = G.rows + Q_EVERY;
-    G.boost = Math.min(1.35, G.boost + .025);    // 越跑越快一點點
-    if (G.newCount >= ROUND && G.retry.length === 0) { G.finishing = true; G.finishRow = G.rows + 3; }
+    G.safeRows = 2; G.sinceHit = 0;
+    G.boost = Math.min(1.3, G.boost + .02);    // 越跑越快一點點
+    if (G.answered >= ROUND) { G.finishing = true; G.finishRow = G.rows + 3; }
     renderHud();
     G.phase = 'count';
     App.countdown(function () { if (G) G.phase = 'run'; }, true);
@@ -307,18 +317,13 @@
       if (o.hit) return;
       var ox = laneCX(o.lane), near = Math.abs(ox - cx) < lw * .45 && Math.abs(o.y - cy) < lw * .38;
       if (o.type === 'finish' && o.y >= cy) { o.hit = true; burst(cx, cy - 40, 40, true); SFX.win(); setTimeout(finish, 600); return; }
+      if (o.type === 'fence' && o.y >= cy - lw * .3 && G.phase === 'run') { o.hit = true; G.fenceOnField = false; hitObstacle(cx, cy); return; }
       if (!near) return;
       if (o.type === 'coin') { o.hit = true; G.coins++; SFX.key(); sparkle(ox, o.y); renderHud(); }
-      else if (o.type === 'obs' && G.invT <= 0) {
-        o.hit = true; G.stunT = .6; G.invT = 1.4;
-        var lost = Math.min(3, G.coins); G.coins -= lost;
-        G.floats.push({ x: cx, y: cy - 50, t: 0, text: lost ? '-' + lost + ' 🪙' : '小心！', bad: true });
-        SFX.bad(); renderHud();
-      } else if (o.type === 'q') { o.hit = true; burst(ox, o.y, 20, false); openQuestion(); }
+      else if (o.type === 'obs' && G.invT <= 0 && G.phase === 'run') { o.hit = true; hitObstacle(cx, cy); }
     });
-    // 沒撞到的 Q 跑出畫面：等一下再出一個
-    G.objs.forEach(function (o) { if (o.type === 'q' && !o.hit && o.y > H + 40) { o.hit = true; G.qOnField = false; G.nextQ = G.rows + 2; } });
-    G.objs = G.objs.filter(function (o) { return o.y < H + 80 && !(o.hit && o.type !== 'obs' && o.type !== 'finish'); });
+    G.sinceHit += dt;
+    G.objs = G.objs.filter(function (o) { return o.y < H + 80 && !(o.hit && o.type === 'coin'); });
   }
 
   function burst(x, y, n, stars) {
@@ -353,6 +358,7 @@
       var x = laneCX(o.lane);
       if (o.type === 'coin') coin(x, o.y, lw * .17, o.t);
       else if (o.type === 'obs') obstacle(x, o.y, lw * .3, o.kind, o.hit);
+      else if (o.type === 'fence') fence(roadL, o.y, roadW, o.hit);
       else if (o.type === 'q') qbox(x, o.y, lw * .3, o.t);
       else if (o.type === 'finish') finishLine(roadL, o.y, roadW);
     });
@@ -415,6 +421,17 @@
       ctx.fillStyle = '#B5793D'; ctx.fillRect(-s * .8, -s * .7, s * 1.6, s * 1.4);
       ctx.strokeStyle = '#7A4E22'; ctx.lineWidth = 4; ctx.strokeRect(-s * .8, -s * .7, s * 1.6, s * 1.4);
       ctx.beginPath(); ctx.moveTo(-s * .8, -s * .7); ctx.lineTo(s * .8, s * .7); ctx.moveTo(s * .8, -s * .7); ctx.lineTo(-s * .8, s * .7); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function fence(x, y, w, hit) { // 🚧 擋住整條路的柵欄
+    ctx.save(); if (hit) ctx.globalAlpha = .45;
+    ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.fillRect(x + 6, y + 22, w - 12, 8);
+    for (var i = 0; i < 4; i++) { var px = x + 14 + i * (w - 28) / 3; ctx.fillStyle = '#8A5A2B'; ctx.fillRect(px - 5, y - 22, 10, 46); }
+    for (var r = 0; r < 2; r++) {
+      var yy = y - 16 + r * 20; ctx.fillStyle = r ? '#F2B705' : '#E35D4F'; ctx.fillRect(x + 6, yy, w - 12, 13);
+      ctx.fillStyle = r ? '#2B2A28' : '#fff';
+      for (var s2 = x + 6; s2 < x + w - 12; s2 += 26) { ctx.beginPath(); ctx.moveTo(s2, yy + 13); ctx.lineTo(s2 + 10, yy); ctx.lineTo(s2 + 18, yy); ctx.lineTo(s2 + 8, yy + 13); ctx.closePath(); ctx.fill(); }
     }
     ctx.restore();
   }
