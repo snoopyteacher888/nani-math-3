@@ -1,0 +1,194 @@
+/*
+ * ⏱️ 60 秒挑戰（計算題）
+ *
+ * 用數字鍵盤從個位開始往前填答案（跟在紙上寫直式一樣）。
+ * 60 秒倒數，答對加時間（四位數加減也來得及算），時間到就結束，比答對幾題。
+ * 直式上面的小格子可以點，用來寫進位的數字（點一下 1、再點變 2……）。
+ * 答錯會暫停計時、顯示正確答案和提示，這題等一下會再出現。
+ */
+(function () {
+  'use strict';
+
+  var App = window.App, $ = App.$, esc = App.esc, speak = App.speak, SFX = App.SFX, len = window.MathQ.len;
+  var START = 60;
+  var T = null; // 這一局的狀態
+
+  function open(s) {
+    App.ready({
+      title: '⏱️ 關卡 ' + s.id + '　' + s.name,
+      desc: s.desc,
+      say: s.name + '，60 秒挑戰。答對會加時間喔！',
+      tips: [
+        '從<b>個位</b>開始填答案，填完按 ✔。',
+        '答對加 <b>' + s.bonus + ' 秒</b>！時間到就結束。',
+        '直式上面的<b>小格子</b>可以點，寫進位的數字。',
+        '⭐ 答對 ' + s.goals[0] + ' 題・⭐⭐ ' + s.goals[1] + ' 題・⭐⭐⭐ ' + s.goals[2] + ' 題'
+      ],
+      onStart: function () { start(s); }
+    });
+  }
+  App.modes.timed = { open: open };
+
+  function start(s) {
+    T = { stage: s, left: START, count: 0, combo: 0, n: 0, retry: [], wrongList: [], phase: 'play', p: null, last: 0, lastTick: 0 };
+    App.showScreen('timed');
+    $('t-title').textContent = s.id + ' ' + s.name;
+    next();
+    T.last = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function next() {
+    var r = T.retry.findIndex(function (x) { return x.due <= T.n; });
+    T.p = r >= 0 ? T.retry.splice(r, 1)[0].p : T.stage.make();
+    T.p.again = r >= 0;
+    T.n++;
+    var p = T.p;
+    T.C = p.op === '－' ? len(p.a) : Math.max(len(p.a), len(p.b)) + 1;
+    T.digits = []; for (var i = 0; i < T.C; i++) T.digits.push('');
+    T.marks = {}; T.cur = 0; T.phase = 'play';
+    $('t-msg').className = 't-msg'; $('t-msg').innerHTML = '';
+    $('t-next').hidden = true;
+    $('t-again').hidden = !p.again;
+    render();
+    if (App.store.autoSay) speak(p.say);
+  }
+
+  function render() {
+    var p = T.p;
+    $('t-q').innerHTML = App.vgrid({
+      a: p.a, op: p.op, b: p.b, C: T.C,
+      mark: function (i) { return i === 0 ? '' : '<button type="button" class="mk" data-mk="' + i + '" aria-label="' + ['個', '十', '百', '千', '萬'][i] + '位上面的小格子">' + (T.marks[i] || '') + '</button>'; },
+      ans: function (i) {
+        var cls = 'box' + (T.phase === 'play' && i === T.cur ? ' cur' : '') + (T.res && T.res[i] ? ' ' + T.res[i] : '');
+        return '<button type="button" class="' + cls + '" data-box="' + i + '">' + T.digits[i] + '</button>';
+      }
+    });
+    hud();
+  }
+  function hud() {
+    $('t-count').textContent = T.count;
+    var sec = Math.max(0, Math.ceil(T.left));
+    $('t-sec').textContent = sec;
+    $('t-fill').style.width = Math.min(100, T.left / START * 100) + '%';
+    $('t-fill').classList.toggle('low', T.left <= 10);
+    $('t-combo').hidden = T.combo < 2; $('t-combo').textContent = '🔥' + T.combo;
+  }
+
+  /* ---------- 輸入 ---------- */
+  function press(k) {
+    if (!T || T.phase !== 'play') return;
+    if (k === 'ok') return submit();
+    if (k === 'del') {
+      if (T.digits[T.cur] === '' && T.cur > 0) T.cur--;
+      T.digits[T.cur] = '';
+    } else {
+      T.digits[T.cur] = k;
+      if (T.cur < T.C - 1) T.cur++;
+    }
+    SFX.key(); T.res = null; render();
+  }
+  $('keypad').addEventListener('click', function (e) { var b = e.target.closest('[data-k]'); if (b) press(b.dataset.k); });
+  $('t-q').addEventListener('click', function (e) {
+    if (!T || T.phase !== 'play') return;
+    var b = e.target.closest('[data-box]');
+    if (b) { T.cur = +b.dataset.box; render(); return; }
+    var m = e.target.closest('[data-mk]');
+    if (m) { var i = +m.dataset.mk, v = +(T.marks[i] || 0); T.marks[i] = v >= 9 ? '' : String(v + 1); SFX.key(); render(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!T || $('timed').hidden || !$('ov-pause').hidden || !$('ov-end').hidden) return;
+    if (T.phase === 'wrong' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); $('t-next').click(); return; }
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === 'Backspace') { e.preventDefault(); press('del'); }
+    else if (e.key === 'Enter') { e.preventDefault(); press('ok'); }
+    else if (e.key === 'ArrowLeft') { if (T.cur < T.C - 1) T.cur++; render(); }
+    else if (e.key === 'ArrowRight') { if (T.cur > 0) T.cur--; render(); }
+    else if (e.key === 'Escape') pause();
+  });
+  $('t-say').onclick = function () { if (T && T.p) speak(T.p.say + '，等於多少？'); };
+
+  function value() { // 中間有空格就不算
+    var s = '', seen = false;
+    for (var i = T.C - 1; i >= 0; i--) {
+      if (T.digits[i] === '') { if (seen) return null; continue; }
+      seen = true; s += T.digits[i];
+    }
+    return s === '' ? null : +s;
+  }
+
+  function submit() {
+    var v = value(), p = T.p;
+    if (v === null) {
+      $('t-msg').className = 't-msg warn';
+      $('t-msg').textContent = T.digits.join('') === '' ? '先從個位開始填答案喔！' : '中間有空格，每一位都要填喔！';
+      return;
+    }
+    // 每一格對或錯（給孩子看哪一位算錯）
+    var s = String(p.ans);
+    T.res = {};
+    for (var i = 0; i < T.C; i++) {
+      var want = i < s.length ? s[s.length - 1 - i] : '';
+      if (T.digits[i] !== '' || want !== '') T.res[i] = T.digits[i] === want ? 'ok' : 'bad';
+    }
+    if (v === p.ans) {
+      T.count++; T.combo++; T.left += T.stage.bonus; T.phase = 'good';
+      SFX.good();
+      $('t-msg').className = 't-msg good';
+      $('t-msg').textContent = '答對了！ ＋' + T.stage.bonus + ' 秒' + (T.combo >= 3 ? '　🔥 連對 ' + T.combo : '');
+      render();
+      setTimeout(function () { if (T && T.phase === 'good') { T.res = null; next(); } }, 700);
+    } else {
+      T.combo = 0; T.phase = 'wrong';
+      T.wrongList.push(p); T.retry.push({ p: p, due: T.n + 2 });
+      SFX.bad();
+      $('t-msg').className = 't-msg bad';
+      $('t-msg').innerHTML = '正確答案是 <b>' + p.ans + '</b>（紅色的位算錯了）<br>' + esc(p.hint) + (p.check ? '<br>驗算：' + p.check : '');
+      $('t-next').hidden = false;
+      render();
+      speak('正確答案是' + p.ans + '。' + p.hint);
+    }
+  }
+  $('t-next').onclick = function () { T.res = null; T.last = performance.now(); next(); };
+
+  /* ---------- 計時 ---------- */
+  function loop(now) {
+    if (!T || $('timed').hidden) return;
+    requestAnimationFrame(loop);
+    var dt = Math.min((now - T.last) / 1000, .1); T.last = now;
+    if (T.phase !== 'play') return; // 看答案、暫停時不計時
+    T.left -= dt;
+    if (T.left <= 10 && Math.ceil(T.left) !== T.lastTick && T.left > 0) { T.lastTick = Math.ceil(T.left); SFX.tick(); }
+    hud();
+    if (T.left <= 0) finish();
+  }
+
+  function pause() {
+    if (!T || T.phase === 'end' || T.phase === 'paused') return;
+    var was = T.phase, s = T.stage; T.phase = 'paused';
+    App.pause({
+      resume: function () { T.phase = was; T.last = performance.now(); },
+      restart: function () { start(s); },
+      quit: function () { T = null; }
+    });
+  }
+  $('t-pause').onclick = pause;
+  document.addEventListener('visibilitychange', function () { if (document.hidden && T && T.phase === 'play' && !$('timed').hidden) pause(); });
+
+  function finish() {
+    T.phase = 'end'; T.left = 0; hud();
+    var s = T.stage, n = T.count, g = s.goals, stars = n >= g[2] ? 3 : n >= g[1] ? 2 : n >= g[0] ? 1 : 0;
+    var r = App.saveResult(s.id, stars, n);
+    var title = stars === 3 ? '太厲害了！' : stars === 2 ? '很棒喔！' : stars === 1 ? '完成了！再挑戰更多題！' : '時間到！多練習幾次會越來越快喔！';
+    var seen = {}, rv = '';
+    var list = T.wrongList.filter(function (p) { var k = p.a + p.op + p.b; if (seen[k]) return false; seen[k] = 1; return true; });
+    if (list.length) rv = '<h3>📝 這次算錯的題目</h3><ul>' + list.map(function (p) { return '<li>' + p.a + ' ' + p.op + ' ' + p.b + ' ＝ <b>' + p.ans + '</b></li>'; }).join('') + '</ul>';
+    var next3 = stars < 3 ? '<p class="sub">再答對 ' + (g[stars] - n) + ' 題就能拿到 ' + (stars + 1) + ' 顆星！</p>' : '';
+    App.showEnd({
+      stars: stars, title: title, scoreHTML: '答對 <b>' + n + '</b> 題', isRecord: r.isRecord && n > 0,
+      bestText: '這關最多答對 ' + r.rec.best + ' 題', reviewHTML: next3 + rv,
+      again: function () { start(s); }, say: '時間到！答對' + n + '題。' + title
+    });
+  }
+  if (/[?&]debug\b/.test(location.search)) window.__peekT = function () { return T; }; // 測試用
+})();

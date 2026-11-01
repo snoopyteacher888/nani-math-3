@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>三年級數學跑跑樂園</title>
-  <meta name="description" content="四德學輔班 南一版三上數學複習跑酷遊戲">
+  <meta name="description" content="四德學輔班 南一版三上數學複習遊戲：跑酷、60 秒挑戰、小偵探">
   <meta name="theme-color" content="#F8F6F0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
@@ -56,6 +56,52 @@
     </nav>
   </section>
 
+  <!-- ===== ⏱️ 60 秒挑戰 ===== -->
+  <section class="screen game" id="timed" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="t-pause" type="button" aria-label="暫停">⏸</button>
+      <div class="hud-mid"><span id="t-title"></span></div>
+      <div class="combo" id="t-combo" hidden></div>
+      <div class="score">✔ <b id="t-count">0</b> 題</div>
+    </header>
+    <div class="timer" aria-label="剩下的時間"><div class="timer-fill" id="t-fill"></div><span class="timer-sec">⏱️ <b id="t-sec">60</b> 秒</span></div>
+    <main class="calc">
+      <div class="calc-top"><button class="say" type="button" id="t-say" aria-label="念題目">🔊</button><span class="again" id="t-again" hidden>🔁 再算一次</span></div>
+      <div class="calc-q" id="t-q"></div>
+      <div class="t-msg" id="t-msg" aria-live="polite"></div>
+      <button class="big-btn" type="button" id="t-next" hidden>我知道了，下一題 ▶</button>
+    </main>
+    <nav class="keypad" id="keypad">
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+      <button type="button" data-k="del" class="k-del" aria-label="刪除">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="k-ok">✔ 確定</button>
+    </nav>
+  </section>
+
+  <!-- ===== 🔍 小偵探 ===== -->
+  <section class="screen game" id="spot" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="s-pause" type="button" aria-label="暫停">⏸</button>
+      <div class="hud-mid"><span id="s-title"></span><span class="left" id="s-prog"></span></div>
+      <div class="combo" id="s-combo" hidden></div>
+      <div class="score">⭐ <b id="s-count">0</b></div>
+    </header>
+    <main class="calc spot-main">
+      <div class="calc-top"><button class="say" type="button" id="s-say" aria-label="念題目">🔊</button><span class="who" id="s-who"></span></div>
+      <p class="spot-ask">算對了嗎？算錯了就<b>點錯的那一位數字</b>。</p>
+      <div class="calc-q paper" id="s-q"></div>
+      <div class="spot-actions" id="s-actions">
+        <button class="big-btn ok-btn" type="button" id="s-ok">✔ 算對了</button>
+      </div>
+      <div class="spot-result" id="s-result" hidden>
+        <h2 class="s-head" id="s-head"></h2>
+        <div class="ex-work" id="s-body"></div>
+        <button class="big-btn" type="button" id="s-next">下一題 ▶</button>
+      </div>
+    </main>
+  </section>
+
   <!-- ===== 選速度 ===== -->
   <div class="overlay" id="ov-speed" hidden>
     <div class="dialog">
@@ -66,9 +112,19 @@
         <button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>
         <button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>門會很快就跑過來！</small></button>
       </div>
-      <p class="tip" id="speed-tip"></p>
       <p class="tip">💡 選好答案後<b>再按一次</b>，可以衝刺拿更多分！</p>
       <button class="link-btn" type="button" data-close>返回</button>
+    </div>
+  </div>
+
+  <!-- ===== 開始前說明（60 秒挑戰、小偵探） ===== -->
+  <div class="overlay" id="ov-ready" hidden>
+    <div class="dialog">
+      <h2 id="ready-title"></h2>
+      <p class="sub" id="ready-desc"></p>
+      <div class="ready-tips" id="ready-tips"></div>
+      <button class="big-btn" type="button" id="ready-go">開始！</button>
+      <button class="link-btn" type="button" id="ready-back">返回</button>
     </div>
   </div>
 
@@ -100,7 +156,7 @@
     <div class="dialog end">
       <div class="end-stars" id="end-stars"></div>
       <h2 id="end-title"></h2>
-      <p class="end-score">得到 <b id="end-score"></b> 分 <span class="record" id="end-record" hidden>🎉 新紀錄！</span></p>
+      <p class="end-score"><span id="end-score"></span> <span class="record" id="end-record" hidden>🎉 新紀錄！</span></p>
       <p class="sub" id="end-best"></p>
       <div class="end-review" id="end-review"></div>
       <button class="big-btn" type="button" id="end-again">再玩一次 🔁</button>
@@ -109,6 +165,9 @@
   </div>
 
   <script src="js/questions.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/runner.js"></script>
+  <script src="js/timed.js"></script>
+  <script src="js/spot.js"></script>
 </body>
 </html>

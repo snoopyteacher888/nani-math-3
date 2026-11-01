@@ -1,5 +1,5 @@
 /*
- * 數學跑跑樂園：跑酷遊戲主程式
+ * 跑酷（第 1 單元這類「不用計算、要看清楚」的題目）
  *
  * 玩法：小橘往前跑，前面有三扇門（三條跑道），每扇門上寫一個答案。
  * 按下面的答案按鈕（或點跑道）換到那條跑道，跑進正確的門就得分。
@@ -9,109 +9,20 @@
 (function () {
   'use strict';
 
-  var UNITS = window.MathQ.UNITS;
+  var App = window.App, store = App.store, save = App.save, $ = App.$, esc = App.esc,
+      speak = App.speak, SFX = App.SFX, show = App.show, hide = App.hide, STAGES = App.STAGES;
   var ROUND = 10;           // 每局新題目數（答錯的會再加回來）
   var HEARTS = 5;
   var SPEEDS = { slow: { name: '🐢 慢慢跑', f: 1.6 }, normal: { name: '🐇 一般', f: 1 }, fast: { name: '🐆 挑戰', f: 0.6 } };
   var LANE_COLORS = ['#E35D4F', '#E99A1E', '#3C8DD9'];
   var FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
 
-  var STAGES = {};
-  UNITS.forEach(function (u) { u.stages.forEach(function (s) { s.unit = u; STAGES[s.id] = s; }); });
-
-  /* ---------- 紀錄（只存在這台裝置的瀏覽器） ---------- */
-  var KEY = 'nani-math-3:v1';
-  var store = (function () { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })();
-  store.stages = store.stages || {};
-  if (store.sound === undefined) store.sound = true;
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* 無痕模式等：不存 */ } }
-
-  function $(id) { return document.getElementById(id); }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function starsHTML(n) { var h = ''; for (var i = 0; i < 3; i++) h += '<span' + (i < n ? '' : ' class="off"') + '>⭐</span>'; return h; }
-
-  /* ---------- 念出來（班上有不識字的學生） ---------- */
-  function speak(text) {
-    if (!text || !('speechSynthesis' in window)) return;
-    try {
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = .9;
-      var v = speechSynthesis.getVoices().filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0];
-      if (v) u.voice = v;
-      speechSynthesis.speak(u);
-    } catch (e) { /* 不支援就算了 */ }
-  }
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest && e.target.closest('[data-say]');
-    if (b) { e.preventDefault(); speak(b.dataset.say); }
-  });
-
-  /* ---------- 音效（不用音檔，直接合成） ---------- */
-  var actx = null;
-  function tone(notes, type, vol) {
-    if (!store.sound) return;
-    try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      if (actx.state === 'suspended') actx.resume();
-      var t = actx.currentTime;
-      notes.forEach(function (n) {
-        var o = actx.createOscillator(), g = actx.createGain();
-        o.type = type || 'triangle'; o.frequency.value = n[0];
-        g.gain.setValueAtTime(0, t + n[1]);
-        g.gain.linearRampToValueAtTime(vol || .18, t + n[1] + .02);
-        g.gain.exponentialRampToValueAtTime(.001, t + n[1] + n[2]);
-        o.connect(g); g.connect(actx.destination);
-        o.start(t + n[1]); o.stop(t + n[1] + n[2] + .05);
-      });
-    } catch (e) { /* 沒有音效也能玩 */ }
-  }
-  var SFX = {
-    pick: function () { tone([[660, 0, .08]], 'sine', .12); },
-    dash: function () { tone([[440, 0, .1], [660, .06, .1], [880, .12, .15]], 'square', .06); },
-    good: function () { tone([[784, 0, .12], [1047, .1, .25]], 'triangle', .2); },
-    bad: function () { tone([[220, 0, .25], [165, .15, .35]], 'sawtooth', .08); },
-    win: function () { tone([[523, 0, .15], [659, .15, .15], [784, .3, .15], [1047, .45, .4]], 'triangle', .2); }
-  };
-
-  /* =====================================================
-   * 地圖
-   * ===================================================== */
-  function renderMap() {
-    var total = 0, html = '', soon = '';
-    UNITS.forEach(function (u) {
-      var no = typeof u.id === 'number' ? '第 ' + u.id + ' 單元' : '';
-      if (!u.stages.length) {
-        soon += '<div class="soon-card"><span>' + u.ic + '</span><span>' + (no ? no + ' ' : '') + esc(u.name) + '</span><span class="tag">準備中</span></div>';
-        return;
-      }
-      html += '<section class="unit"><h2 class="unit-title"><span>' + u.ic + '</span><span class="no">' + no + '</span><span>' + esc(u.name) + '</span></h2><div class="stages">';
-      u.stages.forEach(function (s) {
-        var rec = store.stages[s.id] || {}, st = rec.stars || 0;
-        total += st;
-        html += '<button class="stage-card run-ic" type="button" data-stage="' + s.id + '">' +
-          '<span class="sid">關卡 ' + s.id + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
-          '<span class="srow"><span class="stars">' + starsHTML(st) + '</span><span class="best">' + (rec.best ? '最高 ' + rec.best + ' 分' : '還沒玩過') + '</span></span></button>';
-      });
-      html += '</div></section>';
-    });
-    $('units').innerHTML = html + (soon ? '<div class="soon-grid">' + soon + '</div>' : '');
-    $('total-stars').textContent = total;
-  }
-  $('units').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-stage]');
-    if (b) openSpeed(b.dataset.stage);
-  });
-  $('opt-autosay').checked = !!store.autoSay;
-  $('opt-sound').checked = !!store.sound;
-  $('opt-autosay').onchange = function () { store.autoSay = this.checked; save(); };
-  $('opt-sound').onchange = function () { store.sound = this.checked; save(); if (this.checked) SFX.good(); };
-
+  /* ---------- 選速度 ---------- */
   var pendingStage = null;
-  function openSpeed(id) {
-    var s = STAGES[id]; pendingStage = id;
+  function openSpeed(s) {
+    pendingStage = s.id;
     $('speed-title').textContent = '關卡 ' + s.id + '　' + s.name;
     $('speed-desc').textContent = s.desc;
-    $('speed-tip').textContent = s.time >= 18 ? '✏️ 這關要計算，先準備一張計算紙喔！' : '';
     document.querySelectorAll('.speed').forEach(function (b) { b.classList.toggle('last', b.dataset.speed === (store.speed || 'slow')); });
     show('ov-speed');
     speak('關卡' + s.name + '。選一個速度。');
@@ -120,9 +31,7 @@
     b.onclick = function () { store.speed = b.dataset.speed; save(); hide('ov-speed'); startGame(pendingStage, b.dataset.speed); };
   });
   $('ov-speed').querySelector('[data-close]').onclick = function () { hide('ov-speed'); };
-
-  function show(id) { $(id).hidden = false; }
-  function hide(id) { $(id).hidden = true; }
+  App.modes.run = { open: openSpeed };
 
   /* =====================================================
    * 遊戲狀態
@@ -138,7 +47,7 @@
       q: null, tRemain: 0, chosen: null, laneY: 1, dashing: false, dashBonus: 0,
       phase: 'run', phaseT: 0, result: null, scroll: 0, runT: 0, particles: [], floats: [], gateX: 0
     };
-    $('map').hidden = true; $('game').hidden = false;
+    App.showScreen('game');
     $('hud-stage').textContent = s.id + ' ' + s.name + '・' + SPEEDS[speedKey].name;
     resize();
     nextQuestion();
@@ -214,8 +123,8 @@
   });
   document.addEventListener('keydown', function (e) {
     if (!G || $('game').hidden) return;
-    if (!$('ov-explain').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ex-next').click(); } return; }
     if (!$('ov-pause').hidden || !$('ov-end').hidden) return;
+    if (!$('ov-explain').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ex-next').click(); } return; }
     var k = e.key;
     if (k === '1' || k === '2' || k === '3') choose(+k - 1);
     else if (k === 'ArrowUp' || k === 'ArrowDown') {
@@ -275,51 +184,37 @@
 
   function finish(done) {
     G.phase = 'end';
-    var stars = !done ? 0 : G.wrong <= 1 ? 3 : G.wrong <= 3 ? 2 : 1;
-    var rec = store.stages[G.stage.id] || {}, isRecord = done && G.score > (rec.best || 0);
-    if (done) {
-      rec.stars = Math.max(rec.stars || 0, stars);
-      rec.best = Math.max(rec.best || 0, G.score);
-      rec.plays = (rec.plays || 0) + 1;
-      store.stages[G.stage.id] = rec; save();
-    }
-    $('end-stars').innerHTML = starsHTML(stars);
+    var stars = !done ? 0 : G.wrong <= 1 ? 3 : G.wrong <= 3 ? 2 : 1, r = { rec: App.store.stages[G.stage.id] || {}, isRecord: false };
+    if (done) r = App.saveResult(G.stage.id, stars, G.score);
     var title = !done ? '愛心用完了，休息一下再挑戰！' : stars === 3 ? '太厲害了！' : stars === 2 ? '很棒喔！' : '完成了！再試試拿更多星星！';
-    $('end-title').textContent = title;
-    $('end-score').textContent = G.score;
-    $('end-record').hidden = !isRecord;
-    $('end-best').textContent = rec.best ? '這關最高紀錄：' + rec.best + ' 分' : '';
     var rv = '';
     if (G.wrongList.length) {
       var seen = {};
       rv = '<h3>📝 這次答錯的題目</h3><ul>' + G.wrongList.filter(function (q) { var k = (q.review || q.text) + q.big; if (seen[k]) return false; seen[k] = 1; return true; })
         .map(function (q) { return '<li>' + esc(q.review || q.text) + (q.big ? '　' + esc(q.big) : '') + ' → <b>' + esc(q.answer) + '</b></li>'; }).join('') + '</ul>';
     }
-    $('end-review').innerHTML = rv;
-    show('ov-end');
-    if (done) { SFX.win(); speak(title + '得到' + G.score + '分。'); } else speak(title);
+    var id = G.stage.id, sp = G.speedKey;
+    App.showEnd({
+      stars: stars, title: title, scoreHTML: '得到 <b>' + G.score + '</b> 分', isRecord: done && r.isRecord,
+      bestText: r.rec.best ? '這關最高紀錄：' + r.rec.best + ' 分' : '', reviewHTML: rv,
+      again: function () { startGame(id, sp); }, say: done ? title + '得到' + G.score + '分。' : title
+    });
   }
-  $('end-again').onclick = function () { hide('ov-end'); startGame(G.stage.id, G.speedKey); };
-  $('end-map').onclick = function () { hide('ov-end'); quit(); };
 
   /* ---------- 暫停 ---------- */
   var pausedPhase = null;
   function pause() {
     if (!G || G.phase === 'end' || G.phase === 'paused' || !$('ov-explain').hidden) return;
-    pausedPhase = G.phase; G.phase = 'paused'; show('ov-pause');
+    pausedPhase = G.phase; G.phase = 'paused';
+    var id = G.stage.id, sp = G.speedKey;
+    App.pause({
+      resume: function () { G.phase = pausedPhase; lastT = 0; },
+      restart: function () { startGame(id, sp); },
+      quit: function () { G = null; }
+    });
   }
   $('btn-pause').onclick = pause;
-  $('pause-resume').onclick = function () { hide('ov-pause'); G.phase = pausedPhase; lastT = 0; };
-  $('pause-restart').onclick = function () { hide('ov-pause'); startGame(G.stage.id, G.speedKey); };
-  $('pause-quit').onclick = function () { hide('ov-pause'); quit(); };
-  document.addEventListener('visibilitychange', function () { if (document.hidden && G && G.phase === 'run') pause(); });
-
-  function quit() {
-    G = null;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
-    $('game').hidden = true; $('map').hidden = false;
-    renderMap();
-  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden && G && G.phase === 'run' && !$('game').hidden) pause(); });
 
   /* =====================================================
    * 畫面（canvas）
@@ -343,7 +238,7 @@
   var raf = 0, lastT = 0;
   function loop(t) {
     raf = requestAnimationFrame(loop);
-    if (!G) { cancelAnimationFrame(raf); raf = 0; return; }
+    if (!G || $('game').hidden) { cancelAnimationFrame(raf); raf = 0; return; }
     var dt = lastT ? Math.min((t - lastT) / 1000, .05) : 0; lastT = t;
     update(dt); draw();
   }
@@ -546,6 +441,5 @@
     }
   }
 
-  renderMap();
   if (/[?&]debug\b/.test(location.search)) window.__peek = function () { return G; }; // 測試用
 })();

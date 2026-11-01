@@ -46,7 +46,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .stars { letter-spacing: 2px; font-size: 1.2em; }
 .stars .off { filter: grayscale(1); opacity: .3; }
 .best { font-size: .8em; color: var(--ink-soft); }
-.stage-card.run-ic::before { content: "🏃"; position: absolute; right: 14px; top: 10px; font-size: 1.5em; }
+.stage-card[data-ic]::before { content: attr(data-ic); position: absolute; right: 14px; top: 10px; font-size: 1.5em; }
 .soon-card { border-radius: var(--radius); border: 3px dashed var(--line); background: var(--muted); color: var(--ink-soft); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
 .soon-card .tag { margin-left: auto; white-space: nowrap; flex: none; font-size: .75em; background: var(--surface); border-radius: 999px; padding: 0 10px; }
 .soon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 22px; }
@@ -146,6 +146,55 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .end-review li { margin: 2px 0; }
 .end-review li b { color: var(--good); }
 
+/* ===== ⏱️ 60 秒挑戰、🔍 小偵探 ===== */
+.timer { flex: none; position: relative; height: 34px; margin: 8px 12px 0; border-radius: 999px; background: var(--muted); overflow: hidden; border: 2px solid var(--line); }
+.timer-fill { position: absolute; inset: 0 auto 0 0; width: 100%; background: var(--good); transition: width .1s linear; }
+.timer-fill.low { background: var(--bad); }
+.timer-sec { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05em; }
+.timer-sec b { font-size: 1.2em; margin: 0 4px; }
+.calc { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 16px; }
+.calc-top { align-self: stretch; display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.again { font-weight: 700; color: var(--brand); }
+.who { font-weight: 700; font-size: 1.2em; }
+.calc-q { display: flex; justify-content: center; }
+
+.vg { display: inline-grid; grid-template-columns: repeat(var(--cols), 1.25em); font-size: clamp(36px, 8vw, 60px); font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.vg > span { display: flex; align-items: center; justify-content: center; }
+.vg-mark { height: .7em; font-size: .5em; }
+.vg-d.ul { border-bottom: 4px solid currentColor; }
+.vg-a { padding-top: 6px; }
+.vg .mk { width: 1.5em; height: 1.4em; padding: 0; border: 2px dashed #E8A9A2; border-radius: 8px; background: #FFF7F6; color: var(--bad); font-size: 1em; font-weight: 700; line-height: 1; }
+.vg .box { width: 1.1em; height: 1.3em; padding: 0; border: 3px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 1em; font-weight: 700; color: var(--math); line-height: 1; }
+.vg .box.cur { border-color: var(--math); box-shadow: 0 0 0 4px var(--math-soft); animation: blink 1s infinite; }
+.vg .box.ok { border-color: var(--good); color: var(--good); background: #EAF6EF; }
+.vg .box.bad { border-color: var(--bad); color: var(--bad); background: #FDECEA; }
+@keyframes blink { 50% { border-color: var(--line); } }
+.t-msg { min-height: 1.6em; text-align: center; font-size: 1.1em; font-weight: 700; }
+.t-msg.good { color: var(--good); font-size: 1.4em; }
+.t-msg.bad { color: var(--ink); background: #FFF4E6; border-radius: 14px; padding: 8px 14px; font-weight: 400; }
+.t-msg.bad b { color: var(--good); font-size: 1.4em; }
+.t-msg.warn { color: var(--brand); }
+.keypad { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 2px solid var(--line); max-width: 560px; width: 100%; margin: 0 auto; }
+.keypad button { min-height: 58px; border-radius: 16px; border: 3px solid var(--line); background: var(--bg); font-size: 1.7em; font-weight: 700; box-shadow: 0 4px 0 var(--line); }
+.keypad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
+.keypad .k-ok { background: var(--math); border-color: var(--math); color: #fff; font-size: 1.2em; box-shadow: 0 4px 0 #1C4479; }
+.keypad .k-del { font-size: 1.4em; }
+
+.spot-ask { margin: 0; font-size: 1.15em; text-align: center; }
+.paper { padding: 10px 26px 16px; border-radius: 16px; background: repeating-linear-gradient(#FFFDF7 0 34px, #E8E1CF 34px 36px); border: 2px solid var(--line); box-shadow: 0 6px 0 var(--muted); }
+.vg .hand { width: 1.15em; height: 1.3em; padding: 0; border: 3px dashed transparent; border-radius: 10px; background: none; font: inherit; color: #3B5BA5; }
+.vg .hand:not(:disabled):hover { border-color: var(--brand); background: #FFF4E6; }
+.vg .hand.picked { border-color: var(--brand); border-style: solid; }
+.vg .hand.bad { background: #FDECEA; color: var(--bad); border-color: var(--bad); border-style: solid; }
+.spot-actions { display: flex; justify-content: center; }
+.ok-btn { background: var(--good); min-width: 220px; font-size: 1.3em; }
+.spot-result { width: min(100%, 560px); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.s-head { margin: 0; font-size: 1.4em; }
+.s-head.good { color: var(--good); }
+.s-head.bad { color: var(--bad); }
+.ex-why { margin: 0; background: #FFF4E6; border-radius: 14px; padding: 8px 12px; text-align: left; }
+.ready-tips { text-align: left; display: flex; flex-direction: column; gap: 6px; background: var(--bg); border-radius: 14px; padding: 12px 14px; }
+
 @media (max-width: 520px) {
   .qpanel { min-height: 80px; padding: 8px 10px; }
   .ans { min-height: 64px; }
@@ -154,6 +203,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
   .hud-mid #hud-stage { display: none; }
   .hud-mid .left { font-size: .9em; white-space: nowrap; }
   .stages, .soon-grid { grid-template-columns: 1fr; }
+  .keypad button { min-height: 52px; }
 }
 @media (max-height: 560px) and (orientation: landscape) {
   .qpanel { min-height: 0; padding: 4px 12px; }
@@ -161,4 +211,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
   .vert { font-size: 22px; }
   .ans { min-height: 56px; }
   .nline { width: min(100%, 420px); }
+  .vg { font-size: 34px; }
+  .keypad { grid-template-columns: repeat(6, 1fr); }
+  .keypad button { min-height: 46px; }
 }

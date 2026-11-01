@@ -178,7 +178,14 @@
     };
   }
 
-  /* ========== 第 2 單元 四位數的加減 ========== */
+  /* ========== 第 2、3 單元：計算題 ==========
+   * 計算題不用跑酷，改用「⏱️ 60 秒挑戰」（自己填答案）和「🔍 小偵探」（找同學算錯的地方）。
+   * 每個 make 函式回傳一題：
+   *   a, op, b, ans ：算式和答案
+   *   marks         ：直式上方的小字（進位）
+   *   mistakes      ：常見的錯誤答案 [{ v: 錯的答案, why: 錯在哪裡 }]
+   *   hint, say     ：提示、念出來的話
+   */
   function addCarries(a, b) {
     var marks = {}, c = 0, count = 0, pos = [];
     for (var i = 0; i < 5; i++) {
@@ -192,36 +199,21 @@
     for (var i = 0; i < L; i++) r += ((dig(a, i) + dig(b, i)) % 10) * Math.pow(10, i);
     return r;
   }
-  var ADD_STORY = [
-    function (a, b) { return ['🤖 電腦展第一天來了 ' + a + ' 人，第二天來了 ' + b + ' 人，兩天共幾人？', '人']; },
-    function (a, b) { return ['🐷 存錢筒裡有 ' + a + ' 元，媽媽又給 ' + b + ' 元，現在有幾元？', '元']; },
-    function (a, b) { return ['🏃 馬拉松已經有 ' + a + ' 人報名，又多了 ' + b + ' 人，共有幾人？', '人']; }
-  ];
-  function genAdd() {
+  var PLACE = ['個位', '十位', '百位', '千位', '萬位'];
+  function makeAdd() { // 四位數加法，至少進位 2 次
     var a, b, c;
     do {
       a = R(1000, 8999); b = Math.random() < .35 ? R(100, 999) : R(1000, 8999);
       c = addCarries(a, b);
     } while (a + b > 9999 || c.count < 2);
-    var ans = a + b, wrongs = [noCarryAdd(a, b)];
-    shuffle(c.pos).forEach(function (p) { wrongs.push(ans - Math.pow(10, p)); });
-    var q = {
-      visual: vertical(a, '＋', b, null),
-      answer: String(ans), options: options(ans, wrongs),
-      hint: '每一位加起來滿 10，就要進 1 到前一位，別忘了把進位的 1 加上去！',
-      explain: vertical(a, '＋', b, ans, c.marks) + '<p class="ex-line">小小的 1 是進位，要記得加上去。</p>'
-    };
-    if (Math.random() < .3) {
-      var st = pick(ADD_STORY)(a, b);
-      q.visual = null; q.text = st[0]; q.say = st[0].replace(/^\S+\s/, '');
-    } else {
-      q.text = a + ' ＋ ' + b + ' ＝ ？'; q.say = a + ' 加 ' + b + '，等於多少？';
-    }
-    return q;
+    var ans = a + b, mistakes = [{ v: noCarryAdd(a, b), why: '每一位加起來滿 10 都沒有進位，只寫了個位數。' }];
+    c.pos.forEach(function (p) { mistakes.push({ v: ans - Math.pow(10, p), why: PLACE[p - 1] + '加起來滿 10，進位的 1 忘記加到' + PLACE[p] + '了。' }); });
+    return { a: a, op: '＋', b: b, ans: ans, marks: c.marks, mistakes: mistakes,
+      hint: '滿 10 要進 1 到前一位，別忘了把進位的 1 加上去！', say: a + ' 加 ' + b };
   }
 
   function subInfo(a, b) {
-    var br = 0, pos = [], marks = {};
+    var br = 0, pos = [];
     for (var i = 0; i < 4; i++) {
       var d = dig(a, i) - dig(b, i) - br;
       if (d < 0) { br = 1; pos.push(i); } else br = 0;
@@ -233,12 +225,7 @@
     for (var i = 0; i < len(a); i++) r += Math.abs(dig(a, i) - dig(b, i)) * Math.pow(10, i);
     return r;
   }
-  var SUB_STORY = [
-    function (a, b) { return ['💰 哥哥有 ' + a + ' 元，買了 ' + b + ' 元的球鞋，還剩幾元？']; },
-    function (a, b) { return ['📚 圖書館有 ' + a + ' 本書，借出去 ' + b + ' 本，還有幾本？']; },
-    function (a, b) { return ['🎈 第二天有 ' + a + ' 人，第三天比第二天少 ' + b + ' 人，第三天有幾人？']; }
-  ];
-  function genSub() {
+  function makeSub() { // 四位數減法，一半是被減數中間有 0
     var a, b, info, zeroA = Math.random() < .55;
     for (;;) {
       a = zeroA ? zeroNumber() : R(2000, 9999);
@@ -247,26 +234,16 @@
       info = subInfo(a, b);
       if (a > b && info.count >= (zeroA ? 1 : 2) && a - b >= 100) break;
     }
-    var ans = a - b, wrongs = [bigMinusSmall(a, b)];
-    shuffle(info.pos).forEach(function (p) { wrongs.push(ans + Math.pow(10, p + 1)); });
+    var ans = a - b, mistakes = [{ v: bigMinusSmall(a, b), why: '不夠減的時候，把上下倒過來，用大的減小的。應該要向前一位借 1 才對！' }];
+    info.pos.forEach(function (p) {
+      mistakes.push({ v: ans + Math.pow(10, p + 1), why: PLACE[p] + '不夠減，向' + PLACE[p + 1] + '借了 1，可是' + PLACE[p + 1] + '忘記少 1。' });
+    });
     var hasZero = /0/.test(String(a).slice(1));
-    var q = {
-      visual: vertical(a, '－', b, null),
-      answer: String(ans), options: options(ans, wrongs),
-      hint: hasZero ? '不夠減要向前一位借 1。前一位是 0 借不到，就要再往前借，借過的那一位要少 1！'
-                    : '不夠減要向前一位借 1 當 10，被借走的那一位要記得少 1！',
-      explain: vertical(a, '－', b, ans) + '<p class="ex-line">驗算：' + ans + ' ＋ ' + b + ' ＝ ' + a + '</p>'
-    };
-    if (Math.random() < .3) {
-      var st = pick(SUB_STORY)(a, b);
-      q.visual = null; q.text = st[0]; q.say = st[0].replace(/^\S+\s/, '');
-    } else {
-      q.text = a + ' － ' + b + ' ＝ ？'; q.say = a + ' 減 ' + b + '，等於多少？';
-    }
-    return q;
+    return { a: a, op: '－', b: b, ans: ans, marks: null, mistakes: mistakes, check: ans + ' ＋ ' + b + ' ＝ ' + a,
+      hint: hasZero ? '不夠減要向前一位借 1；前一位是 0 借不到，就再往前借，借過的那一位要少 1！'
+                    : '不夠減要向前一位借 1 當 10，被借走的那一位要記得少 1！', say: a + ' 減 ' + b };
   }
 
-  /* ========== 第 3 單元 乘法 ========== */
   function mulInfo(a, m) {
     var marks = {}, c = 0, carries = [];
     for (var i = 0; i < len(a); i++) {
@@ -280,72 +257,50 @@
     for (var i = 0; i < len(a); i++) r += ((dig(a, i) * m) % 10) * Math.pow(10, i);
     return r;
   }
-  function mulWrongs(a, m) {
-    var ans = a * m, info = mulInfo(a, m), w = [];
-    shuffle(info.carries).forEach(function (pc) { w.push(ans - pc[1] * Math.pow(10, pc[0])); });
-    w.push(noCarryMul(a, m));
-    return w;
-  }
-  function mulQ(a, m, story) {
-    var ans = a * m, info = mulInfo(a, m), wrongs = mulWrongs(a, m);
-    var q = {
-      visual: vertical(a, '×', m, null),
-      answer: String(ans),
-      hint: '從個位開始乘，乘出來滿 10 要進位，記得把進位的數加到下一位！',
-      explain: vertical(a, '×', m, ans, info.marks) + '<p class="ex-line">小小的數字是進位，乘完下一位要加上去。</p>'
-    };
-    if (story) {
-      q.visual = null; q.text = story[0]; q.say = story[0].replace(/^\S+\s/, '');
-      wrongs.unshift(a + m);
-      q.hint = story[1] + '用乘法：' + a + ' × ' + m + '。' + q.hint;
-      q.explain = '<p class="ex-line">' + story[1] + '：' + a + ' × ' + m + ' ＝ ' + ans + '</p>' + q.explain;
-    } else {
-      q.text = a + ' × ' + m + ' ＝ ？'; q.say = a + ' 乘以 ' + m + '，等於多少？';
-    }
-    q.options = options(ans, wrongs);
-    return q;
-  }
-  function genMulA() { // 二位數、三位數 × 一位數，會進位
+  function makeMul() { // 二位數、三位數 × 一位數，會進位；三成是 105 × 4 這種中間有 0 的
     var a, m;
     do {
-      a = Math.random() < .45 ? R(12, 99) : R(102, 499);
+      var t = Math.random();
+      a = t < .3 ? R(1, 9) * 100 + R(1, 9) : t < .6 ? R(12, 99) : R(102, 499);
       m = R(2, 9);
     } while (mulInfo(a, m).carries.length < 1 || a % 10 === 0 || a * m > 9999);
-    return mulQ(a, m, null);
-  }
-  /* big：可以用三位數的情境（價錢）；其他情境只用二位數，比較合理 */
-  var MUL_STORY = [
-    { big: false, f: function (a, m) { return ['🍎 1 盒蘋果 ' + a + ' 元，買 ' + m + ' 盒，要付幾元？', m + ' 盒 ' + a + ' 元']; } },
-    { big: true, f: function (a, m) { return ['✏️ 1 打原子筆 ' + a + ' 元，買 ' + m + ' 打，要付幾元？', m + ' 打 ' + a + ' 元']; } },
-    { big: false, f: function (a, m) { return ['📦 1 箱有 ' + a + ' 瓶果汁，' + m + ' 箱有幾瓶？', m + ' 箱，每箱 ' + a + ' 瓶']; } },
-    { big: false, f: function (a, m) { return ['🚌 1 輛車可以坐 ' + a + ' 人，' + m + ' 輛車可以坐幾人？', m + ' 輛，每輛 ' + a + ' 人']; } },
-    { big: true, f: function (a, m) { return ['🎫 1 張門票 ' + a + ' 元，買 ' + m + ' 張，要付幾元？', m + ' 張 ' + a + ' 元']; } },
-    { big: true, f: function (a, m) { return ['🎒 1 個書包 ' + a + ' 元，買 ' + m + ' 個，要付幾元？', m + ' 個 ' + a + ' 元']; } }
-  ];
-  function genMulB() { // 應用題＋中間有 0 的三位數
-    var a, m;
-    if (Math.random() < .35) { // 105 × 4 這種
-      do { a = R(1, 9) * 100 + R(1, 9); m = R(2, 9); } while (mulInfo(a, m).carries.length < 1 || a * m > 9999);
-      return mulQ(a, m, null);
-    }
-    var st = pick(MUL_STORY), big = st.big && Math.random() < .6;
-    do { a = big ? R(105, 480) : R(12, 96); m = R(2, 9); } while (mulInfo(a, m).carries.length < 1 || a * m > 9999);
-    return mulQ(a, m, st.f(a, m));
+    var ans = a * m, info = mulInfo(a, m), mistakes = [];
+    info.carries.forEach(function (pc) {
+      mistakes.push({ v: ans - pc[1] * Math.pow(10, pc[0]), why: PLACE[pc[0] - 1] + '乘完要進 ' + pc[1] + '，可是' + PLACE[pc[0]] + '乘完忘記加上這個 ' + pc[1] + '。' });
+    });
+    mistakes.push({ v: noCarryMul(a, m), why: '每一位乘出來滿 10 都沒有進位，只寫了個位數。' });
+    return { a: a, op: '×', b: m, ans: ans, marks: info.marks, mistakes: mistakes,
+      hint: '從個位開始乘，乘出來滿 10 要進位，乘下一位時記得加上去！', say: a + ' 乘以 ' + m };
   }
 
-  /* ========== 關卡清單 ========== */
+  /* 小偵探：同學的作業（三成算對、七成有一個常見錯誤） */
+  function spotFrom(make) {
+    return function () {
+      var p = make(), ok = p.mistakes.filter(function (m) { return m.v > 0 && m.v !== p.ans && m.v < 100000; });
+      if (Math.random() < .3 || !ok.length) { p.shown = p.ans; p.why = null; }
+      else { var m = pick(ok); p.shown = m.v; p.why = m.why; }
+      return p;
+    };
+  }
+  function makeAddSub() { return Math.random() < .5 ? makeAdd() : makeSub(); }
+
+  /* ========== 關卡清單 ==========
+   * mode：run 跑酷、timed 60 秒挑戰、spot 小偵探
+   * timed：bonus＝答對加幾秒；goals＝拿 1、2、3 顆星要答對幾題
+   */
   var UNITS = [
     { id: 1, name: '數到 10000', ic: '🔢', stages: [
-      { id: '1-1', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite, time: 10 },
-      { id: '1-2', name: '數線大挑戰', desc: '1 小格是多少？箭頭指在哪裡？', gen: genNumberLine, time: 12 }
+      { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite, time: 10 },
+      { id: '1-2', mode: 'run', name: '數線大挑戰', desc: '1 小格是多少？箭頭指在哪裡？', gen: genNumberLine, time: 12 }
     ] },
     { id: 2, name: '四位數的加減', ic: '➕', stages: [
-      { id: '2-1', name: '加法進位', desc: '滿 10 要進 1', gen: genAdd, time: 26 },
-      { id: '2-2', name: '減法退位', desc: '不夠減要借；遇到 0 再往前借', gen: genSub, time: 30 }
+      { id: '2-1', mode: 'timed', name: '加法進位', desc: '滿 10 要進 1', make: makeAdd, bonus: 15, goals: [2, 4, 7] },
+      { id: '2-2', mode: 'timed', name: '減法退位', desc: '不夠減要借；遇到 0 再往前借', make: makeSub, bonus: 20, goals: [2, 4, 6] },
+      { id: '2-3', mode: 'spot', name: '找出加減的錯', desc: '同學的直式算對了嗎？錯在哪一位？', make: spotFrom(makeAddSub) }
     ] },
     { id: 3, name: '乘法', ic: '✖️', stages: [
-      { id: '3-1', name: '乘法進位', desc: '乘完要加上進位', gen: genMulA, time: 20 },
-      { id: '3-2', name: '乘法應用題', desc: '買東西、算總數', gen: genMulB, time: 24 }
+      { id: '3-1', mode: 'timed', name: '乘法進位', desc: '乘完要加上進位', make: makeMul, bonus: 10, goals: [3, 6, 10] },
+      { id: '3-2', mode: 'spot', name: '找出乘法的錯', desc: '同學忘記進位了嗎？', make: spotFrom(makeMul) }
     ] },
     { id: 4, name: '幾毫米', ic: '📏', stages: [] },
     { id: 5, name: '角、正方形和長方形', ic: '📐', stages: [] },
@@ -357,6 +312,6 @@
     { id: 'p2', name: '加油小站二', ic: '⛽', stages: [] }
   ];
 
-  root.MathQ = { UNITS: UNITS, zh: zh, literal: literal, vertical: vertical,
-    _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, genAdd: genAdd, genSub: genSub, genMulA: genMulA, genMulB: genMulB } };
+  root.MathQ = { UNITS: UNITS, zh: zh, literal: literal, vertical: vertical, len: len, dig: dig,
+    _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, makeAdd: makeAdd, makeSub: makeSub, makeMul: makeMul } };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -8,24 +8,30 @@ const cases = { 3005: '三千零五', 3050: '三千零五十', 3500: '三千五�
 for (const [n, s] of Object.entries(cases)) assert.strictEqual(Q.zh(+n), s, n);
 assert.strictEqual(Q.literal(3005), 305);
 
-// 每個關卡出 3000 題，檢查答案正確、選項 3 個且不重複
-function check(id, q) {
-  assert.ok(q.text && q.say && q.answer && q.hint, id + ' missing fields');
-  assert.strictEqual(q.options.length, 3, id + ' options ' + JSON.stringify(q));
-  assert.strictEqual(new Set(q.options).size, 3, id + ' dup');
-  assert.ok(q.options.includes(q.answer), id + ' no answer');
-}
-const evalExpr = t => { const m = t.match(/^(\d+) ([＋－×]) (\d+) ＝/); if (!m) return null; const a = +m[1], b = +m[3]; return m[2] === '＋' ? a + b : m[2] === '－' ? a - b : a * b; };
-let counts = {};
+const calc = (a, op, b) => op === '＋' ? a + b : op === '－' ? a - b : a * b;
+const N = 3000;
 for (const u of Q.UNITS) for (const s of u.stages) {
-  for (let i = 0; i < 3000; i++) {
-    const q = s.gen(); check(s.id, q);
-    const v = evalExpr(q.text); if (v != null) assert.strictEqual(String(v), q.answer, s.id + ' ' + q.text);
-    if (/^\d+$/.test(q.answer)) assert.ok(+q.answer > 0 && +q.answer <= 10000, s.id + ' range ' + q.answer);
-    q.options.forEach(o => { if (/^\d+$/.test(o)) assert.ok(+o >= 0, 'neg'); });
+  for (let i = 0; i < N; i++) {
+    if (s.mode === 'run') {
+      const q = s.gen();
+      assert.ok(q.text && q.say && q.answer && q.hint, s.id + ' missing fields');
+      assert.strictEqual(q.options.length, 3, s.id + ' options');
+      assert.strictEqual(new Set(q.options).size, 3, s.id + ' dup');
+      assert.ok(q.options.includes(q.answer), s.id + ' no answer');
+    } else {
+      const p = s.make();
+      assert.strictEqual(calc(p.a, p.op, p.b), p.ans, s.id + ' wrong answer');
+      assert.ok(p.ans > 0 && p.ans <= 9999, s.id + ' range ' + p.ans);
+      assert.ok(p.mistakes.length >= 1);
+      p.mistakes.forEach(m => assert.ok(m.why && Number.isInteger(m.v), s.id + ' mistake'));
+      assert.ok(p.mistakes.some(m => m.v !== p.ans && m.v > 0), s.id + ' needs a real mistake');
+      if (s.mode === 'spot') {
+        assert.ok(p.shown > 0, s.id + ' shown');
+        assert.strictEqual(p.shown === p.ans, p.why === null, s.id + ' why matches');
+      }
+    }
   }
-  counts[s.id] = 'ok';
+  const ex = s.mode === 'run' ? s.gen() : s.make();
+  console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }
-// 範例
-for (const u of Q.UNITS) for (const s of u.stages) for (let i = 0; i < 3; i++) { const q = s.gen(); console.log(s.id, '|', q.text, q.big || '', '| 答', q.answer, '| 選項', q.options.join(' / ')); }
-console.log('全部通過', counts);
+console.log('全部通過');
