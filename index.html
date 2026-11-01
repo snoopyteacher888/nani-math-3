@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>數學三上學習樂園</title>
-  <meta name="description" content="四德學輔班 南一版三上數學複習遊戲：跑酷、60 秒挑戰、小偵探">
+  <meta name="description" content="四德學輔班 南一版三上數學複習遊戲：跑酷、2 分鐘挑戰、小偵探">
   <meta name="theme-color" content="#F8F6F0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
@@ -58,7 +58,7 @@
     </nav>
   </section>
 
-  <!-- ===== ⏱️ 60 秒挑戰 ===== -->
+  <!-- ===== ⏱️ 2 分鐘挑戰 ===== -->
   <section class="screen game" id="timed" hidden>
     <header class="hud">
       <button class="hud-btn" id="t-pause" type="button" aria-label="暫停">⏸</button>
@@ -66,7 +66,7 @@
       <div class="combo" id="t-combo" hidden></div>
       <div class="score">✔ <b id="t-count">0</b> 題</div>
     </header>
-    <div class="timer" aria-label="剩下的時間"><div class="timer-fill" id="t-fill"></div><span class="timer-sec">⏱️ <b id="t-sec">60</b> 秒</span></div>
+    <div class="timer" aria-label="剩下的時間"><div class="timer-fill" id="t-fill"></div><span class="timer-sec">⏱️ 剩下 <b id="t-sec">2 分 0 秒</b></span></div>
     <main class="calc">
       <div class="calc-top"><button class="say" type="button" id="t-say" aria-label="念題目">🔊</button><span class="again" id="t-again" hidden>🔁 再算一次</span></div>
       <div class="calc-q" id="t-q"></div>
@@ -91,13 +91,13 @@
     </header>
     <main class="calc spot-main">
       <div class="calc-top"><button class="say" type="button" id="s-say" aria-label="念題目">🔊</button><span class="who" id="s-who"></span></div>
-      <p class="spot-ask">算對了嗎？算錯了就<b>點錯的那一位數字</b>。</p>
+      <p class="spot-ask"><button class="say" type="button" data-say="同學算對了嗎？算對了，就按綠色的算對了。算錯了，就點錯的那一位數字。" aria-label="念出來">🔊</button><span>算對了嗎？算錯了就<b>點錯的那一位數字</b>。</span></p>
       <div class="calc-q paper" id="s-q"></div>
       <div class="spot-actions" id="s-actions">
         <button class="big-btn ok-btn" type="button" id="s-ok">✔ 算對了</button>
       </div>
       <div class="spot-result" id="s-result" hidden>
-        <h2 class="s-head" id="s-head"></h2>
+        <div class="say-row"><button class="say" type="button" id="s-res-say" aria-label="念出來">🔊</button><h2 class="s-head" id="s-head"></h2></div>
         <div class="ex-work" id="s-body"></div>
         <button class="big-btn" type="button" id="s-next">下一題 ▶</button>
       </div>
@@ -107,7 +107,7 @@
   <!-- ===== 選速度 ===== -->
   <div class="overlay" id="ov-speed" hidden>
     <div class="dialog">
-      <h2 id="speed-title"></h2>
+      <div class="say-row"><button class="say" type="button" data-say="選一個速度。烏龜，慢慢跑，時間比較多。兔子，一般。獵豹，挑戰，門會很快就跑過來。" aria-label="念出來">🔊</button><h2 id="speed-title"></h2></div>
       <p class="sub" id="speed-desc"></p>
       <div class="speed-list">
         <button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>時間比較多，可以拿紙筆慢慢算</small></button>
@@ -119,13 +119,13 @@
     </div>
   </div>
 
-  <!-- ===== 開始前說明（60 秒挑戰、小偵探） ===== -->
+  <!-- ===== 開始前說明（2 分鐘挑戰、小偵探） ===== -->
   <div class="overlay" id="ov-ready" hidden>
     <div class="dialog">
-      <h2 id="ready-title"></h2>
+      <div class="say-row"><button class="say" type="button" id="ready-say" aria-label="念出來">🔊</button><h2 id="ready-title"></h2></div>
       <p class="sub" id="ready-desc"></p>
       <div class="ready-tips" id="ready-tips"></div>
-      <button class="big-btn" type="button" id="ready-go">開始！</button>
+      <button class="big-btn" type="button" id="ready-go">開始！ ▶</button>
       <button class="link-btn" type="button" id="ready-back">返回</button>
     </div>
   </div>
@@ -146,7 +146,7 @@
   <!-- ===== 暫停 ===== -->
   <div class="overlay" id="ov-pause" hidden>
     <div class="dialog">
-      <h2>休息一下 ⏸</h2>
+      <div class="say-row"><button class="say" type="button" data-say="休息一下。藍色按鈕，繼續。下面的按鈕，重新開始，或是回關卡地圖。" aria-label="念出來">🔊</button><h2>休息一下 ⏸</h2></div>
       <button class="big-btn" type="button" id="pause-resume">繼續跑 ▶</button>
       <button class="big-btn alt" type="button" id="pause-restart">重新開始</button>
       <button class="big-btn alt" type="button" id="pause-quit">回關卡地圖</button>
@@ -157,7 +157,7 @@
   <div class="overlay" id="ov-end" hidden>
     <div class="dialog end">
       <div class="end-stars" id="end-stars"></div>
-      <h2 id="end-title"></h2>
+      <div class="say-row"><button class="say" type="button" id="end-say" aria-label="念出來">🔊</button><h2 id="end-title"></h2></div>
       <p class="end-score"><span id="end-score"></span> <span class="record" id="end-record" hidden>🎉 新紀錄！</span></p>
       <p class="sub" id="end-best"></p>
       <div class="end-review" id="end-review"></div>

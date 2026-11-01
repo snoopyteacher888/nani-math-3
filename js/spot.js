@@ -19,10 +19,10 @@
       desc: s.desc,
       say: '小偵探。同學的直式算對了嗎？算對了就按算對了；算錯了，就點錯的那一位數字。',
       tips: [
-        '同學算對了 → 按「<b>✔ 算對了</b>」',
-        '同學算錯了 → <b>點答案裡錯的那一位數字</b>',
+        ['同學算對了 → 按「<b>✔ 算對了</b>」', '同學算對了，就按綠色的算對了。'],
+        ['同學算錯了 → <b>點答案裡錯的那一位數字</b>', '同學算錯了，就點答案裡錯的那一位數字。'],
         '✏️ 可以先用計算紙自己算一次再比對。',
-        '⭐⭐⭐ 錯 0～1 題・⭐⭐ 錯 2～3 題'
+        ['⭐⭐⭐ 錯 0～1 題・⭐⭐ 錯 2～3 題', '錯0到1題，拿3顆星。錯2到3題，拿2顆星。']
       ],
       onStart: function () { start(s); }
     });
@@ -86,6 +86,7 @@
         (p.check ? '<p class="ex-line">驗算：' + p.check + '</p>' : '');
     }
     $('s-head').textContent = head;
+    $('s-res-say').dataset.say = head + (isRight ? '' : '。' + p.why);
     $('s-head').className = 's-head ' + (good ? 'good' : 'bad');
     $('s-body').innerHTML = body;
     $('s-result').hidden = false; $('s-actions').hidden = true;
@@ -95,7 +96,7 @@
   $('s-q').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) judge(+b.dataset.col); });
   $('s-ok').onclick = function () { judge(null); };
   $('s-next').onclick = function () { next(); };
-  $('s-say').onclick = function () { if (S && S.p) speak(S.kid + '算的' + S.p.say + '，答案寫' + S.p.shown + '。算對了嗎？'); };
+  $('s-say').onclick = function () { if (S && S.p) speak(S.kid + '算的' + S.p.say + '，答案寫' + S.p.shown + '。算對了嗎？算對了，就按算對了；算錯了，就點錯的那一位數字。'); };
   document.addEventListener('keydown', function (e) {
     if (!S || $('spot').hidden || !$('ov-pause').hidden || !$('ov-end').hidden) return;
     if (S.phase === 'done' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); next(); }
@@ -115,7 +116,8 @@
     var r = App.saveResult(s.id, stars, S.score);
     var title = stars === 3 ? '神探出動！太厲害了！' : stars === 2 ? '很棒的小偵探！' : '完成了！再當一次小偵探吧！';
     var rv = S.wrongList.length ? '<h3>📝 這次沒抓到的題目</h3><ul>' + S.wrongList.map(function (p) {
-      return '<li>' + p.a + ' ' + p.op + ' ' + p.b + '：同學寫 ' + p.shown + '，正確是 <b>' + p.ans + '</b></li>';
+      return '<li>' + p.a + ' ' + p.op + ' ' + p.b + '：同學寫 ' + p.shown + '，' +
+        (p.shown === p.ans ? '<b>其實算對了</b>' : '正確是 <b>' + p.ans + '</b>') + '</li>';
     }).join('') + '</ul>' : '';
     App.showEnd({
       stars: stars, title: title, scoreHTML: '10 題答對 <b>' + S.right + '</b> 題，得到 ' + S.score + ' 分', isRecord: r.isRecord,

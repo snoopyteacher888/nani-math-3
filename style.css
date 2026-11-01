@@ -29,6 +29,14 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 
 .say { min-width: 44px; min-height: 44px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 1.05em; flex: none; }
 .say:hover { border-color: var(--brand); }
+.say-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.say-row h2 { min-width: 0; }
+.cell { position: relative; display: flex; }
+.cell .stage-card { flex: 1; padding-left: 62px; }
+.cell > .say { position: absolute; left: 10px; top: 12px; z-index: 1; }
+.dialog .tip, .ready-tips .tip { display: flex; align-items: center; gap: 10px; text-align: left; }
+.spot-ask { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.t-msg.bad, .t-msg.tip { display: flex; align-items: center; gap: 10px; text-align: left; }
 
 /* ===== 地圖 ===== */
 .map { max-width: 1080px; margin: 0 auto; padding: clamp(18px, 4vh, 40px) 16px 48px; }
@@ -174,7 +182,7 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .who { font-weight: 700; font-size: 1.2em; }
 .calc-q { display: flex; justify-content: center; }
 
-.vg { display: inline-grid; grid-template-columns: repeat(var(--cols), 1.25em); font-size: clamp(36px, 8vw, 60px); font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.vg { display: inline-grid; grid-template-columns: repeat(var(--cols), 1.25em); font-size: clamp(30px, min(8vw, 7.5vh), 60px); font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .vg > span { display: flex; align-items: center; justify-content: center; }
 .vg-mark { height: .7em; font-size: .5em; }
 .vg-d.ul { border-bottom: 4px solid currentColor; }
@@ -194,12 +202,22 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .t-msg.bad b { color: var(--good); font-size: 1.4em; }
 .t-msg.warn { color: var(--brand); }
 .t-msg.tip { color: var(--bad); font-size: .95em; }
-#timed.show-ans .keypad { display: none; } /* 看答案的時候不用鍵盤，讓說明和「下一題」完整顯示 */
+#timed.show-ans .keypad { display: none; }
+/* 寬螢幕（平板橫放、電腦）：鍵盤放右邊，不會擋住直式和說明 */
+@media (min-width: 700px) and (min-aspect-ratio: 5/4) {
+  #timed { display: grid; grid-template-columns: 1fr minmax(260px, 32%); grid-template-rows: auto auto 1fr; }
+  #timed > .hud, #timed > .timer { grid-column: 1 / -1; }
+  #timed > .calc { grid-column: 1; grid-row: 3; }
+  #timed.show-ans > .calc { grid-column: 1 / -1; }
+  #timed > .keypad { grid-column: 2; grid-row: 3; align-content: center; max-width: none; margin: 0; border-top: 0; border-left: 2px solid var(--line); }
+  #timed > .keypad button { min-height: min(84px, 15vh); }
+} /* 看答案的時候不用鍵盤，讓說明和「下一題」完整顯示 */
 .keypad { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 2px solid var(--line); max-width: 560px; width: 100%; margin: 0 auto; }
 .keypad button { min-height: 58px; border-radius: 16px; border: 3px solid var(--line); background: var(--bg); font-size: 1.7em; font-weight: 700; box-shadow: 0 4px 0 var(--line); }
 .keypad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
 .keypad .k-ok { background: var(--math); border-color: var(--math); color: #fff; font-size: 1.2em; box-shadow: 0 4px 0 #1C4479; }
 .keypad .k-del { font-size: 1.4em; }
+.keypad .k-ok { white-space: nowrap; padding: 0 4px; }
 
 .spot-ask { margin: 0; font-size: 1.15em; text-align: center; }
 .paper { padding: 10px 26px 16px; border-radius: 16px; background: repeating-linear-gradient(#FFFDF7 0 34px, #E8E1CF 34px 36px); border: 2px solid var(--line); box-shadow: 0 6px 0 var(--muted); }
@@ -233,6 +251,5 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
   .ans { min-height: 56px; }
   .nline { width: min(100%, 420px); }
   .vg { font-size: 34px; }
-  .keypad { grid-template-columns: repeat(6, 1fr); }
   .keypad button { min-height: 46px; }
 }

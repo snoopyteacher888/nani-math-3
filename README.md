@@ -11,7 +11,7 @@
 - 每局 10 題、5 顆愛心。答錯扣愛心、看提示，這題等一下會再出現。星星：錯 0～1 題 3 顆、2～3 題 2 顆。
 - 速度：🐢 慢慢跑（時間 ×1.6）、🐇 一般、🐆 挑戰（×0.6）。
 
-**⏱️ 60 秒挑戰**（加減乘的計算）
+**⏱️ 2 分鐘挑戰**（加減乘的計算）
 - 用數字鍵盤**從個位開始**填答案，跟在紙上寫直式一樣，不能用猜的。
 - 答對加時間（加法 15 秒、減法 20 秒、乘法 10 秒），時間到就結束，比答對幾題。
 - 直式上面的紅色小格子：點一下，就能用數字鍵盤寫進位、借位的數字（最多 2 位，例如 12）；寫完點答案格子回來。
@@ -47,14 +47,14 @@
 - `js/common.js`：紀錄、念出來、音效、注音、地圖、共用對話框
 - `js/zhuyin.js`：注音字型的破音字修正
 - `js/runner.js`：🏃 跑酷
-- `js/timed.js`：⏱️ 60 秒挑戰
+- `js/timed.js`：⏱️ 2 分鐘挑戰
 - `js/spot.js`：🔍 小偵探
 - `tests/questions.test.js`：出題測試，執行 `node tests/questions.test.js`
 
 ## 新增單元
 在 `js/questions.js` 加到 `UNITS` 裡那個單元的 `stages`：
 - 跑酷：`{ mode: 'run', gen }`，`gen()` 回傳 `{ text, say, answer, options, hint, explain }`
-- 60 秒挑戰：`{ mode: 'timed', make, bonus, goals }`，`make()` 回傳 `{ a, op, b, ans, marks, mistakes, hint, say }`
+- 2 分鐘挑戰：`{ mode: 'timed', make, bonus, goals }`，`make()` 回傳 `{ a, op, b, ans, marks, mistakes, hint, say }`
 - 小偵探：`{ mode: 'spot', make: spotFrom(makeXxx) }`
 
 ## 接到學習樂園首頁

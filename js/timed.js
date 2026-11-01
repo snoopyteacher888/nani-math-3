@@ -1,8 +1,8 @@
 /*
- * ⏱️ 60 秒挑戰（計算題）
+ * ⏱️ 2 分鐘挑戰（計算題）
  *
  * 用數字鍵盤從個位開始往前填答案（跟在紙上寫直式一樣）。
- * 60 秒倒數，答對加時間（四位數加減也來得及算），時間到就結束，比答對幾題。
+ * 2 分鐘倒數，答對再加時間，時間到就結束，比答對幾題。
  * 直式上面的紅色小格子：點一下，就能用數字鍵盤寫進位、借位的數字（最多 2 位，例如 10、12）。
  * 題目的黑色數字點一下會畫上紅色斜線（借位時把數字畫掉），就像在紙上算一樣。
  * 答錯會暫停計時、顯示正確答案和提示，這題等一下會再出現。
@@ -11,19 +11,20 @@
   'use strict';
 
   var App = window.App, $ = App.$, esc = App.esc, speak = App.speak, SFX = App.SFX, len = window.MathQ.len;
-  var START = 60;
+  var START = 120; // 2 分鐘（老師說 60 秒太少）
   var T = null; // 這一局的狀態
 
   function open(s) {
     App.ready({
       title: '⏱️ 關卡 ' + s.id + '　' + s.name,
       desc: s.desc,
-      say: s.name + '，60 秒挑戰。答對會加時間喔！',
+      say: s.name + '，2 分鐘挑戰。',
       tips: [
-        '從<b>個位</b>開始填答案，填完按 ✔。',
-        '答對加 <b>' + s.bonus + ' 秒</b>！時間到就結束。',
-        '直式上面的<b>小格子</b>可以點，寫進位的數字。',
-        '⭐ 答對 ' + s.goals[0] + ' 題・⭐⭐ ' + s.goals[1] + ' 題・⭐⭐⭐ ' + s.goals[2] + ' 題'
+        ['有 <b>2 分鐘</b>，從<b>個位</b>開始填答案，填完按 ✔ 確定。', '有2分鐘。從個位開始填答案，填完按確定。'],
+        ['答對再加 <b>' + s.bonus + ' 秒</b>！時間到就結束。', '答對再加' + s.bonus + '秒。時間到就結束。'],
+        ['直式上面的<b>紅色小格子</b>點一下，可以寫進位的數字；黑色的數字點一下可以畫掉。', '直式上面的紅色小格子，點一下，可以寫進位的數字。黑色的數字，點一下，可以畫掉。'],
+        ['⭐ 答對 ' + s.goals[0] + ' 題・⭐⭐ ' + s.goals[1] + ' 題・⭐⭐⭐ ' + s.goals[2] + ' 題',
+         '答對' + s.goals[0] + '題，拿1顆星。答對' + s.goals[1] + '題，拿2顆星。答對' + s.goals[2] + '題，拿3顆星。']
       ],
       onStart: function () { start(s); }
     });
@@ -78,8 +79,8 @@
   }
   function hud() {
     $('t-count').textContent = T.count;
-    var sec = Math.max(0, Math.ceil(T.left));
-    $('t-sec').textContent = sec;
+    var sec = Math.max(0, Math.ceil(T.left)), m = Math.floor(sec / 60), r = sec % 60;
+    $('t-sec').textContent = (m ? m + ' 分 ' : '') + r + ' 秒';
     $('t-fill').style.width = Math.min(100, T.left / START * 100) + '%';
     $('t-fill').classList.toggle('low', T.left <= 10);
     $('t-combo').hidden = T.combo < 2; $('t-combo').textContent = '🔥' + T.combo;
@@ -126,7 +127,7 @@
   $('t-say').onclick = function () { if (T && T.p) speak(T.p.say + '，等於多少？'); };
 
   function tipMk() { // 告訴孩子現在鍵盤在寫哪裡
-    if (T.mk !== null) { $('t-msg').className = 't-msg tip'; $('t-msg').textContent = '✏️ 在紅色小格子寫數字；寫完點下面的答案格子回來。'; }
+    if (T.mk !== null) { $('t-msg').className = 't-msg tip'; $('t-msg').innerHTML = App.sayBtn('在紅色小格子寫數字；寫完，點下面的答案格子回來。') + '<span>✏️ 在紅色小格子寫數字；寫完點下面的答案格子回來。</span>'; }
     else if ($('t-msg').classList.contains('tip')) { $('t-msg').className = 't-msg'; $('t-msg').textContent = ''; }
   }
 
@@ -166,7 +167,8 @@
       T.wrongList.push(p); T.retry.push({ p: p, due: T.n + 2 });
       SFX.bad();
       $('t-msg').className = 't-msg bad';
-      $('t-msg').innerHTML = '正確答案是 <b>' + p.ans + '</b>（紅色的位算錯了）<br>' + esc(p.hint) + (p.check ? '<br>驗算：' + p.check : '');
+      $('t-msg').innerHTML = App.sayBtn('正確答案是' + p.ans + '。紅色的位算錯了。' + p.hint) +
+        '<div>正確答案是 <b>' + p.ans + '</b>（紅色的位算錯了）<br>' + esc(p.hint) + (p.check ? '<br>驗算：' + p.check : '') + '</div>';
       $('t-next').hidden = false;
       $('timed').classList.add('show-ans');
       render();

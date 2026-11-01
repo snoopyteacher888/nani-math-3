@@ -15,7 +15,7 @@
   store.stages = store.stages || {};
   if (store.sound === undefined) store.sound = true;
   if (store.zhuyin === undefined) store.zhuyin = true; // 三年級：預設加注音
-  if ((store.v || 1) < 2) { // 第 2、3 單元從跑酷改成 60 秒挑戰／小偵探，舊的分數意思不一樣了，清掉
+  if ((store.v || 1) < 2) { // 第 2、3 單元從跑酷改成計時挑戰／小偵探，舊的分數意思不一樣了，清掉
     ['2-1', '2-2', '3-1', '3-2'].forEach(function (id) { delete store.stages[id]; });
     store.v = 2;
   }
@@ -34,6 +34,9 @@
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function starsHTML(n) { var h = ''; for (var i = 0; i < 3; i++) h += '<span' + (i < n ? '' : ' class="off"') + '>⭐</span>'; return h; }
+  /* 🔊 按鈕（班上有不識字的學生，看得到字的地方都要能念出來） */
+  function plain(html) { return String(html).replace(/<[^>]+>/g, '').replace(/[⭐✔✏️💡📝🔍⏱️🏃]/g, '').replace(/\s+/g, ' ').trim(); }
+  function sayBtn(text) { return '<button class="say" type="button" data-say="' + esc(plain(text)) + '" aria-label="念出來">🔊</button>'; }
   function show(id) { $(id).hidden = false; }
   function hide(id) { $(id).hidden = true; }
 
@@ -99,16 +102,17 @@
         var rec = store.stages[s.id] || {}, st = rec.stars || 0;
         total += st;
         var best = !rec.plays && !rec.best ? '還沒玩過' : s.mode === 'timed' ? '最多答對 ' + (rec.best || 0) + ' 題' : '最高 ' + (rec.best || 0) + ' 分';
-        html += '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + MODE_IC[s.mode] + '">' +
+        html += '<div class="cell">' + sayBtn('關卡 ' + s.id + '，' + s.name + '，' + modeName(s.mode) + '。' + s.desc) +
+          '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + MODE_IC[s.mode] + '">' +
           '<span class="sid">關卡 ' + s.id + '・' + modeName(s.mode) + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
-          '<span class="srow"><span class="stars">' + starsHTML(st) + '</span><span class="best">' + best + '</span></span></button>';
+          '<span class="srow"><span class="stars">' + starsHTML(st) + '</span><span class="best">' + best + '</span></span></button></div>';
       });
       html += '</div></section>';
     });
     $('units').innerHTML = html + (soon ? '<div class="soon-grid">' + soon + '</div>' : '');
     $('total-stars').textContent = total;
   }
-  function modeName(m) { return { run: '跑酷', timed: '60 秒挑戰', spot: '小偵探' }[m]; }
+  function modeName(m) { return { run: '跑酷', timed: '2 分鐘挑戰', spot: '小偵探' }[m]; }
   $('units').addEventListener('click', function (e) {
     var b = e.target.closest('[data-stage]');
     if (b) { var s = STAGES[b.dataset.stage]; App.modes[s.mode].open(s); }
@@ -159,10 +163,14 @@
 
   /* ---------- 通用對話框 ---------- */
   var readyCb = null;
-  function ready(o) { // { title, desc, tips:[], onStart }
+  function ready(o) { // { title, desc, tips:[html 或 [html, 念的話]], onStart }
     $('ready-title').textContent = o.title;
     $('ready-desc').textContent = o.desc || '';
-    $('ready-tips').innerHTML = (o.tips || []).map(function (t) { return '<p class="tip">' + t + '</p>'; }).join('');
+    $('ready-say').dataset.say = plain(o.title) + '。' + (o.desc || '');
+    $('ready-tips').innerHTML = (o.tips || []).map(function (t) {
+      var html = typeof t === 'string' ? t : t[0], say = typeof t === 'string' ? t : t[1];
+      return '<p class="tip">' + sayBtn(say) + '<span>' + html + '</span></p>';
+    }).join('');
     readyCb = o.onStart; show('ov-ready');
     speak(o.say || o.title);
   }
@@ -183,6 +191,7 @@
     $('end-record').hidden = !o.isRecord;
     $('end-best').textContent = o.bestText || '';
     $('end-review').innerHTML = o.reviewHTML || '';
+    $('end-say').dataset.say = plain(o.say || o.title);
     againCb = o.again; show('ov-end');
     if (o.stars > 0) SFX.win();
     speak(o.say || o.title);
@@ -208,7 +217,7 @@
   }
 
   window.App = {
-    vgrid: vgrid,
+    vgrid: vgrid, sayBtn: sayBtn, plain: plain,
     UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
     $: $, esc: esc, starsHTML: starsHTML, show: show, hide: hide, speak: speak, SFX: SFX,
     showScreen: showScreen, toMap: toMap, ready: ready, pause: pause, showEnd: showEnd, renderMap: renderMap,

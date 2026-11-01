@@ -179,7 +179,7 @@
   }
 
   /* ========== 第 2、3 單元：計算題 ==========
-   * 計算題不用跑酷，改用「⏱️ 60 秒挑戰」（自己填答案）和「🔍 小偵探」（找同學算錯的地方）。
+   * 計算題不用跑酷，改用「⏱️ 2 分鐘挑戰」（自己填答案）和「🔍 小偵探」（找同學算錯的地方）。
    * 每個 make 函式回傳一題：
    *   a, op, b, ans ：算式和答案
    *   marks         ：直式上方的小字（進位）
@@ -285,7 +285,7 @@
   function makeAddSub() { return Math.random() < .5 ? makeAdd() : makeSub(); }
 
   /* ========== 關卡清單 ==========
-   * mode：run 跑酷、timed 60 秒挑戰、spot 小偵探
+   * mode：run 跑酷、timed 2 分鐘挑戰、spot 小偵探
    * timed：bonus＝答對加幾秒；goals＝拿 1、2、3 顆星要答對幾題
    */
   var UNITS = [
@@ -294,12 +294,12 @@
       { id: '1-2', mode: 'run', name: '數線大挑戰', desc: '1 小格是多少？箭頭指在哪裡？', gen: genNumberLine, time: 12 }
     ] },
     { id: 2, name: '四位數的加減', ic: '➕', stages: [
-      { id: '2-1', mode: 'timed', name: '加法進位', desc: '滿 10 要進 1', make: makeAdd, bonus: 15, goals: [2, 4, 7] },
-      { id: '2-2', mode: 'timed', name: '減法退位', desc: '不夠減要借；遇到 0 再往前借', make: makeSub, bonus: 20, goals: [2, 4, 6] },
+      { id: '2-1', mode: 'timed', name: '加法進位', desc: '滿 10 要進 1', make: makeAdd, bonus: 15, goals: [3, 6, 10] },
+      { id: '2-2', mode: 'timed', name: '減法退位', desc: '不夠減要借；遇到 0 再往前借', make: makeSub, bonus: 20, goals: [3, 5, 8] },
       { id: '2-3', mode: 'spot', name: '找出加減的錯', desc: '同學的直式算對了嗎？錯在哪一位？', make: spotFrom(makeAddSub) }
     ] },
     { id: 3, name: '乘法', ic: '✖️', stages: [
-      { id: '3-1', mode: 'timed', name: '乘法進位', desc: '乘完要加上進位', make: makeMul, bonus: 10, goals: [3, 6, 10] },
+      { id: '3-1', mode: 'timed', name: '乘法進位', desc: '乘完要加上進位', make: makeMul, bonus: 10, goals: [4, 8, 14] },
       { id: '3-2', mode: 'spot', name: '找出乘法的錯', desc: '同學忘記進位了嗎？', make: spotFrom(makeMul) }
     ] },
     { id: 4, name: '幾毫米', ic: '📏', stages: [] },
