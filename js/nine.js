@@ -2,7 +2,7 @@
  * 🦊 九九乘法大冒險
  *   選一座島（2～9 的乘法、🌈 綜合）→ 地圖 9 格：答對往前走一格（第 5 格 🍎 補一顆愛心）
  *   → 第 10 格 👾 大魔王：5 格血，答對打一下，每題 10 秒，時間到或答錯會被打。
- *   用數字鍵盤自己打答案（背九九，不是猜）。答錯念出口訣，同一題要再答對才能走。
+ *   用數字鍵盤自己打答案（背九九，不是猜）。答錯只寫數字（不寫國字、不放喇叭），會念出口訣，同一題要再答對才能走。
  *   愛心 3 顆；破關剩幾顆愛心就拿幾顆星，還有 🏅。
  */
 (function () {
@@ -36,7 +36,7 @@
     $('n-title').textContent = '🦊 九九乘法大冒險';
     $('n-hearts').innerHTML = ''; $('n-left').textContent = '選一座島';
     $('nine').className = 'screen game nine-pick';
-    var h = '<p class="n-pick-title">' + App.sayBtn('選一座島。2的乘法，到9的乘法，或是綜合挑戰。') + '<span>選一座島開始冒險！</span></p><div class="islands">';
+    var h = '<p class="n-pick-title">選一座島開始冒險！</p><div class="islands">';
     [2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(function (t) {
       var rec = App.store.stages['99-' + t] || {}, st = rec.stars || 0;
       h += '<button class="island' + (t ? '' : ' mix') + '" type="button" data-t="' + t + '"><span class="i-ic">' + (t ? '🏝️' : '🌈') + '</span><b>' + (t ? t + ' 的乘法' : '綜合挑戰') + '</b>' +
@@ -88,7 +88,6 @@
     $('n-left').textContent = N.boss ? '打倒大魔王！' : '第 ' + (N.pos + 1) + ' 格';
     $('n-score').textContent = N.score;
     $('n-q').innerHTML = N.q.a + ' × ' + N.q.b + ' ＝ <span class="n-ans' + (N.phase === 'play' ? ' cur' : '') + '">' + (N.val || '') + '</span>';
-    $('n-say').dataset.say = N.q.a + '乘以' + N.q.b + '，等於多少？';
   }
   function msg(html, cls) { $('n-msg').className = 'n-msg ' + (cls || ''); $('n-msg').innerHTML = html; }
 
@@ -136,7 +135,7 @@
     N.combo = 0; N.wrong++; N.hearts--; N.wrongs.push(q.a + ' × ' + q.b + ' ＝ ' + q.a * q.b);
     SFX.bad();
     var c = chant(q.a, q.b);
-    msg('❌ ' + why + '！' + App.sayBtn(c) + '<span><b>' + q.a + ' × ' + q.b + ' ＝ ' + q.a * q.b + '</b>（' + c + '）</span>', 'bad');
+    msg('❌ ' + why + '！<b>' + q.a + ' × ' + q.b + ' ＝ ' + q.a * q.b + '</b>', 'bad'); // 只寫數字（老師：學生看得懂數字，國字反而是負擔）
     speak(c);
     render();
     if (N.hearts <= 0) { setTimeout(function () { finish(false); }, 1800); return; }
@@ -171,7 +170,7 @@
     var name = t ? t + ' 的乘法島' : '綜合挑戰';
     var title = win ? '🏅 打倒大魔王！' + name + '破關了！' : '愛心用完了，背一背口訣再來一次！';
     var rv = N.wrongs.length ? '<h3>📝 要再背一背</h3><ul>' + N.wrongs.filter(function (w, i, a) { return a.indexOf(w) === i; }).map(function (w) {
-      var m = /(\d+) × (\d+)/.exec(w); return '<li>' + esc(w) + '（' + chant(+m[1], +m[2]) + '）</li>'; }).join('') + '</ul>' : '';
+      return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>' : '';
     App.showEnd({
       stars: stars, title: title, scoreHTML: '得到 <b>' + N.score + '</b> 分', isRecord: win && r.isRecord,
       bestText: r.rec.best ? '這座島最高紀錄：' + r.rec.best + ' 分' : '', reviewHTML: rv,

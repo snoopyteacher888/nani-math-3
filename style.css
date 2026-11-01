@@ -435,3 +435,6 @@ html.zhuyin .n-q, html.zhuyin .tile { font-family: var(--font); }
 .tut-start .go-btn, #tut-resume { min-height: 68px; font-size: 2em; line-height: 1; }
 .tut-back { align-self: center; min-width: 64px; min-height: 52px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); font-size: 1.6em; line-height: 1; color: var(--ink-soft); }
 @media (max-width: 520px) { .tut-btn { min-width: 68px; min-height: 52px; } }
+
+/* 九九：數字不加注音 */
+html.zhuyin .n-msg b, html.zhuyin .n-q, html.zhuyin .island b, html.zhuyin #n-left { font-family: var(--font); }
