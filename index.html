@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#F8F6F0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
+  <link rel="stylesheet" href="fonts/zihi/zihi.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,6 +21,7 @@
       <div class="total">我的星星 <b id="total-stars">0</b> 顆 ⭐</div>
     </header>
     <div class="settings">
+      <label class="toggle"><input type="checkbox" id="opt-zhuyin"> ㄅ 注音</label>
       <label class="toggle"><input type="checkbox" id="opt-autosay"> 🔊 自動念題目</label>
       <label class="toggle"><input type="checkbox" id="opt-sound"> 🎵 音效</label>
     </div>
@@ -165,6 +167,7 @@
   </div>
 
   <script src="js/questions.js"></script>
+  <script src="js/zhuyin.js"></script>
   <script src="js/common.js"></script>
   <script src="js/runner.js"></script>
   <script src="js/timed.js"></script>

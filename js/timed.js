@@ -3,7 +3,8 @@
  *
  * 用數字鍵盤從個位開始往前填答案（跟在紙上寫直式一樣）。
  * 60 秒倒數，答對加時間（四位數加減也來得及算），時間到就結束，比答對幾題。
- * 直式上面的小格子可以點，用來寫進位的數字（點一下 1、再點變 2……）。
+ * 直式上面的紅色小格子：點一下，就能用數字鍵盤寫進位、借位的數字（最多 2 位，例如 10、12）。
+ * 題目的黑色數字點一下會畫上紅色斜線（借位時把數字畫掉），就像在紙上算一樣。
  * 答錯會暫停計時、顯示正確答案和提示，這題等一下會再出現。
  */
 (function () {
@@ -30,6 +31,7 @@
   App.modes.timed = { open: open };
 
   function start(s) {
+    $('timed').classList.remove('show-ans');
     T = { stage: s, left: START, count: 0, combo: 0, n: 0, retry: [], wrongList: [], phase: 'play', p: null, last: 0, lastTick: 0 };
     App.showScreen('timed');
     $('t-title').textContent = s.id + ' ' + s.name;
@@ -46,7 +48,7 @@
     var p = T.p;
     T.C = p.op === '－' ? len(p.a) : Math.max(len(p.a), len(p.b)) + 1;
     T.digits = []; for (var i = 0; i < T.C; i++) T.digits.push('');
-    T.marks = {}; T.cur = 0; T.phase = 'play';
+    T.marks = {}; T.cur = 0; T.mk = null; T.struck = {}; T.phase = 'play';
     $('t-msg').className = 't-msg'; $('t-msg').innerHTML = '';
     $('t-next').hidden = true;
     $('t-again').hidden = !p.again;
@@ -58,9 +60,17 @@
     var p = T.p;
     $('t-q').innerHTML = App.vgrid({
       a: p.a, op: p.op, b: p.b, C: T.C,
-      mark: function (i) { return i === 0 ? '' : '<button type="button" class="mk" data-mk="' + i + '" aria-label="' + ['個', '十', '百', '千', '萬'][i] + '位上面的小格子">' + (T.marks[i] || '') + '</button>'; },
+      mark: function (i) {
+        if (i === 0 && p.op !== '－') return ''; // 個位上面不會有進位；減法要留給借位
+        return '<button type="button" class="mk' + (T.phase === 'play' && T.mk === i ? ' cur' : '') + '" data-mk="' + i + '" aria-label="' +
+          ['個', '十', '百', '千', '萬'][i] + '位上面的小格子">' + (T.marks[i] || '') + '</button>';
+      },
+      digit: function (row, i, ch) {
+        var k = row + '-' + i;
+        return '<button type="button" class="dg' + (T.struck[k] ? ' struck' : '') + '" data-st="' + k + '" aria-label="畫掉">' + ch + '</button>';
+      },
       ans: function (i) {
-        var cls = 'box' + (T.phase === 'play' && i === T.cur ? ' cur' : '') + (T.res && T.res[i] ? ' ' + T.res[i] : '');
+        var cls = 'box' + (T.phase === 'play' && T.mk === null && i === T.cur ? ' cur' : '') + (T.res && T.res[i] ? ' ' + T.res[i] : '');
         return '<button type="button" class="' + cls + '" data-box="' + i + '">' + T.digits[i] + '</button>';
       }
     });
@@ -79,6 +89,11 @@
   function press(k) {
     if (!T || T.phase !== 'play') return;
     if (k === 'ok') return submit();
+    if (T.mk !== null) { // 正在寫上面的小格子
+      var m = T.marks[T.mk] || '';
+      T.marks[T.mk] = k === 'del' ? m.slice(0, -1) : (m.length >= 2 ? k : m + k);
+      SFX.key(); render(); return;
+    }
     if (k === 'del') {
       if (T.digits[T.cur] === '' && T.cur > 0) T.cur--;
       T.digits[T.cur] = '';
@@ -92,9 +107,11 @@
   $('t-q').addEventListener('click', function (e) {
     if (!T || T.phase !== 'play') return;
     var b = e.target.closest('[data-box]');
-    if (b) { T.cur = +b.dataset.box; render(); return; }
+    if (b) { T.mk = null; T.cur = +b.dataset.box; tipMk(); render(); return; }
     var m = e.target.closest('[data-mk]');
-    if (m) { var i = +m.dataset.mk, v = +(T.marks[i] || 0); T.marks[i] = v >= 9 ? '' : String(v + 1); SFX.key(); render(); }
+    if (m) { var i = +m.dataset.mk; T.mk = T.mk === i ? null : i; SFX.key(); tipMk(); render(); return; }
+    var d = e.target.closest('[data-st]');
+    if (d) { var k = d.dataset.st; T.struck[k] = !T.struck[k]; SFX.key(); render(); }
   });
   document.addEventListener('keydown', function (e) {
     if (!T || $('timed').hidden || !$('ov-pause').hidden || !$('ov-end').hidden) return;
@@ -108,6 +125,11 @@
   });
   $('t-say').onclick = function () { if (T && T.p) speak(T.p.say + '，等於多少？'); };
 
+  function tipMk() { // 告訴孩子現在鍵盤在寫哪裡
+    if (T.mk !== null) { $('t-msg').className = 't-msg tip'; $('t-msg').textContent = '✏️ 在紅色小格子寫數字；寫完點下面的答案格子回來。'; }
+    else if ($('t-msg').classList.contains('tip')) { $('t-msg').className = 't-msg'; $('t-msg').textContent = ''; }
+  }
+
   function value() { // 中間有空格就不算
     var s = '', seen = false;
     for (var i = T.C - 1; i >= 0; i--) {
@@ -118,6 +140,7 @@
   }
 
   function submit() {
+    T.mk = null;
     var v = value(), p = T.p;
     if (v === null) {
       $('t-msg').className = 't-msg warn';
@@ -145,11 +168,12 @@
       $('t-msg').className = 't-msg bad';
       $('t-msg').innerHTML = '正確答案是 <b>' + p.ans + '</b>（紅色的位算錯了）<br>' + esc(p.hint) + (p.check ? '<br>驗算：' + p.check : '');
       $('t-next').hidden = false;
+      $('timed').classList.add('show-ans');
       render();
       speak('正確答案是' + p.ans + '。' + p.hint);
     }
   }
-  $('t-next').onclick = function () { T.res = null; T.last = performance.now(); next(); };
+  $('t-next').onclick = function () { $('timed').classList.remove('show-ans'); T.res = null; T.last = performance.now(); next(); };
 
   /* ---------- 計時 ---------- */
   function loop(now) {

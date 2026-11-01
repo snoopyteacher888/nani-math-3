@@ -15,7 +15,8 @@
   var HEARTS = 5;
   var SPEEDS = { slow: { name: '🐢 慢慢跑', f: 1.6 }, normal: { name: '🐇 一般', f: 1 }, fast: { name: '🐆 挑戰', f: 0.6 } };
   var LANE_COLORS = ['#E35D4F', '#E99A1E', '#3C8DD9'];
-  var FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+  var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+  function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
 
   /* ---------- 選速度 ---------- */
   var pendingStage = null;
@@ -337,7 +338,7 @@
     ctx.globalAlpha = 1;
     G.floats.forEach(function (f) {
       ctx.globalAlpha = Math.max(0, 1 - f.t / 1.1);
-      ctx.font = '700 28px ' + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.font = '700 28px ' + FONTF(); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.strokeText(f.text, f.x, f.y);
       ctx.fillStyle = '#2D8A57'; ctx.fillText(f.text, f.x, f.y);
     });
@@ -377,13 +378,13 @@
       ctx.fillStyle = 'rgba(255,255,255,.94)'; roundRect(x + 6, y + pad + 6, gw - 12, h - 12, 10); ctx.fill();
       // 文字
       var text = q.options[i], fs = Math.min(h * .55, 40);
-      ctx.font = '700 ' + fs + 'px ' + FONT;
-      while (ctx.measureText(text).width > gw - 24 && fs > 12) { fs -= 2; ctx.font = '700 ' + fs + 'px ' + FONT; }
+      ctx.font = '700 ' + fs + 'px ' + FONTF();
+      while (ctx.measureText(text).width > gw - 24 && fs > 12) { fs -= 2; ctx.font = '700 ' + fs + 'px ' + FONTF(); }
       ctx.fillStyle = state === 'right' ? '#2D8A57' : state === 'wrong' ? '#D9483B' : '#2B2A28';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(text, x + gw / 2, y + L.h / 2 + 1);
-      if (state === 'wrong') { ctx.font = '700 ' + Math.min(h * .5, 34) + 'px ' + FONT; ctx.fillText('✖', x + gw - 18, y + pad + 18); }
-      if (state === 'right') { ctx.font = '700 ' + Math.min(h * .5, 34) + 'px ' + FONT; ctx.fillText('✔', x + gw - 18, y + pad + 18); }
+      if (state === 'wrong') { ctx.font = '700 ' + Math.min(h * .5, 34) + 'px ' + FONTF(); ctx.fillText('✖', x + gw - 18, y + pad + 18); }
+      if (state === 'right') { ctx.font = '700 ' + Math.min(h * .5, 34) + 'px ' + FONTF(); ctx.fillText('✔', x + gw - 18, y + pad + 18); }
       ctx.globalAlpha = 1;
     }
   }

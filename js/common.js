@@ -14,6 +14,7 @@
   var store = (function () { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })();
   store.stages = store.stages || {};
   if (store.sound === undefined) store.sound = true;
+  if (store.zhuyin === undefined) store.zhuyin = true; // 三年級：預設加注音
   if ((store.v || 1) < 2) { // 第 2、3 單元從跑酷改成 60 秒挑戰／小偵探，舊的分數意思不一樣了，清掉
     ['2-1', '2-2', '3-1', '3-2'].forEach(function (id) { delete store.stages[id]; });
     store.v = 2;
@@ -112,6 +113,34 @@
     var b = e.target.closest('[data-stage]');
     if (b) { var s = STAGES[b.dataset.stage]; App.modes[s.mode].open(s); }
   });
+  /* ---------- 注音：全站改用注音字型，新出現的文字自動標上正確的破音字讀音 ---------- */
+  var zyObserver = null;
+  function walk(node) {
+    if (node.nodeType === 3) {
+      var t = node.nodeValue, m = window.Zhuyin.mark(t);
+      if (m !== t) node.nodeValue = m;
+      return;
+    }
+    if (node.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(node.nodeName)) return;
+    for (var c = node.firstChild; c; c = c.nextSibling) walk(c);
+  }
+  function applyZhuyin() {
+    var on = !!store.zhuyin;
+    document.documentElement.classList.toggle('zhuyin', on);
+    if (zyObserver) { zyObserver.disconnect(); zyObserver = null; }
+    if (!on || !window.Zhuyin || !window.MutationObserver) return;
+    walk(document.body);
+    zyObserver = new MutationObserver(function (list) {
+      list.forEach(function (m) {
+        if (m.type === 'characterData') walk(m.target);
+        else Array.prototype.forEach.call(m.addedNodes, walk);
+      });
+    });
+    zyObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  $('opt-zhuyin').checked = !!store.zhuyin;
+  $('opt-zhuyin').onchange = function () { store.zhuyin = this.checked; save(); applyZhuyin(); };
+
   $('opt-autosay').checked = !!store.autoSay;
   $('opt-sound').checked = !!store.sound;
   $('opt-autosay').onchange = function () { store.autoSay = this.checked; save(); };
@@ -162,14 +191,18 @@
   $('end-map').onclick = function () { hide('ov-end'); toMap(); };
 
   /* ---------- 直式（可以點的格子） ----------
-   * o = { a, op, b, C(答案最多幾位), mark(i) → 上方小格 HTML, ans(i) → 答案格 HTML }；i 是位數（0＝個位）
+   * o = { a, op, b, C(答案最多幾位), mark(i) → 上方小格 HTML, ans(i) → 答案格 HTML,
+   *       digit(row, i, ch) → 題目數字的 HTML（可省略；row 0＝上面的數、1＝下面的數） }；i 是位數（0＝個位）
    */
   function vgrid(o) {
     var cols = o.C + 1, h = '', sa = String(o.a), sb = String(o.b);
-    function digit(s, i) { return i < s.length ? s[s.length - 1 - i] : ''; }
+    function digit(s, i, row) {
+      var ch = i < s.length ? s[s.length - 1 - i] : '';
+      return ch && o.digit ? o.digit(row, i, ch) : ch;
+    }
     for (var c = 0; c < cols; c++) h += '<span class="vg-mark">' + (c && o.mark ? o.mark(cols - 1 - c) : '') + '</span>';
-    for (c = 0; c < cols; c++) h += '<span class="vg-d">' + (c ? digit(sa, cols - 1 - c) : '') + '</span>';
-    for (c = 0; c < cols; c++) h += '<span class="vg-d ul">' + (c ? digit(sb, cols - 1 - c) : o.op) + '</span>';
+    for (c = 0; c < cols; c++) h += '<span class="vg-d">' + (c ? digit(sa, cols - 1 - c, 0) : '') + '</span>';
+    for (c = 0; c < cols; c++) h += '<span class="vg-d ul">' + (c ? digit(sb, cols - 1 - c, 1) : o.op) + '</span>';
     for (c = 0; c < cols; c++) h += '<span class="vg-a">' + (c ? o.ans(cols - 1 - c) : '') + '</span>';
     return '<div class="vg" style="--cols:' + cols + '">' + h + '</div>';
   }
@@ -182,4 +215,5 @@
     modes: {}
   };
   renderMap();
+  applyZhuyin();
 })();

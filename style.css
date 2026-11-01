@@ -12,6 +12,21 @@ body { font-size: clamp(16px, 1.3vw, 19px); line-height: 1.5; -webkit-text-size-
 button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; cursor: pointer; }
 [hidden] { display: none !important; }
 
+/* 注音字型（字咍楷體注音版，跟國語網站一樣）：開啟注音時全站使用；直式、鍵盤、數線的數字維持原本字型才對得齊 */
+html.zhuyin body, html.zhuyin button, html.zhuyin input {
+  font-family: 'Bpmf Zihi Kai Std', "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+/* 注音比較小，開注音時字要放大才看得清楚 */
+html.zhuyin body { font-size: clamp(19px, 1.7vw, 23px); line-height: 1.7; }
+html.zhuyin .stage-card .sid, html.zhuyin .stage-card .sdesc, html.zhuyin .best, html.zhuyin .hud-mid .left,
+html.zhuyin .dialog .sub, html.zhuyin .dialog .tip, html.zhuyin .speed small, html.zhuyin .soon-card .tag { font-size: .9em; }
+html.zhuyin .dialog h2 { font-size: 1.5em; }
+html.zhuyin .t-msg.tip { font-size: 1em; }
+html.zhuyin .vg, html.zhuyin .vg button, html.zhuyin .vert, html.zhuyin .keypad button, html.zhuyin .nline, html.zhuyin .place,
+html.zhuyin .timer-sec b, html.zhuyin .score b {
+  font-family: var(--font);
+}
+
 .say { min-width: 44px; min-height: 44px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 1.05em; flex: none; }
 .say:hover { border-color: var(--brand); }
 
@@ -153,6 +168,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .timer-sec { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05em; }
 .timer-sec b { font-size: 1.2em; margin: 0 4px; }
 .calc { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 16px; }
+.calc > * { flex-shrink: 0; } /* 不要被擠扁，字才不會跑出框外被按鈕蓋住 */
 .calc-top { align-self: stretch; display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .again { font-weight: 700; color: var(--brand); }
 .who { font-weight: 700; font-size: 1.2em; }
@@ -163,6 +179,9 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .vg-mark { height: .7em; font-size: .5em; }
 .vg-d.ul { border-bottom: 4px solid currentColor; }
 .vg-a { padding-top: 6px; }
+.vg .mk.cur { border-style: solid; border-color: var(--bad); box-shadow: 0 0 0 4px rgba(217,72,59,.2); background: #fff; }
+.vg .dg { position: relative; padding: 0; border: 0; background: none; font: inherit; color: inherit; line-height: inherit; cursor: pointer; }
+.vg .dg.struck::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; border-top: 4px solid var(--bad); transform: rotate(-55deg); border-radius: 2px; }
 .vg .mk { width: 1.5em; height: 1.4em; padding: 0; border: 2px dashed #E8A9A2; border-radius: 8px; background: #FFF7F6; color: var(--bad); font-size: 1em; font-weight: 700; line-height: 1; }
 .vg .box { width: 1.1em; height: 1.3em; padding: 0; border: 3px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 1em; font-weight: 700; color: var(--math); line-height: 1; }
 .vg .box.cur { border-color: var(--math); box-shadow: 0 0 0 4px var(--math-soft); animation: blink 1s infinite; }
@@ -174,6 +193,8 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .t-msg.bad { color: var(--ink); background: #FFF4E6; border-radius: 14px; padding: 8px 14px; font-weight: 400; }
 .t-msg.bad b { color: var(--good); font-size: 1.4em; }
 .t-msg.warn { color: var(--brand); }
+.t-msg.tip { color: var(--bad); font-size: .95em; }
+#timed.show-ans .keypad { display: none; } /* 看答案的時候不用鍵盤，讓說明和「下一題」完整顯示 */
 .keypad { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 2px solid var(--line); max-width: 560px; width: 100%; margin: 0 auto; }
 .keypad button { min-height: 58px; border-radius: 16px; border: 3px solid var(--line); background: var(--bg); font-size: 1.7em; font-weight: 700; box-shadow: 0 4px 0 var(--line); }
 .keypad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
