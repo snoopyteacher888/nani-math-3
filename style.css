@@ -356,10 +356,11 @@ line.hit.wrong { stroke: rgba(217, 72, 59, .4); }
 .bins { display: grid; gap: 10px; }
 .bins-2 { grid-template-columns: 1fr 1fr; }
 .bins-3 { grid-template-columns: 1fr 1fr 1fr; }
-.bin { min-height: 104px; border-radius: 0 0 26px 26px; border: 4px solid #B5793D; border-top-width: 8px; background: #F7E3C3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; font-size: 1.15em; }
-.bin-ic { font-size: 1.6em; line-height: 1; }
-.bin.right { background: var(--good); border-color: #1E6640; color: #fff; }
-.bin.wrong { background: var(--bad); border-color: #9E2F25; color: #fff; }
+.bin { min-height: 96px; border-radius: 18px; border: 3px dashed var(--math); background: #EEF3FA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; font-size: 1.15em; }
+.bin-ic { line-height: 0; }
+.bin.right { background: var(--good); border: 3px solid #1E6640; color: #fff; }
+.bin.wrong { background: var(--bad); border: 3px solid #9E2F25; color: #fff; }
+.bin.right svg path, .bin.wrong svg path { stroke: #fff; }
 /* 塗色 */
 .part { cursor: pointer; }
 .part:hover { opacity: .85; }

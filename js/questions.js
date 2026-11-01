@@ -435,9 +435,16 @@
     return { kind: kind, deg: deg, svg: svgOpen(260, 260, '一個角') + angleSVG(130, 130, deg, rot, 105, 95, '') + '</svg>' };
   }
   var ANGLE_BINS = ['比直角小', '直角', '比直角大'];
+  /* 分類格子上畫一個那一種的角（直角加上直角記號），讓孩子拿卡片來比 */
+  function binAngle(deg, mark) {
+    var r = deg * Math.PI / 180, x = 14 + Math.cos(r) * 44, y = 52 - Math.sin(r) * 44;
+    return '<svg viewBox="0 0 80 60" width="64" height="48" aria-hidden="true"><path d="M58 52 L14 52 L' + x.toFixed(1) + ' ' + y.toFixed(1) + '" fill="none" stroke="#2B2A28" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      (mark ? '<path d="M14 42 L24 42 L24 52" fill="none" stroke="#E0503A" stroke-width="3"/>' : '<path d="M28 52 A14 14 0 0 0 ' + (14 + Math.cos(r) * 14).toFixed(1) + ' ' + (52 - Math.sin(r) * 14).toFixed(1) + '" fill="none" stroke="#E0503A" stroke-width="3"/>') + '</svg>';
+  }
+  var ANGLE_BIN_ICONS = [binAngle(45), binAngle(90, true), binAngle(135)];
   function genAngleSort() { // 5-2 🗑️ 分類
     var c = angleCard(), ans = ['直角', '比直角大', '比直角小'][c.kind];
-    return { kind: 'sort', text: '這個角要放進哪一籃？', say: '這個角是直角、比直角大，還是比直角小？', card: c.svg, bins: ANGLE_BINS,
+    return { kind: 'sort', text: '這個角是哪一種？', say: '這個角是直角、比直角大，還是比直角小？', card: c.svg, bins: ANGLE_BINS, binIcons: ANGLE_BIN_ICONS,
       answer: ans, review: '一個 ' + c.deg + ' 度的角',
       hint: '拿三角板的直角來比：剛好疊在一起是直角；張開比較多是比直角大。',
       explain: '<p class="ex-line">' + c.deg + ' 度的角' + (c.kind === 0 ? '剛好是直角' : c.kind === 1 ? '張開得比直角大' : '張開得比直角小') + '，放進「<b>' + ans + '</b>」。</p>' };

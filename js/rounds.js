@@ -2,7 +2,7 @@
  * 一局 10 題的小遊戲（不限時間）
  *   quiz  ⭕❌ 快答／🧩 選答案：點大大的選項（答得快多一點分）
  *   tap   點圖：📏 數線跳跳（點刻度，青蛙跳過去）、🔍 找找看（點圖上的線）
- *   sort  🗑️ 分類丟丟樂：卡片拖進（或點）正確的籃子
+ *   sort  🗑️ 分類丟丟樂：卡片拖進（或點）正確的格子
  *   paint 🍕 塗色：點一塊塗一塊，塗好按確定
  *   fill  📏 自己填：用數字鍵盤填格子
  * 答對 ⭕、答錯 ❌ 並說明，這題等一下會再出現。星星看答錯幾題。
@@ -31,8 +31,8 @@
       { img: IMG + 'quiz-2.webp', text: '答對會出現圈圈，答得越快分數越多；答錯會出現叉叉，告訴你為什麼。' },
       END_SLIDE],
     sort: [
-      { img: IMG + 'sort-1.webp', text: '卡片掉下來了！看看它應該放進哪一個籃子。' },
-      { img: IMG + 'sort-2.webp', text: '把卡片拖到籃子裡，或是直接點那個籃子。' },
+      { img: IMG + 'sort-1.webp', text: '卡片掉下來了！看看它是哪一種。' },
+      { img: IMG + 'sort-2.webp', text: '把卡片拖到正確的格子裡，或是直接點那個格子。' },
       END_SLIDE],
     paint: [
       { img: IMG + 'paint-1.webp', text: '看題目要塗幾分之幾。分母是平分成幾份，分子是要塗幾份。' },
@@ -96,7 +96,7 @@
     } else if (k === 'sort') {
       $('r-visual').innerHTML = '<div class="sort-card" id="sort-card">' + q.card + '</div>';
       $('r-opts').innerHTML = '<div class="bins bins-' + q.bins.length + '">' + q.bins.map(function (b, i) {
-        return '<button class="bin" type="button" data-bin="' + i + '"><span class="bin-ic">🧺</span><span>' + esc(b) + '</span></button>'; }).join('') + '</div>';
+        return '<button class="bin" type="button" data-bin="' + i + '">' + (q.binIcons ? '<span class="bin-ic">' + q.binIcons[i] + '</span>' : '') + '<span>' + esc(b) + '</span></button>'; }).join('') + '</div>';
       dragSetup();
     } else if (k === 'paint') {
       $('r-visual').innerHTML = q.svg + '<p class="paint-count" id="paint-count">塗了 0 份</p>';
@@ -160,7 +160,7 @@
     })(t0);
   }
 
-  /* ---------- sort：拖卡片或點籃子 ---------- */
+  /* ---------- sort：拖卡片或點格子 ---------- */
   function dragSetup() {
     var card = $('sort-card'), sx, sy, dragging = false;
     card.addEventListener('pointerdown', function (e) {
