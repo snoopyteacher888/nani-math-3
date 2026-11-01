@@ -301,6 +301,18 @@
   function svgOpen(w, h, label, cls) { return '<svg class="' + (cls || 'shapes') + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + label + '">'; }
 
   /* ---------- 1-2 📏 數線跳跳：點刻度，青蛙跳過去 ---------- */
+  /* 自己畫的小青蛙（坐著、腳底在 y≈21），不用表情符號：各家手機的 🐸 長得不一樣 */
+  var FROG = '<g stroke="#3F8A3A" stroke-width="2.5" stroke-linejoin="round">' +
+    '<ellipse cx="-21" cy="13" rx="11" ry="7" fill="#6BB85F"/><ellipse cx="21" cy="13" rx="11" ry="7" fill="#6BB85F"/>' +
+    '<ellipse cx="0" cy="2" rx="26" ry="19" fill="#86D27A"/>' +
+    '<circle cx="-12" cy="-15" r="10" fill="#86D27A"/><circle cx="12" cy="-15" r="10" fill="#86D27A"/>' +
+    '<ellipse cx="-9" cy="19" rx="7" ry="3.5" fill="#6BB85F"/><ellipse cx="9" cy="19" rx="7" ry="3.5" fill="#6BB85F"/></g>' +
+    '<ellipse cx="0" cy="7" rx="15" ry="10" fill="#E4F7D2"/>' +
+    '<circle cx="-12" cy="-15" r="6.5" fill="#fff"/><circle cx="12" cy="-15" r="6.5" fill="#fff"/>' +
+    '<circle cx="-11" cy="-14" r="3.6" fill="#2B2A28"/><circle cx="13" cy="-14" r="3.6" fill="#2B2A28"/>' +
+    '<circle cx="-10" cy="-15.5" r="1.3" fill="#fff"/><circle cx="14" cy="-15.5" r="1.3" fill="#fff"/>' +
+    '<ellipse cx="-16" cy="-2" rx="4.5" ry="2.8" fill="#FF9FB0"/><ellipse cx="16" cy="-2" rx="4.5" ry="2.8" fill="#FF9FB0"/>' +
+    '<path d="M-7 -4 Q0 3 7 -4" fill="none" stroke="#2B2A28" stroke-width="2.5" stroke-linecap="round"/>';
   function genFrog() {
     var step = pick([1, 10, 10, 100, 100, 100, 1000]), s;
     if (step === 1000) s = 0; else if (step === 100) s = R(0, 9) * 1000; else if (step === 10) s = R(10, 99) * 100; else s = R(100, 999) * 10;
@@ -313,7 +325,7 @@
       if (mode === 'ends' ? (i === 0 || i === 10) : (i === 0 || i === 5)) h += '<text x="' + x + '" y="' + (y + 48) + '" text-anchor="middle" font-size="34" font-weight="700" fill="currentColor">' + (s + i * step) + '</text>';
       if (i > 0) h += '<rect class="hit" data-hit="' + i + '" x="' + (x - 26) + '" y="' + (y - 50) + '" width="52" height="86" rx="10"/>';
     }
-    h += '<g class="frog" data-x0="' + x0 + '" data-dx="' + (x1 - x0) / 10 + '" data-y="' + (y - 18) + '" transform="translate(' + x0 + ',' + (y - 18) + ')"><text x="0" y="0" text-anchor="middle" font-size="56">🐸</text></g>';
+    h += '<g class="frog" data-x0="' + x0 + '" data-dx="' + (x1 - x0) / 10 + '" data-y="' + (y - 22) + '" transform="translate(' + x0 + ',' + (y - 22) + ')">' + FROG + '</g>';
     h += '</svg>';
     var endLabel = mode === 'ends' ? s + 10 * step : s + 5 * step, parts = mode === 'ends' ? 10 : 5;
     return { kind: 'tap', frog: true, text: '青蛙要跳到「' + target + '」，點那個刻度！', say: '青蛙要跳到' + target + '，點一下那個刻度！', svg: h,

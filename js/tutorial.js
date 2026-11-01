@@ -1,6 +1,6 @@
 /*
  * 遊戲說明（老師要求）：一頁一小塊遊戲畫面＋一句說明，自動念出來（不用按喇叭）。
- * 念完才能滑到下一頁；全部看完才出現「開始」。
+ * 不用等念完就能滑到下一頁（會自己讀字的學生）；翻到最後一頁才出現「開始」。
  * 第一次玩這種遊戲一定要看完整套；之後進來直接看到開始畫面，可以按「📖 再看一次說明」。
  * 遊戲中上方的 📖 也能隨時再看一次（會先暫停）。
  *
@@ -43,14 +43,14 @@
       var i = cur.i;
       narrate(s.say || s.text, function () { cur.heard[i] = true; if (cur.i === i) render(0); });
     }
-    if (last && cur.heard[cur.i]) allDone();
+    if (last) allDone(); // 翻到最後一頁就可以開始
   }
-  function canNext() { return !cur.gate || cur.heard[cur.i]; }
+  function canNext() { return true; } // 老師：有些學生會自己讀字，不用等念完就能往下
   function updateNext() {
     var last = cur.i === cur.slides.length - 1;
     $('tut-next').hidden = last;
     $('tut-next').disabled = !canNext();
-    $('tut-wait').style.visibility = canNext() || last ? 'hidden' : 'visible';
+    $('tut-wait').style.visibility = 'hidden';
   }
   function go(d) {
     if (!cur) return;
