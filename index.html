@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>三年級數學跑跑樂園</title>
+  <meta name="description" content="四德學輔班 南一版三上數學複習跑酷遊戲">
+  <meta name="theme-color" content="#F8F6F0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== 地圖（選關卡） ===== -->
+  <main class="screen map" id="map">
+    <header class="map-hero">
+      <div class="logo" aria-hidden="true">🏃</div>
+      <h1>數學<span class="brand">跑跑</span>樂園</h1>
+      <p>南一版・三年級上學期 <button class="say" type="button" data-say="數學跑跑樂園。選一個關卡，跑到正確答案的門！" aria-label="念出來">🔊</button></p>
+      <div class="total">我的星星 <b id="total-stars">0</b> 顆 ⭐</div>
+    </header>
+    <div class="settings">
+      <label class="toggle"><input type="checkbox" id="opt-autosay"> 🔊 自動念題目</label>
+      <label class="toggle"><input type="checkbox" id="opt-sound"> 🎵 音效</label>
+    </div>
+    <div id="units"></div>
+  </main>
+
+  <!-- ===== 遊戲 ===== -->
+  <section class="screen game" id="game" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="btn-pause" type="button" aria-label="暫停">⏸</button>
+      <div class="hearts" id="hearts" aria-label="生命"></div>
+      <div class="hud-mid"><span id="hud-stage"></span><span class="left" id="hud-left"></span></div>
+      <div class="combo" id="combo" hidden></div>
+      <div class="score">⭐ <b id="score">0</b></div>
+    </header>
+
+    <section class="qpanel" id="qpanel">
+      <div class="qmain">
+        <div class="qtext"><button class="say" type="button" id="q-say" aria-label="念題目">🔊</button><span id="q-text"></span></div>
+        <div class="qbig" id="q-big" hidden></div>
+      </div>
+      <div class="qvisual" id="q-visual" hidden></div>
+    </section>
+
+    <div class="track" id="track">
+      <canvas id="cv"></canvas>
+      <div class="dist" aria-hidden="true"><div class="dist-fill" id="dist-fill"></div><span class="dist-gate">🚪</span></div>
+    </div>
+
+    <nav class="answers" id="answers">
+      <button class="ans" type="button" data-lane="0"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
+      <button class="ans" type="button" data-lane="1"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
+      <button class="ans" type="button" data-lane="2"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
+    </nav>
+  </section>
+
+  <!-- ===== 選速度 ===== -->
+  <div class="overlay" id="ov-speed" hidden>
+    <div class="dialog">
+      <h2 id="speed-title"></h2>
+      <p class="sub" id="speed-desc"></p>
+      <div class="speed-list">
+        <button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>時間比較多，可以拿紙筆慢慢算</small></button>
+        <button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>
+        <button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>門會很快就跑過來！</small></button>
+      </div>
+      <p class="tip" id="speed-tip"></p>
+      <p class="tip">💡 選好答案後<b>再按一次</b>，可以衝刺拿更多分！</p>
+      <button class="link-btn" type="button" data-close>返回</button>
+    </div>
+  </div>
+
+  <!-- ===== 答錯說明 ===== -->
+  <div class="overlay" id="ov-explain" hidden>
+    <div class="dialog explain">
+      <h2 id="ex-title">差一點！</h2>
+      <p class="ex-q" id="ex-q"></p>
+      <div class="ex-ans">正確答案是 <b id="ex-ans"></b></div>
+      <p class="ex-hint"><button class="say" type="button" id="ex-say" aria-label="念提示">🔊</button><span id="ex-hint"></span></p>
+      <div class="ex-work" id="ex-work"></div>
+      <p class="sub">這題等一下會再出現一次喔！</p>
+      <button class="big-btn" type="button" id="ex-next">我懂了，繼續跑 ▶</button>
+    </div>
+  </div>
+
+  <!-- ===== 暫停 ===== -->
+  <div class="overlay" id="ov-pause" hidden>
+    <div class="dialog">
+      <h2>休息一下 ⏸</h2>
+      <button class="big-btn" type="button" id="pause-resume">繼續跑 ▶</button>
+      <button class="big-btn alt" type="button" id="pause-restart">重新開始</button>
+      <button class="big-btn alt" type="button" id="pause-quit">回關卡地圖</button>
+    </div>
+  </div>
+
+  <!-- ===== 結算 ===== -->
+  <div class="overlay" id="ov-end" hidden>
+    <div class="dialog end">
+      <div class="end-stars" id="end-stars"></div>
+      <h2 id="end-title"></h2>
+      <p class="end-score">得到 <b id="end-score"></b> 分 <span class="record" id="end-record" hidden>🎉 新紀錄！</span></p>
+      <p class="sub" id="end-best"></p>
+      <div class="end-review" id="end-review"></div>
+      <button class="big-btn" type="button" id="end-again">再玩一次 🔁</button>
+      <button class="big-btn alt" type="button" id="end-map">回關卡地圖</button>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
