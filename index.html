@@ -21,6 +21,9 @@
       <div class="total">我的星星 <b id="total-stars">0</b> 顆 ⭐</div>
     </header>
     <div class="settings">
+      <div class="dev-switch" role="group" aria-label="手機版或網頁版">
+        <button type="button" data-dev="phone">📱 手機版</button><button type="button" data-dev="web">💻 網頁版</button>
+      </div>
       <label class="toggle"><input type="checkbox" id="opt-zhuyin"> ㄅ 注音</label>
       <label class="toggle"><input type="checkbox" id="opt-autosay"> 🔊 自動念題目</label>
       <label class="toggle"><input type="checkbox" id="opt-sound"> 🎵 音效</label>
@@ -28,34 +31,24 @@
     <div id="units"></div>
   </main>
 
-  <!-- ===== 遊戲 ===== -->
+  <!-- ===== 🏃 跑酷（直向：往上跑、左右閃、撞到 Q 出題） ===== -->
   <section class="screen game" id="game" hidden>
     <header class="hud">
       <button class="hud-btn" id="btn-pause" type="button" aria-label="暫停">⏸</button>
-      <div class="hearts" id="hearts" aria-label="生命"></div>
       <div class="hud-mid"><span id="hud-stage"></span><span class="left" id="hud-left"></span></div>
       <div class="combo" id="combo" hidden></div>
-      <div class="score">⭐ <b id="score">0</b></div>
+      <div class="score">🪙 <b id="score">0</b></div>
     </header>
-
-    <section class="qpanel" id="qpanel">
-      <div class="qmain">
-        <div class="qtext"><button class="say" type="button" id="q-say" aria-label="念題目">🔊</button><span id="q-text"></span></div>
-        <div class="qbig" id="q-big" hidden></div>
+    <div class="play" id="play">
+      <div class="track" id="track">
+        <canvas id="cv" aria-label="跑道：左右移動吃金幣、閃開障礙物，撞到 Q 會出題"></canvas>
+        <p class="key-hint" id="key-hint">⌨️ 鍵盤 ← → 也可以移動</p>
       </div>
-      <div class="qvisual" id="q-visual" hidden></div>
-    </section>
-
-    <div class="track" id="track">
-      <canvas id="cv"></canvas>
-      <div class="dist" aria-hidden="true"><div class="dist-fill" id="dist-fill"></div><span class="dist-gate">🚪</span></div>
+      <nav class="moves">
+        <button class="move" type="button" data-dir="-1" aria-label="往左">◀ 左</button>
+        <button class="move" type="button" data-dir="1" aria-label="往右">右 ▶</button>
+      </nav>
     </div>
-
-    <nav class="answers" id="answers">
-      <button class="ans" type="button" data-lane="0"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
-      <button class="ans" type="button" data-lane="1"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
-      <button class="ans" type="button" data-lane="2"><span class="txt"></span><span class="dash">⚡ 再按一次衝刺</span></button>
-    </nav>
   </section>
 
   <!-- ===== ⏱️ 2 分鐘挑戰 ===== -->
@@ -107,14 +100,14 @@
   <!-- ===== 選速度 ===== -->
   <div class="overlay" id="ov-speed" hidden>
     <div class="dialog">
-      <div class="say-row"><button class="say" type="button" data-say="選一個速度。烏龜，慢慢跑，時間比較多。兔子，一般。獵豹，挑戰，門會很快就跑過來。" aria-label="念出來">🔊</button><h2 id="speed-title"></h2></div>
+      <div class="say-row"><button class="say" type="button" data-say="選一個速度。烏龜，慢慢跑，比較好閃。兔子，一般。獵豹，挑戰，跑得很快，障礙物也很多。" aria-label="念出來">🔊</button><h2 id="speed-title"></h2></div>
       <p class="sub" id="speed-desc"></p>
       <div class="speed-list">
-        <button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>時間比較多，可以拿紙筆慢慢算</small></button>
+        <button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>跑得慢，比較好閃</small></button>
         <button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>
-        <button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>門會很快就跑過來！</small></button>
+        <button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快，障礙物也很多！</small></button>
       </div>
-      <p class="tip">💡 選好答案後<b>再按一次</b>，可以衝刺拿更多分！</p>
+      <p class="tip">🪙 吃金幣、閃開障礙物；撞到 <b>Q</b> 會出題，題目不限時間。</p>
       <button class="link-btn" type="button" data-close>返回</button>
     </div>
   </div>
@@ -129,6 +122,25 @@
       <button class="link-btn" type="button" id="ready-back">返回</button>
     </div>
   </div>
+
+  <!-- ===== 撞到 Q：題目（不限時間） ===== -->
+  <div class="overlay" id="ov-q" hidden>
+    <div class="dialog qdialog">
+      <div class="q-badge" aria-hidden="true">Q</div>
+      <div class="qtext"><button class="say" type="button" id="q-say" aria-label="念題目">🔊</button><span id="q-text"></span></div>
+      <div class="qbig" id="q-big" hidden></div>
+      <div class="qvisual" id="q-visual" hidden></div>
+      <div class="q-opts" id="q-opts">
+        <button class="qa" type="button" data-i="0"></button>
+        <button class="qa" type="button" data-i="1"></button>
+        <button class="qa" type="button" data-i="2"></button>
+      </div>
+      <p class="sub">慢慢想，不用急 🙂</p>
+    </div>
+  </div>
+
+  <!-- ===== 倒數 3、2、1 ===== -->
+  <div class="countdown" id="ov-count" hidden><span id="count-num">3</span></div>
 
   <!-- ===== 答錯說明 ===== -->
   <div class="overlay" id="ov-explain" hidden>

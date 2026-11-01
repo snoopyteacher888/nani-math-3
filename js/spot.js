@@ -24,7 +24,7 @@
         '✏️ 可以先用計算紙自己算一次再比對。',
         ['⭐⭐⭐ 錯 0～1 題・⭐⭐ 錯 2～3 題', '錯0到1題，拿3顆星。錯2到3題，拿2顆星。']
       ],
-      onStart: function () { start(s); }
+      onStart: function () { $('s-q').innerHTML = ''; $('s-result').hidden = true; App.showScreen('spot'); App.countdown(function () { start(s); }); }
     });
   }
   App.modes.spot = { open: open };

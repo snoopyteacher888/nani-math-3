@@ -26,7 +26,7 @@
         ['⭐ 答對 ' + s.goals[0] + ' 題・⭐⭐ ' + s.goals[1] + ' 題・⭐⭐⭐ ' + s.goals[2] + ' 題',
          '答對' + s.goals[0] + '題，拿1顆星。答對' + s.goals[1] + '題，拿2顆星。答對' + s.goals[2] + '題，拿3顆星。']
       ],
-      onStart: function () { start(s); }
+      onStart: function () { $('t-q').innerHTML = ''; $('t-msg').innerHTML = ''; App.showScreen('timed'); App.countdown(function () { start(s); }); }
     });
   }
   App.modes.timed = { open: open };
@@ -194,7 +194,7 @@
     var was = T.phase, s = T.stage; T.phase = 'paused';
     App.pause({
       resume: function () { T.phase = was; T.last = performance.now(); },
-      restart: function () { start(s); },
+      restart: function () { App.countdown(function () { start(s); }); },
       quit: function () { T = null; }
     });
   }
@@ -213,7 +213,7 @@
     App.showEnd({
       stars: stars, title: title, scoreHTML: '答對 <b>' + n + '</b> 題', isRecord: r.isRecord && n > 0,
       bestText: '這關最多答對 ' + r.rec.best + ' 題', reviewHTML: next3 + rv,
-      again: function () { start(s); }, say: '時間到！答對' + n + '題。' + title
+      again: function () { App.countdown(function () { start(s); }); }, say: '時間到！答對' + n + '題。' + title
     });
   }
   if (/[?&]debug\b/.test(location.search)) window.__peekT = function () { return T; }; // 測試用

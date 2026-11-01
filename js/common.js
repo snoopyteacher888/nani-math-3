@@ -32,6 +32,26 @@
   }
 
   function $(id) { return document.getElementById(id); }
+
+  /* ---------- 手機版／網頁版 ----------
+   * 學習樂園首頁一開始讓學生選，存在 localStorage 的 sedu:device（同一個 github.io 網址底下國語、數學共用），
+   * 也會用 ?device=phone|web 帶進來。都沒有的話：觸控小螢幕當手機版，其他當網頁版。
+   */
+  var DEV_KEY = 'sedu:device';
+  function detectDevice() {
+    var m = /[?&]device=(phone|web)\b/.exec(location.search);
+    if (m) { try { localStorage.setItem(DEV_KEY, m[1]); } catch (e) {} return m[1]; }
+    try { var v = localStorage.getItem(DEV_KEY); if (v === 'phone' || v === 'web') return v; } catch (e) {}
+    var coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    return coarse && Math.min(screen.width, screen.height) < 600 ? 'phone' : 'web';
+  }
+  function setDevice(d) {
+    App.device = d;
+    try { localStorage.setItem(DEV_KEY, d); } catch (e) {}
+    document.documentElement.classList.toggle('dev-phone', d === 'phone');
+    document.documentElement.classList.toggle('dev-web', d === 'web');
+    document.querySelectorAll('[data-dev]').forEach(function (b) { b.classList.toggle('on', b.dataset.dev === d); b.setAttribute('aria-pressed', b.dataset.dev === d); });
+  }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function starsHTML(n) { var h = ''; for (var i = 0; i < 3; i++) h += '<span' + (i < n ? '' : ' class="off"') + '>⭐</span>'; return h; }
   /* 🔊 按鈕（班上有不識字的學生，看得到字的地方都要能念出來） */
@@ -145,6 +165,8 @@
   $('opt-zhuyin').checked = !!store.zhuyin;
   $('opt-zhuyin').onchange = function () { store.zhuyin = this.checked; save(); applyZhuyin(); };
 
+  document.querySelectorAll('[data-dev]').forEach(function (b) { b.onclick = function () { setDevice(b.dataset.dev); SFX.pick(); }; });
+
   $('opt-autosay').checked = !!store.autoSay;
   $('opt-sound').checked = !!store.sound;
   $('opt-autosay').onchange = function () { store.autoSay = this.checked; save(); };
@@ -157,7 +179,8 @@
   }
   function toMap() {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
-    ['ov-ready', 'ov-pause', 'ov-end'].forEach(hide);
+    clearTimeout(countTimer);
+    ['ov-ready', 'ov-pause', 'ov-end', 'ov-count', 'ov-q', 'ov-explain'].forEach(hide);
     showScreen('map'); renderMap();
   }
 
@@ -182,6 +205,22 @@
   $('pause-resume').onclick = function () { hide('ov-pause'); if (pauseCb) pauseCb.resume(); };
   $('pause-restart').onclick = function () { hide('ov-pause'); if (pauseCb) pauseCb.restart(); };
   $('pause-quit').onclick = function () { hide('ov-pause'); if (pauseCb && pauseCb.quit) pauseCb.quit(); toMap(); };
+
+  /* ---------- 倒數 3、2、1 ----------（fast：答完題繼續跑時用，快一點） */
+  var countTimer = null;
+  function countdown(cb, fast) {
+    var el = $('ov-count'), num = $('count-num'), n = 3, gap = fast ? 450 : 800;
+    clearTimeout(countTimer);
+    show('ov-count');
+    function step() {
+      if (n > 0) { num.textContent = n; num.className = 'pop'; void num.offsetWidth; num.className = 'pop go'; SFX.tick(); n--; countTimer = setTimeout(step, gap); }
+      else {
+        num.textContent = fast ? '跑！' : '開始！'; num.className = 'pop'; void num.offsetWidth; num.className = 'pop go start'; SFX.good();
+        countTimer = setTimeout(function () { hide('ov-count'); cb(); }, fast ? 350 : 600);
+      }
+    }
+    step();
+  }
 
   var againCb = null;
   function showEnd(o) { // { stars, title, scoreHTML, isRecord, bestText, reviewHTML, again, say }
@@ -217,12 +256,13 @@
   }
 
   window.App = {
-    vgrid: vgrid, sayBtn: sayBtn, plain: plain,
+    vgrid: vgrid, sayBtn: sayBtn, plain: plain, countdown: countdown, setDevice: setDevice, device: 'web',
     UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
     $: $, esc: esc, starsHTML: starsHTML, show: show, hide: hide, speak: speak, SFX: SFX,
     showScreen: showScreen, toMap: toMap, ready: ready, pause: pause, showEnd: showEnd, renderMap: renderMap,
     modes: {}
   };
+  setDevice(detectDevice());
   renderMap();
   applyZhuyin();
 })();
