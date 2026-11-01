@@ -72,6 +72,7 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .stars .off { filter: grayscale(1); opacity: .3; }
 .best { font-size: .8em; color: var(--ink-soft); }
 .stage-card[data-ic]::before { content: attr(data-ic); position: absolute; right: 14px; top: 10px; font-size: 1.5em; }
+.stage-card[data-ic] .sid, .stage-card[data-ic] .sname { padding-right: 48px; } /* 右上角的圖示不要蓋到字 */
 .soon-card { border-radius: var(--radius); border: 3px dashed var(--line); background: var(--muted); color: var(--ink-soft); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
 .soon-card .tag { margin-left: auto; white-space: nowrap; flex: none; font-size: .75em; background: var(--surface); border-radius: 999px; padding: 0 10px; }
 .soon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 22px; }
