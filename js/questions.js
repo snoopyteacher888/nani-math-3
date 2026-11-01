@@ -612,6 +612,14 @@
       explain: '<p class="ex-line">半徑：一頭在圓心、一頭在圓上。直徑：穿過圓心、兩頭都在圓上。</p><p class="ex-line">沒有經過圓心的線，不是直徑。</p>' };
   }
 
+  /* ---------- 九九口訣：小的數字在前面，例如 七八五十六、三三得九、二五一十 ---------- */
+  function chant(a, b) {
+    var x = Math.min(a, b), y = Math.max(a, b), p = a * b, d = '零一二三四五六七八九', head = d[x] + d[y];
+    if (p < 10) return head + '得' + d[p];
+    if (p === 10) return head + '一十';
+    return head + zh(p);
+  }
+
   /* ---------- 加油小站：混合闖關 ---------- */
   function mix(list) { return function () { var q = pick(list)(); q.kind = undefined; return q; }; }
 
@@ -622,6 +630,9 @@
    * timed：bonus＝答對加幾秒；goals＝拿 1、2、3 顆星要答對幾題
    */
   var UNITS = [
+    { id: '99', name: '九九乘法大冒險', ic: '🦊', stages: [
+      { id: '99', mode: 'nine', ic: '🗺️', label: '九九大冒險', name: '九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！' }
+    ] },
     { id: 1, name: '數到 10000', ic: '🔢', stages: [
       { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite },
       { id: '1-2', mode: 'round', tut: 'frog', ic: '📏', label: '數線跳跳', name: '數線跳跳', desc: '1 小格是多少？點刻度讓青蛙跳過去', gen: genFrog }
@@ -667,6 +678,6 @@
     ] }
   ];
 
-  root.MathQ = { UNITS: UNITS, zh: zh, literal: literal, vertical: vertical, len: len, dig: dig,
+  root.MathQ = { UNITS: UNITS, zh: zh, chant: chant, literal: literal, vertical: vertical, len: len, dig: dig,
     _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, genFrog: genFrog, genPaint: genPaint, genCircleFind: genCircleFind, makeAdd: makeAdd, makeSub: makeSub, makeMul: makeMul } };
 })(typeof window !== 'undefined' ? window : globalThis);

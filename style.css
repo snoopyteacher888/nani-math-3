@@ -374,3 +374,54 @@ line.hit.wrong { stroke: rgba(217, 72, 59, .4); }
 .flabel { font-size: .55em; }
 .r-fields.shake { animation: shake .4s; }
 html.zhuyin .r-fields .box, html.zhuyin .card-num, html.zhuyin .frac { font-family: var(--font); }
+
+/* ===== 🦊 九九乘法大冒險 ===== */
+.medals { font-size: .85em; font-weight: 700; letter-spacing: 0; }
+.nine-main { gap: 10px; }
+.n-pick-title { display: flex; align-items: center; gap: 10px; justify-content: center; font-size: 1.2em; font-weight: 700; margin: 4px 0 10px; }
+.islands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: min(100%, 620px); margin: 0 auto; }
+.island { position: relative; min-height: 112px; border-radius: 22px; border: 3px solid #2D8A57; background: linear-gradient(#DFF3FF, #BFE6FA); box-shadow: 0 6px 0 rgba(45,138,87,.3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px; }
+.island.mix { border-color: #9B59B6; background: linear-gradient(#FCE9FF, #EAD5F5); box-shadow: 0 6px 0 rgba(155,89,182,.3); }
+.island .i-ic { font-size: 2em; line-height: 1; }
+.island b { font-size: 1.15em; }
+.island .stars { font-size: .9em; letter-spacing: 0; }
+.island .medal { position: absolute; top: 6px; right: 8px; font-size: 1.4em; }
+.island:active { transform: translateY(3px); }
+.n-board { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.path { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: min(100%, 560px); direction: ltr; }
+.path .tile:nth-child(n+6) { order: 0; }
+/* 第 2 排從右往左走（像蛇一樣） */
+.path .tile:nth-child(6) { grid-column: 5; grid-row: 2; } .path .tile:nth-child(7) { grid-column: 4; grid-row: 2; }
+.path .tile:nth-child(8) { grid-column: 3; grid-row: 2; } .path .tile:nth-child(9) { grid-column: 2; grid-row: 2; } .path .tile:nth-child(10) { grid-column: 1; grid-row: 2; }
+.tile { position: relative; aspect-ratio: 1; border-radius: 18px; background: #F2D3A2; border: 3px solid #C79B62; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.3em; color: #7A5A2B; }
+.tile.done { background: #CDEBD6; border-color: #2D8A57; color: #2D8A57; }
+.tile.apple { background: #FFE3E0; border-color: #E35D4F; }
+.tile.boss { background: #3B2F4A; border-color: #9B59B6; font-size: 1.7em; }
+.tile.here { box-shadow: 0 0 0 4px #FFD23F; }
+.tile .fox { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 1.6em; animation: hop .5s ease-out; }
+.tile.here .t-ic { opacity: .35; }
+@keyframes hop { from { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -14px); } to { transform: translate(-50%, 0); } }
+.bossbar { display: flex; align-items: center; gap: 8px; width: min(100%, 560px); font-weight: 700; }
+.bossbar .hp { flex: 1; height: 16px; border-radius: 999px; background: var(--muted); overflow: hidden; border: 2px solid #9B59B6; }
+.bossbar .hp div { height: 100%; background: #9B59B6; transition: width .3s; }
+.btime { min-width: 3.2em; text-align: right; color: var(--bad); }
+.n-board.hit .tile.boss { animation: shake .4s; }
+.n-play { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.n-qrow { display: flex; align-items: center; gap: 12px; }
+.n-q { font: 700 clamp(44px, 11vw, 72px)/1.1 var(--font); }
+.n-ans { display: inline-block; min-width: 1.6em; padding: 0 .15em; border-bottom: 5px solid var(--math); color: var(--math); text-align: center; }
+.n-ans.cur { animation: blink 1s infinite; }
+.n-msg { min-height: 1.6em; font-weight: 700; font-size: 1.15em; text-align: center; display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.n-msg.good { color: var(--good); }
+.n-msg.bad { color: var(--bad); }
+.n-msg.bad b { color: var(--ink); font-size: 1.2em; }
+.n-msg.boss { color: #9B59B6; }
+.n-msg.warn { color: var(--brand); }
+html.zhuyin .n-q, html.zhuyin .tile { font-family: var(--font); }
+.nine-pick #n-keypad { display: none; }
+@media (min-width: 700px) and (min-aspect-ratio: 5/4) {
+  html:not(.dev-phone) #nine.nine-run { display: grid; grid-template-columns: 1fr minmax(260px, 32%); grid-template-rows: auto 1fr; }
+  html:not(.dev-phone) #nine.nine-run > .hud { grid-column: 1 / -1; }
+  html:not(.dev-phone) #nine.nine-run > .keypad { grid-column: 2; grid-row: 2; align-content: center; max-width: none; margin: 0; border-top: 0; border-left: 2px solid var(--line); }
+}

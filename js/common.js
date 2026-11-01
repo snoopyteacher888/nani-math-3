@@ -5,16 +5,18 @@
 (function () {
   'use strict';
 
-  var UNITS = window.MathQ.UNITS;
+  /* 年級：學習樂園的五、六年級數學還沒有課本單元，先用 ?grade=5 / ?grade=6 打開「只有九九乘法」的版本（自己的紀錄、預設不加注音） */
+  var GRADE = (/[?&]grade=([356])\b/.exec(location.search) || [])[1] || '3';
+  var UNITS = window.MathQ.UNITS.filter(function (u) { return GRADE === '3' || u.id === '99'; });
   var STAGES = {};
   UNITS.forEach(function (u) { u.stages.forEach(function (s) { s.unit = u; s.mode = s.mode || 'run'; STAGES[s.id] = s; }); });
 
   /* ---------- 紀錄（只存在這台裝置的瀏覽器） ---------- */
-  var KEY = 'nani-math-3:v1';
+  var KEY = GRADE === '3' ? 'nani-math-3:v1' : 'math-g' + GRADE + ':v1';
   var store = (function () { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })();
   store.stages = store.stages || {};
   if (store.sound === undefined) store.sound = true;
-  if (store.zhuyin === undefined) store.zhuyin = true; // 三年級：預設加注音
+  if (store.zhuyin === undefined) store.zhuyin = GRADE === '3'; // 三年級預設加注音；五、六年級不用
   if ((store.v || 1) < 2) { // 第 2、3 單元從跑酷改成計時挑戰／小偵探，舊的分數意思不一樣了，清掉
     ['2-1', '2-2', '3-1', '3-2'].forEach(function (id) { delete store.stages[id]; });
     store.v = 2;
@@ -125,7 +127,7 @@
   /* =====================================================
    * 地圖
    * ===================================================== */
-  var MODE_IC = { run: '🏃', timed: '⏱️', spot: '🔍', round: '🎯' };
+  var MODE_IC = { run: '🏃', timed: '⏱️', spot: '🔍', round: '🎯', nine: '🗺️' };
   function renderMap() {
     var total = 0, html = '', soon = '';
     UNITS.forEach(function (u) {
@@ -139,11 +141,16 @@
         var rec = store.stages[s.id] || {}, st = rec.stars || 0;
         total += st;
         var best = !rec.plays && !rec.best ? '還沒玩過' : s.mode === 'timed' ? '最多答對 ' + (rec.best || 0) + ' 題' : '最高 ' + (rec.best || 0) + ' 分';
-        var mn = s.label || modeName(s.mode);
-        html += '<div class="cell">' + sayBtn('關卡 ' + s.id + '，' + s.name + '，' + mn + '。' + s.desc) +
+        var mn = s.label || modeName(s.mode), starRow = starsHTML(st);
+        if (s.mode === 'nine') { // 九九：顯示破了幾座島
+          var medals = 0;
+          [2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(function (t) { var r9 = store.stages['99-' + t]; if (r9 && r9.stars) { medals++; total += r9.stars; } });
+          starRow = '<span class="medals">🏅 × ' + medals + '</span>'; best = '破了 ' + medals + ' / 9 座島';
+        }
+        html += '<div class="cell">' + sayBtn((s.mode === 'nine' ? '' : '關卡 ' + s.id + '，') + s.name + '，' + mn + '。' + s.desc) +
           '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + (s.ic || MODE_IC[s.mode]) + '">' +
-          '<span class="sid">關卡 ' + s.id + '・' + mn + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
-          '<span class="srow"><span class="stars">' + starsHTML(st) + '</span><span class="best">' + best + '</span></span></button></div>';
+          '<span class="sid">' + (s.mode === 'nine' ? '每天練一練' : '關卡 ' + s.id + '・' + mn) + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
+          '<span class="srow"><span class="stars">' + starRow + '</span><span class="best">' + best + '</span></span></button></div>';
       });
       html += '</div></section>';
     });
@@ -192,7 +199,7 @@
 
   /* 切換畫面：map、game（跑酷）、timed、spot */
   function showScreen(id) {
-    ['map', 'game', 'timed', 'spot', 'round'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['map', 'game', 'timed', 'spot', 'round', 'nine'].forEach(function (s) { $(s).hidden = s !== id; });
     window.scrollTo(0, 0);
   }
   function toMap() {
@@ -265,6 +272,13 @@
     showScreen: showScreen, toMap: toMap, speakThen: speakThen, pause: pause, showEnd: showEnd, renderMap: renderMap,
     modes: {}
   };
+  if (GRADE !== '3') {
+    var gname = GRADE === '5' ? '五' : '六';
+    document.title = gname + '年級數學：九九乘法';
+    document.querySelector('.map-hero h1').innerHTML = '<span class="brand">' + gname + '年級</span>數學';
+    $('grade-sub').textContent = '先練九九乘法（課本單元準備中）';
+    document.querySelector('.map-hero .say').dataset.say = gname + '年級數學。先來練九九乘法！';
+  }
   setDevice(detectDevice());
   renderMap();
   applyZhuyin();

@@ -17,7 +17,7 @@
     <header class="map-hero">
       <div class="logo" aria-hidden="true">🧮</div>
       <h1><span class="brand">數學</span>三上學習樂園</h1>
-      <p>南一版・三年級上學期 <button class="say" type="button" data-say="數學三上學習樂園。選一個關卡開始練習吧！" aria-label="念出來">🔊</button></p>
+      <p><span id="grade-sub">南一版・三年級上學期</span> <button class="say" type="button" data-say="數學三上學習樂園。選一個關卡開始練習吧！" aria-label="念出來">🔊</button></p>
       <div class="total">我的星星 <b id="total-stars">0</b> 顆 ⭐</div>
     </header>
     <div class="settings">
@@ -126,6 +126,30 @@
     </nav>
   </section>
 
+  <!-- ===== 🦊 九九乘法大冒險 ===== -->
+  <section class="screen game" id="nine" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="n-pause" type="button" aria-label="暫停">⏸</button>
+      <button class="hud-btn help" id="help-nine" type="button" aria-label="再看一次說明">📖</button>
+      <div class="hud-mid"><span id="n-title"></span><span class="left" id="n-left"></span></div>
+      <div class="hearts" id="n-hearts"></div>
+      <div class="score">⭐ <b id="n-score">0</b></div>
+    </header>
+    <main class="calc nine-main">
+      <div class="n-board" id="n-board"></div>
+      <div class="n-play" id="n-play" hidden>
+        <div class="n-qrow"><button class="say" type="button" id="n-say" aria-label="念題目">🔊</button><div class="n-q" id="n-q"></div></div>
+        <div class="n-msg" id="n-msg" aria-live="polite"></div>
+      </div>
+    </main>
+    <nav class="keypad" id="n-keypad" hidden>
+      <button type="button" data-nk="7">7</button><button type="button" data-nk="8">8</button><button type="button" data-nk="9">9</button>
+      <button type="button" data-nk="4">4</button><button type="button" data-nk="5">5</button><button type="button" data-nk="6">6</button>
+      <button type="button" data-nk="1">1</button><button type="button" data-nk="2">2</button><button type="button" data-nk="3">3</button>
+      <button type="button" data-nk="del" class="k-del" aria-label="刪除">⌫</button><button type="button" data-nk="0">0</button><button type="button" data-nk="ok" class="k-ok">✔ 確定</button>
+    </nav>
+  </section>
+
   <!-- ===== 遊戲說明（一頁一小塊遊戲畫面＋一句話，自動念；念完才能往下滑） ===== -->
   <div class="overlay" id="ov-tut" hidden>
     <div class="dialog tut-box">
@@ -218,5 +242,6 @@
   <script src="js/timed.js"></script>
   <script src="js/spot.js"></script>
   <script src="js/rounds.js"></script>
+  <script src="js/nine.js"></script>
 </body>
 </html>

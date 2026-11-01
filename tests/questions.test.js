@@ -10,7 +10,12 @@ assert.strictEqual(Q.literal(3005), 305);
 
 const calc = (a, op, b) => op === '＋' ? a + b : op === '－' ? a - b : a * b;
 const N = 3000;
+// 九九口訣
+const chants = { '7,8': '七八五十六', '8,7': '七八五十六', '3,3': '三三得九', '2,5': '二五一十', '9,9': '九九八十一', '2,6': '二六十二', '4,5': '四五二十', '1,7': '一七得七' };
+for (const [k, v] of Object.entries(chants)) { const [a, b] = k.split(',').map(Number); assert.strictEqual(Q.chant(a, b), v, k); }
+
 for (const u of Q.UNITS) for (const s of u.stages) {
+  if (s.mode === 'nine') continue; // 九九大冒險不用出題程式
   for (let i = 0; i < N; i++) {
     if (s.gen) {
       const q = s.gen(), k = q.kind || 'run';
@@ -38,6 +43,7 @@ for (const u of Q.UNITS) for (const s of u.stages) {
       }
     }
   }
+  if (s.mode === 'nine') continue;
   const ex = s.gen ? s.gen() : s.make();
   console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }
