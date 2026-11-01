@@ -426,3 +426,12 @@ html.zhuyin .n-q, html.zhuyin .tile { font-family: var(--font); }
   html:not(.dev-phone) #nine.nine-run > .hud { grid-column: 1 / -1; }
   html:not(.dev-phone) #nine.nine-run > .keypad { grid-column: 2; grid-row: 2; align-content: center; max-width: none; margin: 0; border-top: 0; border-left: 2px solid var(--line); }
 }
+
+/* 說明頁：只留箭頭和符號（老師說字太多） */
+.tut-btn { min-width: 76px; min-height: 56px; font-size: 1.6em; padding: 0 18px; }
+.tut-wait { font-size: 1.6em; color: inherit; animation: pulse 1.2s ease-in-out infinite; }
+.tut-wait.shake { animation: shake .4s; }
+@keyframes pulse { 50% { transform: scale(1.2); opacity: .6; } }
+.tut-start .go-btn, #tut-resume { min-height: 68px; font-size: 2em; line-height: 1; }
+.tut-back { align-self: center; min-width: 64px; min-height: 52px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); font-size: 1.6em; line-height: 1; color: var(--ink-soft); }
+@media (max-width: 520px) { .tut-btn { min-width: 68px; min-height: 52px; } }

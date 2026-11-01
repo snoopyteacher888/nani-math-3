@@ -25,7 +25,7 @@
   function open(s) {
     App.intro({
       mode: 'nine', title: '🦊 九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！', slides: SLIDES,
-      start: function (box) { box.innerHTML = '<button class="big-btn go-btn" type="button">選一座島 ▶</button>'; box.querySelector('button').onclick = picker; }
+      start: function (box) { box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始，選一座島">▶</button>'; box.querySelector('button').onclick = picker; }
     });
   }
   App.modes.nine = { open: open };

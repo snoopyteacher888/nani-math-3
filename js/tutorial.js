@@ -50,7 +50,7 @@
     var last = cur.i === cur.slides.length - 1;
     $('tut-next').hidden = last;
     $('tut-next').disabled = !canNext();
-    $('tut-wait').hidden = canNext() || last;
+    $('tut-wait').style.visibility = canNext() || last ? 'hidden' : 'visible';
   }
   function go(d) {
     if (!cur) return;
@@ -66,7 +66,7 @@
     if (cur.kind === 'intro') {
       store.seenTut[cur.mode] = true; App.save();
       $('tut-start').hidden = false;
-      $('tut-done').hidden = false;
+
     }
   }
 

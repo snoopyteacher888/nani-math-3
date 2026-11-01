@@ -161,12 +161,11 @@
         </div>
         <div class="tut-dots" id="tut-dots" aria-hidden="true"></div>
         <div class="tut-nav">
-          <button class="tut-btn" type="button" id="tut-prev">◀ 上一頁</button>
-          <span class="tut-page" id="tut-page"></span>
-          <button class="tut-btn next" type="button" id="tut-next">下一頁 ▶</button>
+          <button class="tut-btn" type="button" id="tut-prev" aria-label="上一頁">◀</button>
+          <span class="tut-wait" id="tut-wait" aria-label="聽完這一頁，就可以往下滑">🎧</span>
+          <button class="tut-btn next" type="button" id="tut-next" aria-label="下一頁">▶</button>
         </div>
-        <p class="tut-wait" id="tut-wait">🎧 聽完這一頁，就可以往下滑</p>
-        <p class="tut-done" id="tut-done" hidden>✅ 說明都看完了，可以開始了！</p>
+        <span id="tut-page" hidden></span><span id="tut-done" hidden></span>
       </div>
       <div id="tut-menu" hidden>
         <img class="tut-thumb" id="tut-menu-img" alt="遊戲畫面">
@@ -174,8 +173,8 @@
         <button class="tut-again" type="button" id="tut-again"><span>📖</span>再看一次說明</button>
       </div>
       <div class="tut-start" id="tut-start" hidden></div>
-      <button class="big-btn" type="button" id="tut-resume" hidden>繼續玩 ▶</button>
-      <button class="link-btn" type="button" id="tut-back">返回</button>
+      <button class="big-btn go-btn" type="button" id="tut-resume" aria-label="繼續玩" hidden>▶</button>
+      <button class="tut-back" type="button" id="tut-back" aria-label="返回">↩</button>
     </div>
   </div>
 

@@ -32,7 +32,7 @@
     App.intro({
       mode: 'timed', title: '⏱️ 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(s),
       start: function (box) {
-        box.innerHTML = '<button class="big-btn go-btn" type="button">開始！ ▶</button>';
+        box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { $('t-q').innerHTML = ''; $('t-msg').innerHTML = ''; App.showScreen('timed'); App.countdown(function () { start(s); }); };
       }
     });

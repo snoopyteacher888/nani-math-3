@@ -25,7 +25,7 @@
     App.intro({
       mode: 'spot', title: '🔍 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES,
       start: function (box) {
-        box.innerHTML = '<button class="big-btn go-btn" type="button">開始！ ▶</button>';
+        box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { $('s-q').innerHTML = ''; $('s-result').hidden = true; App.showScreen('spot'); App.countdown(function () { start(s); }); };
       }
     });

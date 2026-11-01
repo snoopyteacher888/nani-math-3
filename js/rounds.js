@@ -48,7 +48,7 @@
     App.intro({
       mode: 'round-' + s.tut, title: (s.ic || '') + ' 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES[s.tut],
       start: function (box) {
-        box.innerHTML = '<button class="big-btn go-btn" type="button">開始！ ▶</button>';
+        box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { clearScreen(); App.showScreen('round'); App.countdown(function () { start(s); }); };
       }
     });
