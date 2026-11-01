@@ -169,12 +169,14 @@
   function openQuestion() {
     G.phase = 'question'; G.q = nextQuestion();
     var q = G.q;
-    $('q-text').textContent = (q.again ? '🔁 ' : '') + q.text;
+    $('q-text').innerHTML = (q.again ? '🔁 ' : '') + App.fmt(q.text);
     $('q-big').hidden = !q.big; $('q-big').textContent = q.big || '';
     var vis = $('q-visual'); vis.hidden = !q.visual; vis.innerHTML = q.visual || '';
     $('q-opts').classList.toggle('zh', q.cls === 'zh');
     document.querySelectorAll('.qa').forEach(function (b, i) {
-      b.textContent = q.options[i]; b.className = 'qa' + (q.cls === 'zh' ? ' zh' : ''); b.disabled = false;
+      b.hidden = i >= q.options.length;
+      if (!b.hidden) b.innerHTML = App.fmt(q.options[i]);
+      b.className = 'qa' + (q.cls === 'zh' ? ' zh' : ''); b.disabled = false;
     });
     show('ov-q');
     SFX.dash();
@@ -186,6 +188,7 @@
   function answer(i) {
     if (!G || G.phase !== 'question') return;
     var q = G.q, ok = q.options[i] === q.answer, btns = document.querySelectorAll('.qa');
+    if (i >= q.options.length) return;
     btns.forEach(function (b, j) { b.disabled = true; if (q.options[j] === q.answer) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
     G.answered++;
     G.phase = 'answered';
@@ -208,12 +211,12 @@
   function showExplain() {
     var q = G.q;
     $('ex-title').textContent = '差一點！';
-    $('ex-q').textContent = q.text + (q.big ? '　' + q.big : '');
-    $('ex-ans').textContent = q.answer;
+    $('ex-q').innerHTML = App.fmt(q.text) + (q.big ? '　' + esc(q.big) : '');
+    $('ex-ans').innerHTML = App.fmt(q.answer);
     $('ex-hint').textContent = q.hint;
     $('ex-work').innerHTML = q.explain || '';
     show('ov-explain');
-    speak('差一點。正確答案是' + q.answer + '。' + q.hint);
+    speak('差一點。正確答案是' + q.answer.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint);
   }
   $('ex-say').onclick = function () { if (G) speak('正確答案是' + G.q.answer + '。' + G.q.hint); };
   $('ex-next').onclick = function () { hide('ov-explain'); afterQuestion(); };
@@ -238,7 +241,7 @@
     if (G.wrongList.length) {
       var seen = {};
       rv = '<h3>📝 這次答錯的題目</h3><ul>' + G.wrongList.filter(function (q) { var k = (q.review || q.text) + q.big; if (seen[k]) return false; seen[k] = 1; return true; })
-        .map(function (q) { return '<li>' + esc(q.review || q.text) + (q.big ? '　' + esc(q.big) : '') + ' → <b>' + esc(q.answer) + '</b></li>'; }).join('') + '</ul>';
+        .map(function (q) { return '<li>' + App.fmt(q.review || q.text) + (q.big ? '　' + esc(q.big) : '') + ' → <b>' + App.fmt(q.answer) + '</b></li>'; }).join('') + '</ul>';
     }
     var id = G.stage.id, sp = G.speedKey;
     App.showEnd({

@@ -53,6 +53,8 @@
     document.querySelectorAll('[data-dev]').forEach(function (b) { b.classList.toggle('on', b.dataset.dev === d); b.setAttribute('aria-pressed', b.dataset.dev === d); });
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  /* 分數 3/8 顯示成上下的分數 */
+  function fmt(s) { return esc(s).replace(/(\d+)\/(\d+)/g, '<span class="frac"><span>$1</span><span>$2</span></span>'); }
   function starsHTML(n) { var h = ''; for (var i = 0; i < 3; i++) h += '<span' + (i < n ? '' : ' class="off"') + '>⭐</span>'; return h; }
   /* 🔊 按鈕（班上有不識字的學生，看得到字的地方都要能念出來） */
   function plain(html) { return String(html).replace(/<[^>]+>/g, '').replace(/[⭐✔✏️💡📝🔍⏱️🏃]/g, '').replace(/\s+/g, ' ').trim(); }
@@ -123,7 +125,7 @@
   /* =====================================================
    * 地圖
    * ===================================================== */
-  var MODE_IC = { run: '🏃', timed: '⏱️', spot: '🔍' };
+  var MODE_IC = { run: '🏃', timed: '⏱️', spot: '🔍', round: '🎯' };
   function renderMap() {
     var total = 0, html = '', soon = '';
     UNITS.forEach(function (u) {
@@ -137,9 +139,10 @@
         var rec = store.stages[s.id] || {}, st = rec.stars || 0;
         total += st;
         var best = !rec.plays && !rec.best ? '還沒玩過' : s.mode === 'timed' ? '最多答對 ' + (rec.best || 0) + ' 題' : '最高 ' + (rec.best || 0) + ' 分';
-        html += '<div class="cell">' + sayBtn('關卡 ' + s.id + '，' + s.name + '，' + modeName(s.mode) + '。' + s.desc) +
-          '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + MODE_IC[s.mode] + '">' +
-          '<span class="sid">關卡 ' + s.id + '・' + modeName(s.mode) + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
+        var mn = s.label || modeName(s.mode);
+        html += '<div class="cell">' + sayBtn('關卡 ' + s.id + '，' + s.name + '，' + mn + '。' + s.desc) +
+          '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + (s.ic || MODE_IC[s.mode]) + '">' +
+          '<span class="sid">關卡 ' + s.id + '・' + mn + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
           '<span class="srow"><span class="stars">' + starsHTML(st) + '</span><span class="best">' + best + '</span></span></button></div>';
       });
       html += '</div></section>';
@@ -189,7 +192,7 @@
 
   /* 切換畫面：map、game（跑酷）、timed、spot */
   function showScreen(id) {
-    ['map', 'game', 'timed', 'spot'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['map', 'game', 'timed', 'spot', 'round'].forEach(function (s) { $(s).hidden = s !== id; });
     window.scrollTo(0, 0);
   }
   function toMap() {
@@ -256,7 +259,7 @@
   }
 
   window.App = {
-    vgrid: vgrid, sayBtn: sayBtn, plain: plain, countdown: countdown, setDevice: setDevice, device: 'web',
+    vgrid: vgrid, sayBtn: sayBtn, fmt: fmt, plain: plain, countdown: countdown, setDevice: setDevice, device: 'web',
     UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
     $: $, esc: esc, starsHTML: starsHTML, show: show, hide: hide, speak: speak, SFX: SFX,
     showScreen: showScreen, toMap: toMap, speakThen: speakThen, pause: pause, showEnd: showEnd, renderMap: renderMap,

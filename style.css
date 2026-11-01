@@ -309,3 +309,68 @@ html.dev-phone .q-opts, .q-opts.zh { grid-template-columns: 1fr; } /* 國字選�
   .tut-btn { min-height: 46px; padding: 0 12px; }
 }
 html.zhuyin .tut-box h2 { font-size: 1.2em; }
+
+/* ===== 分數 ===== */
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.05; margin: 0 .12em; font-variant-numeric: tabular-nums; font-family: var(--font); }
+.frac > span:first-child { border-bottom: .09em solid currentColor; padding: 0 .12em; }
+.frac > span { font-size: .85em; }
+
+/* ===== 圖（尺、角、圖形、分數圖、圓） ===== */
+.ruler { width: min(100%, 620px); height: auto; }
+.shapes { width: min(100%, 520px); height: auto; color: var(--ink); }
+.fracpic { width: min(70vw, 260px); }
+.qvisual .fracpic, .r-visual .fracpic { max-height: 32vh; }
+
+/* ===== 一局 10 題的小遊戲 ===== */
+.round-main { position: relative; gap: 10px; }
+.r-q { justify-content: center; text-align: left; font-size: clamp(20px, 3.4vw, 30px); }
+.r-visual { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.r-visual > svg { max-height: 42vh; }
+.r-opts { width: min(100%, 640px); }
+.r-opts .qa { width: 100%; }
+.round-quiz .r-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+html.dev-phone .round-quiz .r-opts.zh, .round-quiz .r-opts:has(.zh) { grid-template-columns: 1fr; }
+.r-fb { width: min(100%, 640px); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; background: #FFF4E6; border-radius: 18px; padding: 12px; }
+.fb-ans { display: flex; align-items: center; gap: 10px; font-size: 1.2em; }
+.fb-ans b { color: var(--good); font-size: 1.3em; }
+.r-stamp { position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%) scale(0); font-size: clamp(120px, 30vw, 220px); line-height: 1; pointer-events: none; opacity: 0; }
+.r-stamp.show { animation: stamp 1s ease-out both; }
+@keyframes stamp { 0% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1); opacity: .95; } 75% { opacity: .9; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+/* 點圖 */
+.hit { fill: transparent; cursor: pointer; }
+rect.hit:hover { fill: rgba(42, 99, 168, .12); }
+rect.hit.right { fill: rgba(45, 138, 87, .3); }
+rect.hit.wrong { fill: rgba(217, 72, 59, .25); }
+line.hit:hover { stroke: rgba(42, 99, 168, .2); }
+line.hit.right { stroke: rgba(45, 138, 87, .45); }
+line.hit.wrong { stroke: rgba(217, 72, 59, .4); }
+.frogline { width: min(100%, 680px); height: auto; color: var(--ink); }
+/* 分類 */
+.sort-card { min-width: 180px; min-height: 140px; padding: 10px; border-radius: 20px; background: #fff; border: 4px solid var(--math); box-shadow: 0 8px 0 var(--math-soft);
+  display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; user-select: none; animation: drop .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+.sort-card svg { width: 200px; height: 200px; }
+.sort-card.dragging { cursor: grabbing; box-shadow: 0 16px 24px rgba(0,0,0,.2); z-index: 5; position: relative; }
+.card-num { font: 700 clamp(48px, 12vw, 80px)/1 var(--font); color: var(--math); padding: 10px 24px; }
+@keyframes drop { from { transform: translateY(-60vh) rotate(-8deg); } to { transform: none; } }
+.bins { display: grid; gap: 10px; }
+.bins-2 { grid-template-columns: 1fr 1fr; }
+.bins-3 { grid-template-columns: 1fr 1fr 1fr; }
+.bin { min-height: 104px; border-radius: 0 0 26px 26px; border: 4px solid #B5793D; border-top-width: 8px; background: #F7E3C3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; font-size: 1.15em; }
+.bin-ic { font-size: 1.6em; line-height: 1; }
+.bin.right { background: var(--good); border-color: #1E6640; color: #fff; }
+.bin.wrong { background: var(--bad); border-color: #9E2F25; color: #fff; }
+/* 塗色 */
+.part { cursor: pointer; }
+.part:hover { opacity: .85; }
+.paint-count { margin: 4px 0 0; font-weight: 700; color: var(--ink-soft); }
+/* 自己填 */
+.r-fields { display: flex; justify-content: center; gap: 18px; font-size: clamp(34px, 7vw, 54px); font-weight: 700; }
+.r-fields:empty { display: none; }
+.fbox-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.r-fields .box { width: 1.4em; height: 1.4em; padding: 0; border: 3px solid var(--line); border-radius: 12px; background: #fff; font: inherit; color: var(--math); }
+.r-fields .box.cur { border-color: var(--math); box-shadow: 0 0 0 4px var(--math-soft); animation: blink 1s infinite; }
+.r-fields .box.ok { border-color: var(--good); color: var(--good); background: #EAF6EF; }
+.r-fields .box.bad { border-color: var(--bad); color: var(--bad); background: #FDECEA; }
+.flabel { font-size: .55em; }
+.r-fields.shake { animation: shake .4s; }
+html.zhuyin .r-fields .box, html.zhuyin .card-num, html.zhuyin .frac { font-family: var(--font); }

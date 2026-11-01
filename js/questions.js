@@ -284,14 +284,347 @@
   }
   function makeAddSub() { return Math.random() < .5 ? makeAdd() : makeSub(); }
 
+  /* =====================================================
+   * 第 4～9 單元（和第 1 單元的數線跳跳）
+   *   kind：run（跑酷 Q 題，選答案）、quiz（⭕❌ 快答、🧩 選答案）、tap（點圖：數線跳跳、找找看）、
+   *         sort（🗑️ 分類）、paint（🍕 塗色）、fill（📏 自己填數字）
+   * ===================================================== */
+  /* 選項：直接給幾個（字串），打亂、去掉重複 */
+  function opts(answer, wrongs, n) {
+    n = n || 3;
+    var out = [String(answer)];
+    wrongs.forEach(function (w) { w = String(w); if (out.length < n && out.indexOf(w) < 0 && w !== '' && !/NaN|undefined|-/.test(w)) out.push(w); });
+    return shuffle(out);
+  }
+  function cmmm(cm, mm) { return cm && mm ? cm + ' 公分 ' + mm + ' 毫米' : cm ? cm + ' 公分' : mm + ' 毫米'; }
+  function lml(l, ml) { return l && ml ? l + ' 公升 ' + ml + ' 毫升' : l ? l + ' 公升' : ml + ' 毫升'; }
+  function svgOpen(w, h, label, cls) { return '<svg class="' + (cls || 'shapes') + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + label + '">'; }
+
+  /* ---------- 1-2 📏 數線跳跳：點刻度，青蛙跳過去 ---------- */
+  function genFrog() {
+    var step = pick([1, 10, 10, 100, 100, 100, 1000]), s;
+    if (step === 1000) s = 0; else if (step === 100) s = R(0, 9) * 1000; else if (step === 10) s = R(10, 99) * 100; else s = R(100, 999) * 10;
+    var k = pick([1, 2, 3, 4, 6, 7, 8, 9, 3, 7]), mode = Math.random() < .65 ? 'ends' : 'half', target = s + k * step;
+    var W = 680, x0 = 50, x1 = 630, y = 120, h = svgOpen(W, 190, '數線', 'nline frogline');
+    h += '<line x1="25" y1="' + y + '" x2="660" y2="' + y + '" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M662 ' + y + ' l-16 -10 v20 z" fill="currentColor"/>';
+    for (var i = 0; i <= 10; i++) {
+      var x = x0 + (x1 - x0) * i / 10, big = i === 0 || i === 10 || i === 5;
+      h += '<line x1="' + x + '" y1="' + (y - (big ? 16 : 11)) + '" x2="' + x + '" y2="' + (y + (big ? 16 : 11)) + '" stroke="currentColor" stroke-width="' + (big ? 5 : 3.5) + '"/>';
+      if (mode === 'ends' ? (i === 0 || i === 10) : (i === 0 || i === 5)) h += '<text x="' + x + '" y="' + (y + 48) + '" text-anchor="middle" font-size="34" font-weight="700" fill="currentColor">' + (s + i * step) + '</text>';
+      if (i > 0) h += '<rect class="hit" data-hit="' + i + '" x="' + (x - 26) + '" y="' + (y - 50) + '" width="52" height="86" rx="10"/>';
+    }
+    h += '<g class="frog" data-x0="' + x0 + '" data-dx="' + (x1 - x0) / 10 + '" data-y="' + (y - 18) + '" transform="translate(' + x0 + ',' + (y - 18) + ')"><text x="0" y="0" text-anchor="middle" font-size="56">🐸</text></g>';
+    h += '</svg>';
+    var endLabel = mode === 'ends' ? s + 10 * step : s + 5 * step, parts = mode === 'ends' ? 10 : 5;
+    return { kind: 'tap', frog: true, text: '青蛙要跳到「' + target + '」，點那個刻度！', say: '青蛙要跳到' + target + '，點一下那個刻度！', svg: h,
+      answer: String(k), answerText: target + '（第 ' + k + ' 格）', review: '數線 ' + s + '～' + endLabel + '，跳到 ' + target,
+      hint: '先看 1 小格是多少：從 ' + s + ' 到 ' + endLabel + ' 分成 ' + parts + ' 格，1 格是 ' + step + '。',
+      explain: '<p class="ex-line">1 格是 ' + step + '，' + target + ' 是從 ' + s + ' 往右數 <b>' + k + ' 格</b>。</p>' };
+  }
+
+  /* ---------- 第 4 單元 幾毫米 ---------- */
+  function genMm() {
+    var t = R(0, 3), cm = R(1, 25), mm = R(1, 9);
+    if (t === 0) {
+      var ans = cm * 10 + mm;
+      return { text: cm + ' 公分 ' + mm + ' 毫米 ＝ ？ 毫米', say: cm + '公分' + mm + '毫米，是幾毫米？',
+        answer: String(ans), options: opts(ans, [cm + mm, cm * 100 + mm, mm * 10 + cm, cm * 10, ans + 10]),
+        hint: '1 公分 ＝ 10 毫米。' + cm + ' 公分是 ' + cm * 10 + ' 毫米，再加 ' + mm + ' 毫米。',
+        explain: '<p class="ex-line">' + cm + ' 公分 ＝ ' + cm * 10 + ' 毫米</p><p class="ex-line">' + cm * 10 + ' ＋ ' + mm + ' ＝ <b>' + ans + '</b> 毫米</p>' };
+    }
+    if (t === 1) {
+      var n = cm * 10 + mm;
+      return { text: n + ' 毫米 ＝ ？', say: n + '毫米，是幾公分幾毫米？', cls: 'zh',
+        answer: cmmm(cm, mm), options: opts(cmmm(cm, mm), [cmmm(mm, cm), n + ' 公分', cmmm(cm + 1, mm), cmmm(Math.floor(n / 100) || cm - 1, n % 100)]),
+        hint: '10 毫米是 1 公分。' + n + ' 毫米裡有 ' + cm + ' 個 10 毫米，還剩 ' + mm + ' 毫米。',
+        explain: '<p class="ex-line">' + n + ' 毫米 ＝ ' + cm * 10 + ' 毫米 ＋ ' + mm + ' 毫米 ＝ <b>' + cmmm(cm, mm) + '</b></p>' };
+    }
+    if (t === 2) {
+      return { text: cm + ' 公分 ＝ ？ 毫米', say: cm + '公分，是幾毫米？',
+        answer: String(cm * 10), options: opts(cm * 10, [cm * 100, cm, cm + 10, cm * 10 + 10]),
+        hint: '1 公分 ＝ 10 毫米，' + cm + ' 公分就是 ' + cm + ' 個 10 毫米。',
+        explain: '<p class="ex-line">' + cm + ' 公分 ＝ <b>' + cm * 10 + '</b> 毫米</p>' };
+    }
+    var a = cm * 10 + mm, bcm = Math.max(1, cm + pick([-1, 1, 2])), b = bcm * 10;
+    var longer = a > b ? a + ' 毫米' : bcm + ' 公分';
+    return { text: a + ' 毫米 和 ' + bcm + ' 公分，哪一個比較長？', say: a + '毫米，和' + bcm + '公分，哪一個比較長？', cls: 'zh',
+      answer: longer, options: opts(longer, [a + ' 毫米', bcm + ' 公分', '一樣長']),
+      hint: '先換成一樣的單位：' + bcm + ' 公分 ＝ ' + b + ' 毫米，再比大小。',
+      explain: '<p class="ex-line">' + bcm + ' 公分 ＝ ' + b + ' 毫米。' + a + ' 毫米 和 ' + b + ' 毫米比，<b>' + longer + '</b>比較長。</p>' };
+  }
+  function rulerSVG(startMm, lenMm) {
+    var W = 660, x0 = 30, u = 6;
+    var c0 = Math.floor(startMm / 10), c1 = Math.min(10, Math.ceil((startMm + lenMm) / 10)); // 只畫鉛筆經過的幾公分
+    var vx = x0 + c0 * 10 * u - 22, vw = (c1 - c0) * 10 * u + 44;
+    var h = '<svg class="ruler" viewBox="' + vx + ' 0 ' + vw + ' 150" role="img" aria-label="尺">';
+    var ax = x0 + startMm * u, bx = x0 + (startMm + lenMm) * u;
+    h += '<rect x="' + ax + '" y="22" width="' + (bx - ax - 18) + '" height="26" rx="4" fill="#3C8DD9"/>';
+    h += '<path d="M' + (bx - 18) + ' 22 L' + bx + ' 35 L' + (bx - 18) + ' 48 Z" fill="#F2D3A2"/><path d="M' + (bx - 6) + ' 31.5 L' + bx + ' 35 L' + (bx - 6) + ' 38.5 Z" fill="#2B2A28"/>';
+    h += '<line x1="' + ax + '" y1="50" x2="' + ax + '" y2="72" stroke="#E0503A" stroke-width="2" stroke-dasharray="4 3"/><line x1="' + bx + '" y1="50" x2="' + bx + '" y2="72" stroke="#E0503A" stroke-width="2" stroke-dasharray="4 3"/>';
+    h += '<rect x="' + (vx + 6) + '" y="72" width="' + (vw - 12) + '" height="66" rx="6" fill="#FFE9A8" stroke="#C9A548" stroke-width="2"/>';
+    for (var m = c0 * 10; m <= c1 * 10; m++) {
+      var x = x0 + m * u, L = m % 10 === 0 ? 26 : m % 5 === 0 ? 18 : 11;
+      h += '<line x1="' + x + '" y1="72" x2="' + x + '" y2="' + (72 + L) + '" stroke="#2B2A28" stroke-width="' + (m % 10 === 0 ? 2.2 : 1.2) + '"/>';
+      if (m % 10 === 0) h += '<text x="' + x + '" y="124" text-anchor="middle" font-size="20" font-weight="700" fill="#2B2A28">' + m / 10 + '</text>';
+    }
+    return h + '<text x="' + (vx + vw - 12) + '" y="134" text-anchor="end" font-size="13" fill="#7A6A3A">公分</text></svg>';
+  }
+  function rulerCase() {
+    var start = pick([0, 10, 20, 30, 20, 10]), len = R(21, 69);
+    if (start + len > 98) len = 98 - start;
+    return { start: start, len: len, cm: Math.floor(len / 10), mm: len % 10, end: start + len };
+  }
+  function rulerTexts(c) {
+    return {
+      hint: c.start ? '鉛筆不是從 0 開始！從 ' + c.start / 10 + ' 開始數，或是用「結束的地方」減「開始的地方」。' : '先數有幾個大格（公分），再數剩下幾個小格（毫米）。',
+      explain: '<p class="ex-line">鉛筆從 ' + c.start / 10 + ' 公分 量到 ' + cmmm(Math.floor(c.end / 10), c.end % 10) + '</p><p class="ex-line">' + c.end + ' 毫米 － ' + c.start + ' 毫米 ＝ ' + c.len + ' 毫米 ＝ <b>' + cmmm(c.cm, c.mm) + '</b></p>'
+    };
+  }
+  function genRulerFill() { // 4-2 📏 自己填
+    var c = rulerCase(), t = rulerTexts(c);
+    return { kind: 'fill', text: '鉛筆有多長？', say: '鉛筆有多長？看看鉛筆從哪裡開始，到哪裡結束。', visual: rulerSVG(c.start, c.len), wide: true,
+      fields: [{ label: '公分', ans: c.cm }, { label: '毫米', ans: c.mm }], answer: cmmm(c.cm, c.mm), review: '鉛筆從 ' + c.start / 10 + ' 公分 量到 ' + cmmm(Math.floor(c.end / 10), c.end % 10),
+      hint: t.hint, explain: t.explain };
+  }
+  function genRulerPick() { // 闖關用：選答案
+    var c = rulerCase(), t = rulerTexts(c), ans = cmmm(c.cm, c.mm);
+    return { text: '鉛筆有多長？', say: '鉛筆有多長？', visual: rulerSVG(c.start, c.len), wide: true, cls: 'zh',
+      answer: ans, options: opts(ans, [cmmm(Math.floor(c.end / 10), c.end % 10), cmmm(c.cm + 1, c.mm), cmmm(c.cm, c.mm === 9 ? 8 : c.mm + 1)]),
+      review: '鉛筆從 ' + c.start / 10 + ' 公分 量到 ' + cmmm(Math.floor(c.end / 10), c.end % 10), hint: t.hint, explain: t.explain };
+  }
+
+  /* ---------- 第 5 單元 角 ---------- */
+  function angleSVG(x, y, deg, rot, l1, l2, label) {
+    var r1 = rot * Math.PI / 180, r2 = (rot + deg) * Math.PI / 180;
+    var p1 = [x + Math.cos(r1) * l1, y - Math.sin(r1) * l1], p2 = [x + Math.cos(r2) * l2, y - Math.sin(r2) * l2];
+    var a1 = [x + Math.cos(r1) * 24, y - Math.sin(r1) * 24], a2 = [x + Math.cos(r2) * 24, y - Math.sin(r2) * 24];
+    var h = '<path d="M' + a1[0].toFixed(1) + ' ' + a1[1].toFixed(1) + ' A24 24 0 0 0 ' + a2[0].toFixed(1) + ' ' + a2[1].toFixed(1) + '" fill="none" stroke="#E0503A" stroke-width="4"/>';
+    h += '<line x1="' + x + '" y1="' + y + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="#2B2A28" stroke-width="5" stroke-linecap="round"/>';
+    h += '<line x1="' + x + '" y1="' + y + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="#2B2A28" stroke-width="5" stroke-linecap="round"/>';
+    h += '<circle cx="' + x + '" cy="' + y + '" r="5" fill="#2B2A28"/>';
+    if (label) h += '<text x="' + x + '" y="' + (y + 42) + '" text-anchor="middle" font-size="30" font-weight="700" fill="#2A63A8">' + label + '</text>';
+    return h;
+  }
+  function genAngleQuick() { // 5-1 ⭕❌ 兩個角哪一個大（小的角故意畫長邊）
+    var same = Math.random() < .22, d1 = R(35, 140), d2;
+    if (same) d2 = d1; else { d2 = d1 + pick([-1, 1]) * R(20, 45); if (d2 < 25 || d2 > 165) d2 = d1 + (d1 > 90 ? -30 : 30); }
+    var bigger = d1 === d2 ? 0 : d1 > d2 ? 1 : 2, longFirst = bigger === 2 || (bigger === 0 && Math.random() < .5);
+    var L1 = longFirst ? 150 : 80, L2 = longFirst ? 80 : 150;
+    var svg = svgOpen(560, 240, '甲、乙兩個角') + angleSVG(95, 175, d1, R(-5, 20), L1, L1 * (.85 + Math.random() * .3), '甲') +
+      angleSVG(360, 175, d2, R(-5, 20), L2, L2 * (.85 + Math.random() * .3), '乙') + '</svg>';
+    var ans = ['一樣大', '甲', '乙'][bigger];
+    return { kind: 'quiz', text: '哪一個角比較大？', say: '甲和乙，哪一個角比較大？', visual: svg, wide: true,
+      answer: ans, options: ['甲', '一樣大', '乙'], review: '甲 ' + d1 + ' 度、乙 ' + d2 + ' 度',
+      hint: '角的大小，看兩條邊「張開」多少，跟邊畫得長或短沒有關係！',
+      explain: '<p class="ex-line">看紅色弧線：兩條邊張開得越大，角就越大；邊畫得長，角不會變大。答案是 <b>' + ans + '</b>。</p>' };
+  }
+  function angleCard() {
+    var kind = R(0, 2), deg = kind === 0 ? 90 : kind === 1 ? R(115, 155) : R(30, 65), rot = R(0, 359);
+    return { kind: kind, deg: deg, svg: svgOpen(260, 260, '一個角') + angleSVG(130, 130, deg, rot, 105, 95, '') + '</svg>' };
+  }
+  var ANGLE_BINS = ['比直角小', '直角', '比直角大'];
+  function genAngleSort() { // 5-2 🗑️ 分類
+    var c = angleCard(), ans = ['直角', '比直角大', '比直角小'][c.kind];
+    return { kind: 'sort', text: '這個角要放進哪一籃？', say: '這個角是直角、比直角大，還是比直角小？', card: c.svg, bins: ANGLE_BINS,
+      answer: ans, review: '一個 ' + c.deg + ' 度的角',
+      hint: '拿三角板的直角來比：剛好疊在一起是直角；張開比較多是比直角大。',
+      explain: '<p class="ex-line">' + c.deg + ' 度的角' + (c.kind === 0 ? '剛好是直角' : c.kind === 1 ? '張開得比直角大' : '張開得比直角小') + '，放進「<b>' + ans + '</b>」。</p>' };
+  }
+  function genAngleRun() { var q = genAngleQuick(); delete q.kind; return q; }
+
+  /* ---------- 第 6 單元 除法 ---------- */
+  function divCase() {
+    var b = R(2, 9), q = R(2, 9), r = Math.random() < .75 ? R(1, b - 1) : 0, a = q * b + r;
+    return a > 99 || a < 10 ? divCase() : { a: a, b: b, q: q, r: r };
+  }
+  function qr(q, r) { return q + ' … ' + r; }
+  function genDivRun() { // 6-1 🏃 做除法
+    var c = divCase(), ans = qr(c.q, c.r), w = [];
+    if (c.q >= 2) w.push(qr(c.q - 1, c.r + c.b));
+    w.push(qr(c.q + 1, Math.abs(c.r - c.b)), qr(c.q, c.r + 1 < c.b ? c.r + 1 : c.r - 1), qr(c.q, 0));
+    return { text: c.a + ' ÷ ' + c.b + ' ＝ ？', say: c.a + ' 除以 ' + c.b + '，商是多少，餘數是多少？', answer: ans, options: opts(ans, w), cls: 'zh',
+      hint: '想 ' + c.b + ' 的乘法：' + c.b + ' × ' + c.q + ' ＝ ' + c.b * c.q + '，' + c.a + ' － ' + c.b * c.q + ' ＝ ' + c.r + '。餘數一定要比 ' + c.b + ' 小！',
+      explain: '<p class="ex-line">' + c.b + ' × ' + c.q + ' ＝ ' + c.b * c.q + '，' + c.a + ' － ' + c.b * c.q + ' ＝ ' + c.r + '</p><p class="ex-line">' + c.a + ' ÷ ' + c.b + ' ＝ <b>' + ans + '</b>（商 ' + c.q + '，餘數 ' + c.r + '）</p><p class="ex-line">驗算：' + c.b + ' × ' + c.q + ' ＋ ' + c.r + ' ＝ ' + c.a + '</p>' };
+  }
+  function genOddEven() { // 6-2 🗑️ 奇數偶數
+    var n = pick([R(1, 99), R(100, 999), R(1000, 9999)]), ans = n % 2 ? '奇數' : '偶數';
+    return { kind: 'sort', text: '這個數是奇數還是偶數？', say: n + '，是奇數還是偶數？', card: '<span class="card-num">' + n + '</span>', bins: ['奇數', '偶數'],
+      answer: ans, review: String(n),
+      hint: '只看個位：個位是 0、2、4、6、8 是偶數；1、3、5、7、9 是奇數。',
+      explain: '<p class="ex-line">' + n + ' 的個位是 ' + n % 10 + '，所以是<b>' + ans + '</b>。</p>' };
+  }
+  function genLeftover() { // 6-3 🧩 剩下的怎麼辦？
+    var b = R(3, 9), q = R(2, 9), r = R(1, b - 1), a = q * b + r, t = R(0, 2), s;
+    if (t === 0) {
+      s = pick([['個人去郊遊，每輛車最多坐', '人', '最少要幾輛車', '輛', '剩下的 ' + r + ' 個人也要坐車，所以要再多 1 輛'],
+                ['個人要過河，每條船最多坐', '人', '最少要幾條船', '條', '剩下的 ' + r + ' 個人也要過河，所以要再多 1 條'],
+                ['顆蛋，每個盒子最多裝', '顆', '最少要幾個盒子', '個', '剩下的 ' + r + ' 顆蛋也要裝，所以要再多 1 個']]);
+      var ans0 = (q + 1) + ' ' + s[3];
+      return { kind: 'quiz', text: '有 ' + a + ' ' + s[0] + ' ' + b + ' ' + s[1] + '。' + s[2] + '？', say: '有' + a + s[0] + b + s[1] + '。' + s[2] + '？',
+        answer: ans0, options: opts(ans0, [q + ' ' + s[3], r + ' ' + s[3], (q + 2) + ' ' + s[3], (q - 1) + ' ' + s[3]]), cls: 'zh', review: a + ' ÷ ' + b + '：' + s[2],
+        hint: a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '。' + s[4] + '！',
+        explain: '<p class="ex-line">' + a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '</p><p class="ex-line">' + s[4] + '：' + q + ' ＋ 1 ＝ <b>' + ans0 + '</b></p>' };
+    }
+    if (t === 1) {
+      s = pick([['顆糖，每', '顆裝一袋', '可以裝滿幾袋', '袋'], ['枝鉛筆，每', '枝綁成一把', '可以綁成幾把', '把'], ['張貼紙，每人分', '張', '可以分給幾個人', '人']]);
+      var ans1 = q + ' ' + s[3];
+      return { kind: 'quiz', text: '有 ' + a + ' ' + s[0] + ' ' + b + ' ' + s[1] + '，' + s[2] + '？', say: '有' + a + s[0] + b + s[1] + '，' + s[2] + '？',
+        answer: ans1, options: opts(ans1, [(q + 1) + ' ' + s[3], r + ' ' + s[3], (q + 2) + ' ' + s[3], (q - 1) + ' ' + s[3]]), cls: 'zh', review: a + ' ÷ ' + b + '：' + s[2],
+        hint: a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '。剩下的 ' + r + ' 個不夠 ' + b + ' 個，不能再多一' + s[3] + '。',
+        explain: '<p class="ex-line">' + a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '</p><p class="ex-line">剩下的不夠，答案是 <b>' + ans1 + '</b>。</p>' };
+    }
+    s = pick([['顆糖，平分給', '個小朋友，每人分一樣多，還剩幾顆', '顆'], ['張卡片，平分給', '個人，每人分一樣多，還剩幾張', '張']]);
+    var ans2 = r + ' ' + s[2];
+    return { kind: 'quiz', text: '有 ' + a + ' ' + s[0] + ' ' + b + ' ' + s[1] + '？', say: '有' + a + s[0] + b + s[1] + '？',
+      answer: ans2, options: opts(ans2, [q + ' ' + s[2], (r + b) + ' ' + s[2], b + ' ' + s[2], (r + 1) + ' ' + s[2]]), cls: 'zh', review: a + ' ÷ ' + b + '：還剩幾個',
+      hint: a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '。問「還剩幾個」就是看餘數。',
+      explain: '<p class="ex-line">' + a + ' ÷ ' + b + ' ＝ ' + q + ' … ' + r + '，每人 ' + q + ' ' + s[2] + '，還剩 <b>' + ans2 + '</b>。</p>' };
+  }
+
+  /* ---------- 第 7 單元 公升和毫升 ---------- */
+  function genLiter() {
+    var t = R(0, 3), l = R(1, 9), ml = pick([5, 8, 20, 50, 80, 250, 300, 600, 45, 705]);
+    if (t === 0) {
+      var ans = l * 1000 + ml;
+      return { text: lml(l, ml) + ' ＝ ？ 毫升', say: l + '公升' + ml + '毫升，是幾毫升？', answer: String(ans),
+        options: opts(ans, [+(String(l) + String(ml)), l * 10000 + ml, l * 1000 + ml * 10, l * 100 + ml]),
+        hint: '1 公升 ＝ 1000 毫升。' + l + ' 公升是 ' + l * 1000 + ' 毫升，再加 ' + ml + ' 毫升；不夠的位要補 0。',
+        explain: '<p class="ex-line">' + l + ' 公升 ＝ ' + l * 1000 + ' 毫升</p><p class="ex-line">' + l * 1000 + ' ＋ ' + ml + ' ＝ <b>' + ans + '</b> 毫升</p>' };
+    }
+    if (t === 1) {
+      var n = l * 1000 + ml, a1 = lml(l, ml);
+      return { text: n + ' 毫升 ＝ ？', say: n + '毫升，是幾公升幾毫升？', answer: a1, cls: 'zh',
+        options: opts(a1, [lml(Math.floor(n / 100), n % 100), lml(l, ml * 10 < 1000 ? ml * 10 : ml + 1), n + ' 公升', lml(l * 10, ml)]),
+        hint: '1000 毫升是 1 公升。' + n + ' 毫升裡有 ' + l + ' 個 1000 毫升，還剩 ' + ml + ' 毫升。',
+        explain: '<p class="ex-line">' + n + ' 毫升 ＝ ' + l * 1000 + ' 毫升 ＋ ' + ml + ' 毫升 ＝ <b>' + a1 + '</b></p>' };
+    }
+    if (t === 2) {
+      return { text: l + ' 公升 ＝ ？ 毫升', say: l + '公升，是幾毫升？', answer: String(l * 1000),
+        options: opts(l * 1000, [l * 100, l * 10, l * 10000]),
+        hint: '1 公升 ＝ 1000 毫升，' + l + ' 公升就是 ' + l + ' 個 1000 毫升。',
+        explain: '<p class="ex-line">' + l + ' 公升 ＝ <b>' + l * 1000 + '</b> 毫升</p>' };
+    }
+    var m = R(2, 9) * 100 + pick([0, 50]) + 1000 * R(0, 2), lt = R(1, 3), more = m > lt * 1000 ? m + ' 毫升' : m === lt * 1000 ? '一樣多' : lt + ' 公升';
+    return { text: m + ' 毫升 和 ' + lt + ' 公升，哪一個比較多？', say: m + '毫升，和' + lt + '公升，哪一個比較多？', cls: 'zh',
+      answer: more, options: opts(more, [m + ' 毫升', lt + ' 公升', '一樣多']),
+      hint: '先換成一樣的單位：' + lt + ' 公升 ＝ ' + lt * 1000 + ' 毫升。',
+      explain: '<p class="ex-line">' + lt + ' 公升 ＝ ' + lt * 1000 + ' 毫升，和 ' + m + ' 毫升比，' + (more === '一樣多' ? '<b>一樣多</b>' : '<b>' + more + '</b>比較多') + '。</p>' };
+  }
+
+  /* ---------- 第 8 單元 分數 ---------- */
+  function pieSVG(n, k, shape, hit, unequal) {
+    var h = svgOpen(320, shape === 'bar' ? 150 : 300, '平分成 ' + n + ' 份的圖', 'shapes fracpic'), i;
+    if (shape === 'bar') {
+      var w = 280 / n, xs = [];
+      if (unequal) { var cuts = [0, 40, 150, 210, 280]; for (i = 0; i < 4; i++) xs.push([20 + cuts[i], cuts[i + 1] - cuts[i]]); }
+      else for (i = 0; i < n; i++) xs.push([20 + i * w, w]);
+      xs.forEach(function (p, j) {
+        h += '<rect ' + (hit ? 'class="part" data-part="' + j + '" ' : '') + 'x="' + p[0] + '" y="20" width="' + p[1] + '" height="110" fill="' + (j < k ? '#FF9F43' : '#fff') + '" stroke="#2B2A28" stroke-width="3"/>';
+      });
+    } else {
+      var cx = 160, cy = 150, r = 130;
+      if (n === 1) h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + (k ? '#FF9F43' : '#fff') + '" stroke="#2B2A28" stroke-width="3"/>';
+      for (i = 0; i < n && n > 1; i++) {
+        var a0 = -Math.PI / 2 + i * 2 * Math.PI / n, a1 = a0 + 2 * Math.PI / n;
+        var d = 'M' + cx + ' ' + cy + ' L' + (cx + r * Math.cos(a0)).toFixed(1) + ' ' + (cy + r * Math.sin(a0)).toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + (cx + r * Math.cos(a1)).toFixed(1) + ' ' + (cy + r * Math.sin(a1)).toFixed(1) + ' Z';
+        h += '<path ' + (hit ? 'class="part" data-part="' + i + '" ' : '') + 'd="' + d + '" fill="' + (i < k ? '#FF9F43' : '#fff') + '" stroke="#2B2A28" stroke-width="3" stroke-linejoin="round"/>';
+      }
+    }
+    return h + '</svg>';
+  }
+  function frac(a, b) { return a + '/' + b; }
+  function genPaint() { // 8-1 🍕 塗色
+    var shape = Math.random() < .55 ? 'pie' : 'bar', n = shape === 'pie' ? pick([2, 3, 4, 5, 6, 8, 10, 12]) : R(2, 10), k = R(1, n - 1);
+    return { kind: 'paint', text: '把圖塗出 ' + frac(k, n) + '！', say: '把圖塗出' + n + '分之' + k + '。點一下就會塗上顏色，再點一下可以擦掉。',
+      paint: { n: n, k: k, shape: shape }, svg: pieSVG(n, 0, shape, true), answer: frac(k, n), review: '塗出 ' + frac(k, n),
+      hint: '分母 ' + n + '：整個平分成 ' + n + ' 份；分子 ' + k + '：塗其中的 ' + k + ' 份。',
+      explain: '<p class="ex-line">' + frac(k, n) + '：平分成 ' + n + ' 份，塗 <b>' + k + ' 份</b>。</p>' };
+  }
+  function genFracRun() { // 8-2 🏃 看圖選分數、幾個幾分之一
+    var t = R(0, 4), n, k;
+    if (t <= 1) {
+      var shape = t ? 'bar' : 'pie'; n = shape === 'pie' ? pick([3, 4, 5, 6, 8, 10, 12]) : R(3, 10); k = R(1, n - 1);
+      return { text: '塗色的部分是全部的幾分之幾？', say: '塗色的部分，是全部的幾分之幾？', visual: pieSVG(n, k, shape, false), answer: frac(k, n),
+        options: opts(frac(k, n), [frac(n - k, n), frac(k, n - k), frac(n, k)]), review: '平分成 ' + n + ' 份，塗了 ' + k + ' 份',
+        hint: '數一數：全部平分成幾份（分母），塗了幾份（分子）。',
+        explain: '<p class="ex-line">平分成 ' + n + ' 份，塗了 ' + k + ' 份，是 <b>' + frac(k, n) + '</b>。</p>' };
+    }
+    if (t === 2) {
+      n = pick([4, 5, 6, 8, 9, 10, 12]); k = R(2, n - 1);
+      if (Math.random() < .3) return { text: n + ' 個 ' + frac(1, n) + ' 合起來是多少？', say: n + '個' + n + '分之1，合起來是多少？', answer: '1',
+        options: opts('1', [frac(n, n * n), frac(1, n)]), hint: n + ' 個 ' + frac(1, n) + ' 就是 ' + frac(n, n) + '，也就是 1 個整個。',
+        explain: '<p class="ex-line">' + n + ' 個 ' + frac(1, n) + ' ＝ ' + frac(n, n) + ' ＝ <b>1</b></p>' };
+      return { text: k + ' 個 ' + frac(1, n) + ' 是多少？', say: k + '個' + n + '分之1，是多少？', answer: frac(k, n),
+        options: opts(frac(k, n), [frac(k, k * n), frac(1, k * n), frac(k + 1, n)]), hint: '分母不變，數一數有幾個 ' + frac(1, n) + '，就是分子。',
+        explain: '<p class="ex-line">' + k + ' 個 ' + frac(1, n) + ' ＝ <b>' + frac(k, n) + '</b></p>' };
+    }
+    if (t === 3) { // 一定要平分
+      var eq = Math.random() < .5;
+      return { text: '這個圖塗色的部分，可以說是 ' + frac(1, 4) + ' 嗎？', say: '這個圖塗色的部分，可以說是4分之1嗎？', visual: pieSVG(4, 1, 'bar', false, !eq),
+        answer: eq ? '可以' : '不可以', options: ['可以', '不可以'], review: (eq ? '平分' : '沒有平分') + '的 4 格',
+        hint: '要「平分」，每一份一樣大，才可以用分數說。',
+        explain: '<p class="ex-line">' + (eq ? '4 份一樣大，塗 1 份是 <b>' + frac(1, 4) + '</b>，可以。' : '4 份不一樣大，沒有平分，<b>不可以</b>說是 ' + frac(1, 4) + '。') + '</p>' };
+    }
+    k = R(2, 11);
+    return { text: '1 打有 12 個，' + k + ' 個是幾打？', say: '1打有12個，' + k + '個是幾打？', answer: frac(k, 12),
+      options: opts(frac(k, 12), [frac(12, k), frac(k, 1), frac(1, k)]), hint: '1 打平分成 12 個，1 個是 ' + frac(1, 12) + ' 打。',
+      explain: '<p class="ex-line">1 個是 ' + frac(1, 12) + ' 打，' + k + ' 個是 <b>' + frac(k, 12) + '</b> 打。</p>' };
+  }
+
+  /* ---------- 第 9 單元 圓 ---------- */
+  var CIRCLE_FACTS = [
+    ['同一個圓的半徑，長度怎麼樣？', '都一樣長', ['都不一樣長', '有的長有的短']],
+    ['一個圓有幾條半徑？', '很多很多條', ['1 條', '2 條']],
+    ['直徑會經過圓的哪裡？', '圓心', ['圓的外面', '不一定']]
+  ];
+  function genCircleRun() { // 9-1 🏃 半徑和直徑
+    var t = R(0, 2), r = R(2, 15);
+    if (t === 0) return { text: '半徑 ' + r + ' 公分，直徑是幾公分？', say: '半徑' + r + '公分，直徑是幾公分？', answer: String(r * 2),
+      options: opts(r * 2, [r, r + 2, r * 4, Math.floor(r / 2) || 1]), hint: '直徑 ＝ 2 條半徑，半徑 × 2。',
+      explain: '<p class="ex-line">直徑 ＝ ' + r + ' × 2 ＝ <b>' + r * 2 + '</b> 公分</p>' };
+    if (t === 1) return { text: '直徑 ' + r * 2 + ' 公分，半徑是幾公分？', say: '直徑' + r * 2 + '公分，半徑是幾公分？', answer: String(r),
+      options: opts(r, [r * 2, r * 4, r + 1]), hint: '半徑是直徑的一半，直徑 ÷ 2。',
+      explain: '<p class="ex-line">半徑 ＝ ' + r * 2 + ' ÷ 2 ＝ <b>' + r + '</b> 公分</p>' };
+    var f = pick(CIRCLE_FACTS);
+    return { text: f[0], say: f[0], answer: f[1], options: shuffle([f[1]].concat(f[2])), cls: 'zh',
+      hint: '從圓心到圓上的線是半徑，每一條都一樣長；穿過圓心、兩頭都在圓上的線是直徑。',
+      explain: '<p class="ex-line">同一個圓：半徑有很多條、都一樣長；直徑穿過圓心，是半徑的 2 倍。</p>' };
+  }
+  function genCircleFind() { // 9-2 🔍 找找看
+    var want = pick(['半徑', '直徑', '半徑', '直徑']), cx = 170, cy = 160, R0 = 130, ids = shuffle(['a', 'b', 'c', 'd']);
+    function pt(deg, rr) { var a = deg * Math.PI / 180; return [(cx + Math.cos(a) * (rr || R0)).toFixed(1), (cy - Math.sin(a) * (rr || R0)).toFixed(1)]; }
+    var base = R(0, 359), segs = [
+      { type: '半徑', p: [[cx, cy], pt(base)] },
+      { type: '直徑', p: [pt(base + 110), pt(base + 290)] },
+      { type: '弦', p: [pt(base + 200), pt(base + 260)] },
+      { type: '線', p: [pt(base + 30, 40), pt(base + 60)] }
+    ];
+    var colors = ['#3C8DD9', '#E35D4F', '#2D8A57', '#9B59B6'];
+    var h = svgOpen(340, 320, '圓和四條線') + '<circle cx="' + cx + '" cy="' + cy + '" r="' + R0 + '" fill="#FFF8E7" stroke="#2B2A28" stroke-width="4"/>';
+    segs.forEach(function (s, i) {
+      var a = s.p[0], b = s.p[1];
+      h += '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="' + colors[i] + '" stroke-width="7" stroke-linecap="round"/>';
+      h += '<line class="hit" data-hit="' + s.type + '" x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="transparent" stroke-width="34" stroke-linecap="round"/>';
+    });
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="#2B2A28"/><text x="' + (cx + 10) + '" y="' + (cy + 26) + '" font-size="20" font-weight="700" fill="#2B2A28">圓心</text></svg>';
+    return { kind: 'tap', text: '點一下圖上的「' + want + '」！', say: '點一下圖上的' + want + '。', svg: h, answer: want, answerText: want, review: '找出' + want,
+      hint: want === '半徑' ? '半徑：從圓心連到圓上的線。' : '直徑：穿過圓心，兩頭都在圓上的線。',
+      explain: '<p class="ex-line">半徑：一頭在圓心、一頭在圓上。直徑：穿過圓心、兩頭都在圓上。</p><p class="ex-line">沒有經過圓心的線，不是直徑。</p>' };
+  }
+
+  /* ---------- 加油小站：混合闖關 ---------- */
+  function mix(list) { return function () { var q = pick(list)(); q.kind = undefined; return q; }; }
+
   /* ========== 關卡清單 ==========
-   * mode：run 跑酷、timed 2 分鐘挑戰、spot 小偵探
+   * mode：run 跑酷、timed 2 分鐘挑戰、spot 小偵探、
+   *       round（一局 10 題）：quiz ⭕❌ 快答／🧩 選答案、tap 點圖、sort 🗑️ 分類、paint 🍕 塗色、fill 📏 自己填
+   * tut：說明頁用哪一套（第一次玩這一套才會自動播）
    * timed：bonus＝答對加幾秒；goals＝拿 1、2、3 顆星要答對幾題
    */
   var UNITS = [
     { id: 1, name: '數到 10000', ic: '🔢', stages: [
-      { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite, time: 10 },
-      { id: '1-2', mode: 'run', name: '數線大挑戰', desc: '1 小格是多少？箭頭指在哪裡？', gen: genNumberLine, time: 12 }
+      { id: '1-1', mode: 'run', name: '數字讀寫', desc: '國字和數字互換，中間的 0 別漏掉', gen: genReadWrite },
+      { id: '1-2', mode: 'round', tut: 'frog', ic: '📏', label: '數線跳跳', name: '數線跳跳', desc: '1 小格是多少？點刻度讓青蛙跳過去', gen: genFrog }
     ] },
     { id: 2, name: '四位數的加減', ic: '➕', stages: [
       { id: '2-1', mode: 'timed', name: '加法進位', desc: '滿 10 要進 1', make: makeAdd, bonus: 15, goals: [3, 6, 10] },
@@ -302,16 +635,38 @@
       { id: '3-1', mode: 'timed', name: '乘法進位', desc: '乘完要加上進位', make: makeMul, bonus: 10, goals: [4, 8, 14] },
       { id: '3-2', mode: 'spot', name: '找出乘法的錯', desc: '同學忘記進位了嗎？', make: spotFrom(makeMul) }
     ] },
-    { id: 4, name: '幾毫米', ic: '📏', stages: [] },
-    { id: 5, name: '角、正方形和長方形', ic: '📐', stages: [] },
-    { id: 'p1', name: '加油小站一', ic: '⛽', stages: [] },
-    { id: 6, name: '除法', ic: '➗', stages: [] },
-    { id: 7, name: '公升和毫升', ic: '🥛', stages: [] },
-    { id: 8, name: '分數', ic: '🍕', stages: [] },
-    { id: 9, name: '圓', ic: '⭕', stages: [] },
-    { id: 'p2', name: '加油小站二', ic: '⛽', stages: [] }
+    { id: 4, name: '幾毫米', ic: '📏', stages: [
+      { id: '4-1', mode: 'run', name: '公分和毫米', desc: '1 公分 ＝ 10 毫米，互相換一換', gen: genMm },
+      { id: '4-2', mode: 'round', tut: 'fill', ic: '📏', label: '看尺量長度', name: '看尺量長度', desc: '鉛筆不一定從 0 開始量喔', gen: genRulerFill }
+    ] },
+    { id: 5, name: '角、正方形和長方形', ic: '📐', stages: [
+      { id: '5-1', mode: 'round', tut: 'quiz', ic: '⭕', label: '比大小快答', name: '哪個角比較大', desc: '邊畫得長，角不一定比較大', gen: genAngleQuick },
+      { id: '5-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '直角分類', desc: '直角、比直角大、比直角小', gen: genAngleSort }
+    ] },
+    { id: 'p1', name: '加油小站一', ic: '⛽', stages: [
+      { id: 'p1', mode: 'run', name: '闖關：1～5 單元', desc: '數字讀寫、數線、公分毫米、量長度、角', gen: mix([genReadWrite, genNumberLine, genMm, genRulerPick, genAngleRun]) }
+    ] },
+    { id: 6, name: '除法', ic: '➗', stages: [
+      { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRun },
+      { id: '6-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '奇數和偶數', desc: '只要看個位', gen: genOddEven },
+      { id: '6-3', mode: 'round', tut: 'quiz', ic: '🧩', label: '選對答案', name: '剩下的怎麼辦？', desc: '要幾輛車？剩下的人也要坐', gen: genLeftover }
+    ] },
+    { id: 7, name: '公升和毫升', ic: '🥛', stages: [
+      { id: '7-1', mode: 'run', name: '公升和毫升', desc: '1 公升 ＝ 1000 毫升，中間的 0 別漏掉', gen: genLiter }
+    ] },
+    { id: 8, name: '分數', ic: '🍕', stages: [
+      { id: '8-1', mode: 'round', tut: 'paint', ic: '🍕', label: '塗塗看', name: '分數塗色', desc: '分母是平分幾份，分子是塗幾份', gen: genPaint },
+      { id: '8-2', mode: 'run', name: '看圖說分數', desc: '幾分之幾？幾個幾分之一？', gen: genFracRun }
+    ] },
+    { id: 9, name: '圓', ic: '⭕', stages: [
+      { id: '9-1', mode: 'run', name: '半徑和直徑', desc: '直徑 ＝ 半徑 × 2', gen: genCircleRun },
+      { id: '9-2', mode: 'round', tut: 'find', ic: '🔍', label: '找找看', name: '找出半徑、直徑', desc: '在圓上點出來', gen: genCircleFind }
+    ] },
+    { id: 'p2', name: '加油小站二', ic: '⛽', stages: [
+      { id: 'p2', mode: 'run', name: '闖關：5～9 單元', desc: '角、除法、公升毫升、分數、圓', gen: mix([genAngleRun, genDivRun, genLiter, genFracRun, genCircleRun]) }
+    ] }
   ];
 
   root.MathQ = { UNITS: UNITS, zh: zh, literal: literal, vertical: vertical, len: len, dig: dig,
-    _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, makeAdd: makeAdd, makeSub: makeSub, makeMul: makeMul } };
+    _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, genFrog: genFrog, genPaint: genPaint, genCircleFind: genCircleFind, makeAdd: makeAdd, makeSub: makeSub, makeMul: makeMul } };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -12,12 +12,19 @@ const calc = (a, op, b) => op === '＋' ? a + b : op === '－' ? a - b : a * b;
 const N = 3000;
 for (const u of Q.UNITS) for (const s of u.stages) {
   for (let i = 0; i < N; i++) {
-    if (s.mode === 'run') {
-      const q = s.gen();
-      assert.ok(q.text && q.say && q.answer && q.hint, s.id + ' missing fields');
-      assert.strictEqual(q.options.length, 3, s.id + ' options');
-      assert.strictEqual(new Set(q.options).size, 3, s.id + ' dup');
-      assert.ok(q.options.includes(q.answer), s.id + ' no answer');
+    if (s.gen) {
+      const q = s.gen(), k = q.kind || 'run';
+      assert.ok(q.text && q.say !== undefined && q.answer && q.hint, s.id + ' missing fields');
+      if (k === 'run' || k === 'quiz') {
+        assert.ok(q.options.length >= 2, s.id + ' options');
+        assert.strictEqual(new Set(q.options).size, q.options.length, s.id + ' dup ' + q.options);
+        assert.ok(q.options.includes(q.answer), s.id + ' no answer');
+        if (!/^(可以|不可以|奇數|偶數)$/.test(q.answer)) assert.strictEqual(q.options.length, 3, s.id + ' needs 3 options ' + q.text);
+      }
+      if (k === 'sort') assert.ok(q.bins.includes(q.answer), s.id + ' bin');
+      if (k === 'tap') assert.ok(q.svg.includes('data-hit="' + q.answer + '"'), s.id + ' hit');
+      if (k === 'fill') assert.ok(q.fields.every(f => Number.isInteger(f.ans) && f.ans >= 0), s.id + ' fill');
+      if (k === 'paint') assert.ok(q.paint.k > 0 && q.paint.k < q.paint.n, s.id + ' paint');
     } else {
       const p = s.make();
       assert.strictEqual(calc(p.a, p.op, p.b), p.ans, s.id + ' wrong answer');
@@ -31,7 +38,7 @@ for (const u of Q.UNITS) for (const s of u.stages) {
       }
     }
   }
-  const ex = s.mode === 'run' ? s.gen() : s.make();
+  const ex = s.gen ? s.gen() : s.make();
   console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }
 console.log('全部通過');
