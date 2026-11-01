@@ -13,20 +13,24 @@
   var KIDS = ['小明', '小美', '阿傑', '小華', '安安', '平平', '小偉', '莉莉'];
   var S = null;
 
+  var IMG = 'images/tutorial/';
+  var SLIDES = [
+    { img: IMG + 'spot-1.webp', text: '這是同學寫的直式。你要當小偵探，檢查他有沒有算對。可以先用計算紙自己算一次。' },
+    { img: IMG + 'spot-2.webp', text: '同學算對了，就按綠色的「算對了」。', say: '同學算對了，就按綠色的算對了。' },
+    { img: IMG + 'spot-3.webp', text: '同學算錯了，就點答案裡錯的那一位數字。' },
+    { img: IMG + 'spot-4.webp', text: '抓到了！看看他錯在哪裡，自己不要犯一樣的錯喔。' },
+    { img: IMG + 'spot-5.webp', text: '一共 10 題。錯 0～1 題拿 3 顆星，錯 2～3 題拿 2 顆星。', say: '一共10題。錯0到1題拿3顆星，錯2到3題拿2顆星。' }
+  ];
   function open(s) {
-    App.ready({
-      title: '🔍 關卡 ' + s.id + '　' + s.name,
-      desc: s.desc,
-      say: '小偵探。同學的直式算對了嗎？算對了就按算對了；算錯了，就點錯的那一位數字。',
-      tips: [
-        ['同學算對了 → 按「<b>✔ 算對了</b>」', '同學算對了，就按綠色的算對了。'],
-        ['同學算錯了 → <b>點答案裡錯的那一位數字</b>', '同學算錯了，就點答案裡錯的那一位數字。'],
-        '✏️ 可以先用計算紙自己算一次再比對。',
-        ['⭐⭐⭐ 錯 0～1 題・⭐⭐ 錯 2～3 題', '錯0到1題，拿3顆星。錯2到3題，拿2顆星。']
-      ],
-      onStart: function () { $('s-q').innerHTML = ''; $('s-result').hidden = true; App.showScreen('spot'); App.countdown(function () { start(s); }); }
+    App.intro({
+      mode: 'spot', title: '🔍 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES,
+      start: function (box) {
+        box.innerHTML = '<button class="big-btn go-btn" type="button">開始！ ▶</button>';
+        box.querySelector('button').onclick = function () { $('s-q').innerHTML = ''; $('s-result').hidden = true; App.showScreen('spot'); App.countdown(function () { start(s); }); };
+      }
     });
   }
+  $('help-spot').onclick = function () { if (S && S.phase !== 'end') App.replay({ title: '📖 遊戲說明', slides: SLIDES, onClose: function () {} }); };
   App.modes.spot = { open: open };
 
   function start(s) {
@@ -125,5 +129,5 @@
       again: function () { start(s); }, say: title + '十題答對' + S.right + '題。'
     });
   }
-  if (/[?&]debug\b/.test(location.search)) window.__peekS = function () { return S; }; // 測試用
+  if (/[?&]debug\b/.test(location.search)) { window.__peekS = function () { return S; }; window.__renderS = render; } // 測試、截說明圖用
 })();

@@ -35,6 +35,7 @@
   <section class="screen game" id="game" hidden>
     <header class="hud">
       <button class="hud-btn" id="btn-pause" type="button" aria-label="暫停">⏸</button>
+      <button class="hud-btn help" id="help-run" type="button" aria-label="再看一次說明">📖</button>
       <div class="hud-mid"><span id="hud-stage"></span><span class="left" id="hud-left"></span></div>
       <div class="combo" id="combo" hidden></div>
       <div class="score">🪙 <b id="score">0</b></div>
@@ -55,6 +56,7 @@
   <section class="screen game" id="timed" hidden>
     <header class="hud">
       <button class="hud-btn" id="t-pause" type="button" aria-label="暫停">⏸</button>
+      <button class="hud-btn help" id="help-timed" type="button" aria-label="再看一次說明">📖</button>
       <div class="hud-mid"><span id="t-title"></span></div>
       <div class="combo" id="t-combo" hidden></div>
       <div class="score">✔ <b id="t-count">0</b> 題</div>
@@ -78,6 +80,7 @@
   <section class="screen game" id="spot" hidden>
     <header class="hud">
       <button class="hud-btn" id="s-pause" type="button" aria-label="暫停">⏸</button>
+      <button class="hud-btn help" id="help-spot" type="button" aria-label="再看一次說明">📖</button>
       <div class="hud-mid"><span id="s-title"></span><span class="left" id="s-prog"></span></div>
       <div class="combo" id="s-combo" hidden></div>
       <div class="score">⭐ <b id="s-count">0</b></div>
@@ -97,29 +100,32 @@
     </main>
   </section>
 
-  <!-- ===== 選速度 ===== -->
-  <div class="overlay" id="ov-speed" hidden>
-    <div class="dialog">
-      <div class="say-row"><button class="say" type="button" data-say="選一個速度。烏龜，慢慢跑，比較好閃。兔子，一般。獵豹，挑戰，跑得很快，障礙物也很多。" aria-label="念出來">🔊</button><h2 id="speed-title"></h2></div>
-      <p class="sub" id="speed-desc"></p>
-      <div class="speed-list">
-        <button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>跑得慢，比較好閃</small></button>
-        <button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>
-        <button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快，障礙物也很多！</small></button>
+  <!-- ===== 遊戲說明（一頁一小塊遊戲畫面＋一句話，自動念；念完才能往下滑） ===== -->
+  <div class="overlay" id="ov-tut" hidden>
+    <div class="dialog tut-box">
+      <h2 id="tut-title"></h2>
+      <div id="tut-learn">
+        <div class="tut-stage" id="tut-stage">
+          <img id="tut-img" alt="" draggable="false">
+          <p class="tut-text" id="tut-text"></p>
+        </div>
+        <div class="tut-dots" id="tut-dots" aria-hidden="true"></div>
+        <div class="tut-nav">
+          <button class="tut-btn" type="button" id="tut-prev">◀ 上一頁</button>
+          <span class="tut-page" id="tut-page"></span>
+          <button class="tut-btn next" type="button" id="tut-next">下一頁 ▶</button>
+        </div>
+        <p class="tut-wait" id="tut-wait">🎧 聽完這一頁，就可以往下滑</p>
+        <p class="tut-done" id="tut-done" hidden>✅ 說明都看完了，可以開始了！</p>
       </div>
-      <p class="tip">🪙 吃金幣、閃開障礙物；撞到 <b>Q</b> 會出題，題目不限時間。</p>
-      <button class="link-btn" type="button" data-close>返回</button>
-    </div>
-  </div>
-
-  <!-- ===== 開始前說明（2 分鐘挑戰、小偵探） ===== -->
-  <div class="overlay" id="ov-ready" hidden>
-    <div class="dialog">
-      <div class="say-row"><button class="say" type="button" id="ready-say" aria-label="念出來">🔊</button><h2 id="ready-title"></h2></div>
-      <p class="sub" id="ready-desc"></p>
-      <div class="ready-tips" id="ready-tips"></div>
-      <button class="big-btn" type="button" id="ready-go">開始！ ▶</button>
-      <button class="link-btn" type="button" id="ready-back">返回</button>
+      <div id="tut-menu" hidden>
+        <img class="tut-thumb" id="tut-menu-img" alt="遊戲畫面">
+        <p class="sub" id="tut-menu-desc"></p>
+        <button class="tut-again" type="button" id="tut-again"><span>📖</span>再看一次說明</button>
+      </div>
+      <div class="tut-start" id="tut-start" hidden></div>
+      <button class="big-btn" type="button" id="tut-resume" hidden>繼續玩 ▶</button>
+      <button class="link-btn" type="button" id="tut-back">返回</button>
     </div>
   </div>
 
@@ -181,6 +187,7 @@
   <script src="js/questions.js"></script>
   <script src="js/zhuyin.js"></script>
   <script src="js/common.js"></script>
+  <script src="js/tutorial.js"></script>
   <script src="js/runner.js"></script>
   <script src="js/timed.js"></script>
   <script src="js/spot.js"></script>

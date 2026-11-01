@@ -14,21 +14,36 @@
   var START = 120; // 2 分鐘（老師說 60 秒太少）
   var T = null; // 這一局的狀態
 
+  var IMG = 'images/tutorial/';
+  function slides(s) {
+    var web = App.device === 'web', g = s.goals;
+    return [
+      { img: IMG + 'timed-1.webp', text: '有 2 分鐘。從個位開始，用' + (web ? '數字鍵盤（或電腦鍵盤）' : '下面的數字鍵盤') + '填答案。',
+        say: '有2分鐘。從個位開始，用' + (web ? '數字鍵盤，或電腦鍵盤' : '下面的數字鍵盤') + '填答案。' },
+      { img: IMG + 'timed-2.webp', text: '填完按「確定」。答對了，會再加 ' + s.bonus + ' 秒！', say: '填完按確定。答對了，會再加' + s.bonus + '秒！' },
+      { img: IMG + 'timed-3.webp', text: '直式上面的紅色小格子點一下，就可以寫進位或借位的數字。' },
+      { img: IMG + 'timed-4.webp', text: '黑色的數字點一下，會畫上紅色斜線，就像在紙上借位一樣。' },
+      { img: IMG + 'timed-5.webp', text: '算錯了，紅色的格子就是算錯的位。看完說明，再按「下一題」。', say: '算錯了，紅色的格子就是算錯的位。看完說明，再按下一題。' },
+      { img: IMG + 'timed-6.webp', text: '時間到就結束。答對 ' + g[0] + ' 題拿 1 顆星、' + g[1] + ' 題拿 2 顆星、' + g[2] + ' 題拿 3 顆星！',
+        say: '時間到就結束。答對' + g[0] + '題拿1顆星，' + g[1] + '題拿2顆星，' + g[2] + '題拿3顆星！' }
+    ];
+  }
   function open(s) {
-    App.ready({
-      title: '⏱️ 關卡 ' + s.id + '　' + s.name,
-      desc: s.desc,
-      say: s.name + '，2 分鐘挑戰。',
-      tips: [
-        ['有 <b>2 分鐘</b>，從<b>個位</b>開始填答案，填完按 ✔ 確定。', '有2分鐘。從個位開始填答案，填完按確定。'],
-        ['答對再加 <b>' + s.bonus + ' 秒</b>！時間到就結束。', '答對再加' + s.bonus + '秒。時間到就結束。'],
-        ['直式上面的<b>紅色小格子</b>點一下，可以寫進位的數字；黑色的數字點一下可以畫掉。', '直式上面的紅色小格子，點一下，可以寫進位的數字。黑色的數字，點一下，可以畫掉。'],
-        ['⭐ 答對 ' + s.goals[0] + ' 題・⭐⭐ ' + s.goals[1] + ' 題・⭐⭐⭐ ' + s.goals[2] + ' 題',
-         '答對' + s.goals[0] + '題，拿1顆星。答對' + s.goals[1] + '題，拿2顆星。答對' + s.goals[2] + '題，拿3顆星。']
-      ],
-      onStart: function () { $('t-q').innerHTML = ''; $('t-msg').innerHTML = ''; App.showScreen('timed'); App.countdown(function () { start(s); }); }
+    App.intro({
+      mode: 'timed', title: '⏱️ 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(s),
+      start: function (box) {
+        box.innerHTML = '<button class="big-btn go-btn" type="button">開始！ ▶</button>';
+        box.querySelector('button').onclick = function () { $('t-q').innerHTML = ''; $('t-msg').innerHTML = ''; App.showScreen('timed'); App.countdown(function () { start(s); }); };
+      }
     });
   }
+  $('help-timed').onclick = function () {
+    if (!T || T.phase === 'end' || T.phase === 'paused') return;
+    var was = T.phase; T.phase = 'paused';
+    App.replay({ title: '📖 遊戲說明', slides: slides(T.stage), onClose: function () {
+      if (!T) return; App.countdown(function () { if (T) { T.phase = was; T.last = performance.now(); } }, true);
+    } });
+  };
   App.modes.timed = { open: open };
 
   function start(s) {
@@ -216,5 +231,5 @@
       again: function () { App.countdown(function () { start(s); }); }, say: '時間到！答對' + n + '題。' + title
     });
   }
-  if (/[?&]debug\b/.test(location.search)) window.__peekT = function () { return T; }; // 測試用
+  if (/[?&]debug\b/.test(location.search)) { window.__peekT = function () { return T; }; window.__renderT = render; } // 測試、截說明圖用
 })();

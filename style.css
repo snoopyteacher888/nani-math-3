@@ -37,6 +37,8 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .dialog .tip, .ready-tips .tip { display: flex; align-items: center; gap: 10px; text-align: left; }
 .spot-ask { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .t-msg.bad, .t-msg.tip { display: flex; align-items: center; gap: 10px; text-align: left; }
+.t-msg.bad, .t-msg.tip { align-self: stretch; max-width: 640px; margin: 0 auto; width: 100%; }
+.t-msg.bad > div, .t-msg.tip > span { flex: 1; min-width: 0; }
 
 /* ===== 地圖 ===== */
 .map { max-width: 1080px; margin: 0 auto; padding: clamp(18px, 4vh, 40px) 16px 48px; }
@@ -56,7 +58,7 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .unit-title { margin: 0 4px 10px; font-size: 1.1em; display: flex; align-items: center; gap: 10px; }
 .unit-title .no { color: var(--math); }
 .unit-title::after { content: ""; flex: 1; height: 2px; background: var(--line); }
-.stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
 .stage-card { position: relative; text-align: left; border-radius: var(--radius); border: 3px solid var(--math); background: var(--surface);
   padding: 14px 16px 12px 16px; box-shadow: 0 6px 0 var(--math-soft); transition: transform .12s, box-shadow .12s; display: flex; flex-direction: column; gap: 2px; min-height: 120px; }
 .stage-card:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--math-soft); }
@@ -265,3 +267,45 @@ html.dev-phone .q-opts, .q-opts.zh { grid-template-columns: 1fr; } /* 國字選�
   .vg { font-size: 34px; }
   .keypad button { min-height: 46px; }
 }
+
+/* ===== 遊戲說明（一頁一小塊畫面＋一句話） ===== */
+.tut-box { width: min(100%, 600px); gap: 8px; }
+.tut-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.tut-stage.in-r { animation: tutR .3s ease-out; }
+.tut-stage.in-l { animation: tutL .3s ease-out; }
+@keyframes tutR { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tutL { from { transform: translateX(-40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.tut-stage img { display: block; width: auto; max-width: 100%; max-height: min(34vh, 300px); border-radius: 16px; border: 3px solid var(--line); background: #fff; pointer-events: none; }
+.tut-text { margin: 0; font-size: 1.25em; font-weight: 700; line-height: 1.6; text-align: left; min-height: 3.2em; }
+.tut-dots { display: flex; justify-content: center; gap: 8px; }
+.tut-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.tut-dots span.done { background: var(--math-soft); }
+.tut-dots span.on { background: var(--math); transform: scale(1.25); }
+.tut-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tut-btn { min-height: 48px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); font-weight: 700; }
+.tut-btn.next { background: var(--math); border-color: var(--math); color: #fff; }
+.tut-btn:disabled { opacity: .35; cursor: default; }
+.tut-page { color: var(--ink-soft); font-size: .9em; }
+.tut-wait { margin: 0; color: var(--ink-soft); font-size: .9em; }
+.tut-wait.shake { animation: shake .4s; color: var(--brand); font-weight: 700; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.tut-done { margin: 0; color: var(--good); font-weight: 700; }
+.tut-start { display: flex; flex-direction: column; gap: 8px; }
+.tut-start-title { margin: 4px 0 0; font-weight: 700; }
+.tut-start .go-btn { min-height: 64px; font-size: 1.4em; }
+.tut-thumb { display: block; max-width: 100%; max-height: min(30vh, 240px); margin: 0 auto; border-radius: 16px; border: 3px solid var(--line); }
+.tut-again { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; margin: 6px auto 0; padding: 0 22px; border-radius: 16px; border: 3px solid #F2B705; background: #FFF8DC; font-weight: 700; font-size: 1.1em; }
+.tut-again span { font-size: 1.5em; }
+.hud-btn.help { background: #FFF8DC; border-color: #F2B705; }
+
+.tut-box h2 { font-size: 1.3em; line-height: 1.4; }
+.tut-btn { white-space: nowrap; }
+.tut-page { white-space: nowrap; }
+@media (max-width: 520px) {
+  .tut-box { padding: 14px 12px; gap: 6px; }
+  .tut-stage img { max-height: 26vh; }
+  .tut-text { font-size: 1.1em; min-height: 0; }
+  .tut-page { display: none; } /* 手機上看圓點就好 */
+  .tut-btn { min-height: 46px; padding: 0 12px; }
+}
+html.zhuyin .tut-box h2 { font-size: 1.2em; }

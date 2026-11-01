@@ -71,6 +71,21 @@
       speechSynthesis.speak(u);
     } catch (e) { /* 不支援就算了 */ }
   }
+  /* 念完再做事（說明頁用）：不支援語音就照字數估時間 */
+  function speakThen(text, done) {
+    var called = false; function fin() { if (!called) { called = true; done(); } }
+    if (!text || !('speechSynthesis' in window)) { setTimeout(fin, Math.max(1500, String(text).length * 200)); return; }
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = .9;
+      var v = speechSynthesis.getVoices().filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0];
+      if (v) u.voice = v;
+      u.onend = fin; u.onerror = fin;
+      speechSynthesis.speak(u);
+      // 沒有中文語音、或根本沒開始念：照字數估時間
+      setTimeout(function () { if (!speechSynthesis.speaking && !speechSynthesis.pending) setTimeout(fin, Math.max(1200, text.length * 200)); }, 1200);
+    } catch (e) { setTimeout(fin, Math.max(1500, text.length * 200)); }
+  }
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-say]');
     if (b) { e.preventDefault(); speak(b.dataset.say); }
@@ -180,26 +195,11 @@
   function toMap() {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     clearTimeout(countTimer);
-    ['ov-ready', 'ov-pause', 'ov-end', 'ov-count', 'ov-q', 'ov-explain'].forEach(hide);
+    ['ov-tut', 'ov-pause', 'ov-end', 'ov-count', 'ov-q', 'ov-explain'].forEach(hide);
     showScreen('map'); renderMap();
   }
 
   /* ---------- 通用對話框 ---------- */
-  var readyCb = null;
-  function ready(o) { // { title, desc, tips:[html 或 [html, 念的話]], onStart }
-    $('ready-title').textContent = o.title;
-    $('ready-desc').textContent = o.desc || '';
-    $('ready-say').dataset.say = plain(o.title) + '。' + (o.desc || '');
-    $('ready-tips').innerHTML = (o.tips || []).map(function (t) {
-      var html = typeof t === 'string' ? t : t[0], say = typeof t === 'string' ? t : t[1];
-      return '<p class="tip">' + sayBtn(say) + '<span>' + html + '</span></p>';
-    }).join('');
-    readyCb = o.onStart; show('ov-ready');
-    speak(o.say || o.title);
-  }
-  $('ready-go').onclick = function () { hide('ov-ready'); if (readyCb) readyCb(); };
-  $('ready-back').onclick = function () { hide('ov-ready'); };
-
   var pauseCb = null;
   function pause(o) { pauseCb = o; show('ov-pause'); } // { resume, restart }
   $('pause-resume').onclick = function () { hide('ov-pause'); if (pauseCb) pauseCb.resume(); };
@@ -259,7 +259,7 @@
     vgrid: vgrid, sayBtn: sayBtn, plain: plain, countdown: countdown, setDevice: setDevice, device: 'web',
     UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
     $: $, esc: esc, starsHTML: starsHTML, show: show, hide: hide, speak: speak, SFX: SFX,
-    showScreen: showScreen, toMap: toMap, ready: ready, pause: pause, showEnd: showEnd, renderMap: renderMap,
+    showScreen: showScreen, toMap: toMap, speakThen: speakThen, pause: pause, showEnd: showEnd, renderMap: renderMap,
     modes: {}
   };
   setDevice(detectDevice());

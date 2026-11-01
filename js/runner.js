@@ -20,20 +20,43 @@
   var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
 
-  /* ---------- 選速度 ---------- */
-  var pendingStage = null;
-  function openSpeed(s) {
-    pendingStage = s.id;
-    $('speed-title').textContent = '關卡 ' + s.id + '　' + s.name;
-    $('speed-desc').textContent = s.desc;
-    document.querySelectorAll('.speed').forEach(function (b) { b.classList.toggle('last', b.dataset.speed === (store.speed || 'slow')); });
-    show('ov-speed');
-    speak('關卡' + s.name + '。選一個速度。');
+  /* ---------- 說明（一頁一小塊遊戲畫面）＋選速度 ---------- */
+  var IMG = 'images/tutorial/';
+  function slides() {
+    var web = App.device === 'web';
+    return [
+      { img: IMG + 'run-1.webp', text: web ? '小橘會一直往上跑。按鍵盤的 ← →，或按下面的「左」「右」，換跑道。' : '小橘會一直往上跑。按下面的「左」「右」，或點畫面的左邊、右邊，換跑道。',
+        say: web ? '小橘會一直往上跑。按鍵盤的左右鍵，或按下面的左、右，換跑道。' : '小橘會一直往上跑。按下面的左、右，或點畫面的左邊、右邊，換跑道。' },
+      { img: IMG + 'run-2.webp', text: '吃到金幣，就得到 1 個金幣。' },
+      { img: IMG + 'run-3.webp', text: '看到石頭、三角錐、木箱要閃開！撞到會跌倒，還會掉 3 個金幣。' },
+      { img: IMG + 'run-4.webp', text: '撞到 Q 的方塊，就會出題目。' },
+      { img: IMG + 'run-5.webp', text: '題目不限時間，慢慢想，點正確的答案。答對多拿 10 個金幣；答錯會告訴你為什麼。' },
+      { img: IMG + 'run-6.webp', text: '答完 10 題，跑到終點就完成了！答錯越少，星星越多。' }
+    ];
   }
-  document.querySelectorAll('.speed').forEach(function (b) {
-    b.onclick = function () { store.speed = b.dataset.speed; save(); hide('ov-speed'); startGame(pendingStage, b.dataset.speed); };
-  });
-  $('ov-speed').querySelector('[data-close]').onclick = function () { hide('ov-speed'); };
+  var SPEED_BTNS = '<p class="tut-start-title">選一個速度，開始跑！</p><div class="speed-list">' +
+    '<button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>跑得慢，比較好閃</small></button>' +
+    '<button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>' +
+    '<button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快，障礙物也很多！</small></button></div>';
+  function openSpeed(s) {
+    App.intro({
+      mode: 'run', title: '🏃 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(),
+      start: function (box) {
+        box.innerHTML = SPEED_BTNS;
+        box.querySelectorAll('.speed').forEach(function (b) {
+          b.classList.toggle('last', b.dataset.speed === (store.speed || 'slow'));
+          b.onclick = function () { store.speed = b.dataset.speed; save(); startGame(s.id, b.dataset.speed); };
+        });
+      }
+    });
+  }
+  $('help-run').onclick = function () {
+    if (!G || G.phase !== 'run') return;
+    G.phase = 'paused';
+    App.replay({ title: '📖 遊戲說明', slides: slides(), onClose: function () {
+      if (!G) return; G.phase = 'count'; lastT = 0; App.countdown(function () { if (G) G.phase = 'run'; }, true);
+    } });
+  };
   App.modes.run = { open: openSpeed };
 
   /* =====================================================
