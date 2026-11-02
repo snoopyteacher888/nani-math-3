@@ -50,4 +50,11 @@ for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
   const ex = s.gen ? s.gen() : s.make();
   console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }
+// 跑酷難度：每一關的題目都要標 lv（1～3），初階和中階都至少要有 8 種不同的題目
+for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
+  if (s.mode !== 'run') continue;
+  const pools = { 1: new Set(), 2: new Set(), 3: new Set() };
+  for (let i = 0; i < 800; i++) { const q = s.gen(); assert.ok([1, 2, 3].includes(q.lv), s.id + ' 沒有標難度 ' + q.text); pools[q.lv].add(q.text + q.answer + (q.big || '') + (q.review || '')); }
+  assert.ok(pools[1].size >= 8 && pools[2].size >= 8, s.id + ' 初階／中階題目太少 ' + pools[1].size + '/' + pools[2].size);
+}
 console.log('全部通過');

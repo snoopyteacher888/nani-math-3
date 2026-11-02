@@ -15,9 +15,11 @@
   var App = window.App, store = App.store, save = App.save, $ = App.$, esc = App.esc,
       speak = App.speak, SFX = App.SFX, show = App.show, hide = App.hide, STAGES = App.STAGES;
   var ROUND = 10;                 // 一局撞 10 個障礙物＝答 10 題
-  var BANK = 60;                  // 題庫：開始時先出這麼多題，再隨機挑 10 題不重複的
+  var BANK = 150;                 // 題庫：開始時先出這麼多題（不重複），再從選的難度裡隨機挑 10 題
   /* obs：每一排出現障礙物的機會（老師說太多，調少）；fence：幾秒沒撞到就放柵欄 */
-  var SPEEDS = { slow: { name: '🐢 慢慢跑', f: .42, obs: .16, fence: 15 }, normal: { name: '🐇 一般', f: .58, obs: .22, fence: 12 }, fast: { name: '🐆 挑戰', f: .78, obs: .28, fence: 10 } };
+  /* 速度大家都一樣（老師要求）；選的是題目難度。f：跑多快、obs：障礙物多寡、fence：幾秒沒撞到就放柵欄 */
+  var SPEED = { f: .5, obs: .2, fence: 13 };
+  var LEVELS = { 1: '🌱 初階', 2: '🌿 中階', 3: '🌳 進階' };
   var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
 
@@ -35,18 +37,18 @@
       { img: IMG + 'run-6.webp', text: '撞到 10 個、答完 10 題，跑到終點就完成了！答錯越少，星星越多。' }
     ];
   }
-  var SPEED_BTNS = '<p class="tut-start-title">選一個速度，開始跑！</p><div class="speed-list">' +
-    '<button class="speed" type="button" data-speed="slow"><span class="ic">🐢</span><b>慢慢跑</b><small>跑得慢，比較好閃</small></button>' +
-    '<button class="speed" type="button" data-speed="normal"><span class="ic">🐇</span><b>一般</b><small>剛剛好的速度</small></button>' +
-    '<button class="speed" type="button" data-speed="fast"><span class="ic">🐆</span><b>挑戰</b><small>跑得很快！</small></button></div>';
+  var SPEED_BTNS = '<p class="tut-start-title">選一個難度，開始跑！</p><div class="speed-list">' +
+    '<button class="speed" type="button" data-level="1"><span class="ic">🌱</span><b>初階</b><small>基本題，先從這裡開始</small></button>' +
+    '<button class="speed" type="button" data-level="2"><span class="ic">🌿</span><b>中階</b><small>多想一步的題目</small></button>' +
+    '<button class="speed" type="button" data-level="3"><span class="ic">🌳</span><b>進階</b><small>最容易錯的挑戰題</small></button></div>';
   function openSpeed(s) {
     App.intro({
       mode: 'run', title: '🏃 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(),
       start: function (box) {
         box.innerHTML = SPEED_BTNS;
         box.querySelectorAll('.speed').forEach(function (b) {
-          b.classList.toggle('last', b.dataset.speed === (store.speed || 'slow'));
-          b.onclick = function () { store.speed = b.dataset.speed; save(); startGame(s.id, b.dataset.speed); };
+          b.classList.toggle('last', b.dataset.level === String(store.level || 1));
+          b.onclick = function () { store.level = +b.dataset.level; save(); startGame(s.id, +b.dataset.level); };
         });
       }
     });
@@ -66,16 +68,16 @@
   var G = null;
   var cv = $('cv'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
 
-  function startGame(id, speedKey) {
+  function startGame(id, level) {
     var s = STAGES[id];
     G = {
-      stage: s, speedKey: speedKey, sp: SPEEDS[speedKey],
-      bank: pickTen(s), wrong: 0, wrongList: [], combo: 0, coins: 0, answered: 0, sinceHit: 0, safeRows: 3,
+      stage: s, level: level, sp: SPEED,
+      bank: pickTen(s, level), wrong: 0, wrongList: [], combo: 0, coins: 0, answered: 0, sinceHit: 0, safeRows: 3,
       lane: 1, laneX: 1, objs: [], dist: 0, rowAcc: 0, rows: 0, finishing: false,
       phase: 'count', t: 0, stunT: 0, invT: 0, boost: 1, particles: [], floats: [], q: null
     };
     App.showScreen('game');
-    $('hud-stage').textContent = s.id + ' ' + s.name + '・' + G.sp.name;
+    $('hud-stage').textContent = s.id + ' ' + s.name + '・' + LEVELS[level];
     $('key-hint').hidden = false;
     $('key-hint').textContent = App.device === 'web' ? '⌨️ 鍵盤 ← → 也可以移動' : '👈 用手指左右滑 👉';
     $('key-hint').classList.remove('fade'); void $('key-hint').offsetWidth; $('key-hint').classList.add('fade');
@@ -88,16 +90,19 @@
     App.countdown(function () { if (G) G.phase = 'run'; });
   }
 
-  /* 題庫：先出一大批題目，去掉重複的，再隨機挑 10 題 */
-  function pickTen(s) {
+  /* 題庫：先出一大批題目（去掉重複），再挑 10 題選的難度（q.lv）。
+     那個難度不夠 10 題，就從難度最接近的補；沒有標難度的題目算中階。 */
+  function pickTen(s, level) {
     var seen = {}, list = [], tries = 0;
-    while (list.length < BANK && tries++ < BANK * 6) {
+    while (list.length < BANK && tries++ < BANK * 4) {
       var q = s.gen(), k = q.text + '|' + (q.big || '') + '|' + (q.review || '') + '|' + q.answer;
       if (!seen[k]) { seen[k] = 1; list.push(q); }
     }
     for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = list[i]; list[i] = list[j]; list[j] = t; }
+    list.sort(function (a, b) { return Math.abs((a.lv || 2) - level) - Math.abs((b.lv || 2) - level); }); // 一樣接近的保持亂數順序
     return list.slice(0, ROUND);
   }
+  App.pickTen = pickTen; // 測試用
 
   function renderHud() {
     $('score').textContent = G.coins;
@@ -110,7 +115,7 @@
   function laneCX(l) { return W / 2 + (l - 1) * laneW(); }
   function charY() { return H * .8; }
   function rowGap() { return Math.max(110, H * .2); }
-  function speedPx() { return H * G.sp.f * G.boost; }
+  function speedPx() { return H * G.sp.f * G.boost; } // 大家一樣快
 
   function addObj(type, lane, y, kind) { G.objs.push({ type: type, lane: lane, y: y, kind: kind || 0, hit: false, t: Math.random() * 6 }); }
 
@@ -253,7 +258,7 @@
       rv = '<h3>📝 這次答錯的題目</h3><ul>' + G.wrongList.filter(function (q) { var k = (q.review || q.text) + q.big; if (seen[k]) return false; seen[k] = 1; return true; })
         .map(function (q) { return '<li>' + App.fmt(q.review || q.text) + (q.big ? '　' + esc(q.big) : '') + ' → <b>' + App.fmt(q.answer) + '</b></li>'; }).join('') + '</ul>';
     }
-    var id = G.stage.id, sp = G.speedKey;
+    var id = G.stage.id, sp = G.level;
     App.showEnd({
       stars: stars, title: '🏁 ' + title, scoreHTML: '吃到 <b>' + G.coins + '</b> 個金幣 🪙', isRecord: r.isRecord,
       bestText: '這關最多：' + r.rec.best + ' 個金幣', reviewHTML: rv,
@@ -266,7 +271,7 @@
   function pause() {
     if (!G || G.phase !== 'run') return;
     pausedPhase = G.phase; G.phase = 'paused';
-    var id = G.stage.id, sp = G.speedKey;
+    var id = G.stage.id, sp = G.level;
     App.pause({
       resume: function () { G.phase = 'count'; lastT = 0; App.countdown(function () { if (G) G.phase = 'run'; }, true); },
       restart: function () { startGame(id, sp); },

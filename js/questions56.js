@@ -263,7 +263,15 @@
 
   /* 9 乘以幾分之一、整數相除 */
   function genFracOf() {
-    var t = R(0, 2);
+    var t = R(0, 3);
+    if (t === 3) { // 進階：整數 × 幾分之一，答案要約分
+      var whole = pick([6, 8, 9, 10, 12, 15]), nn = pick([4, 6, 8, 9, 12, 15, 16]), unit = pick([['公升', '桶紅茶'], ['公尺', '根竹子'], ['公斤', '袋米']]);
+      if (whole % nn === 0) return genFracOf();
+      var ans = sfrac(whole, nn);
+      return { text: '1 ' + unit[1] + '有 ' + whole + ' ' + unit[0] + '，用了 ' + frac(1, nn) + ' ' + unit[1].slice(0, 1) + '，是幾' + unit[0] + '？（約成最簡分數）', say: '1' + unit[1] + '有' + whole + unit[0] + '，用了' + nn + '分之1' + unit[1].slice(0, 1) + '，是幾' + unit[0] + '？',
+        answer: ans, options: opts(ans, [frac(nn, whole), sfrac(whole + 1, nn), frac(1, whole * nn), String(whole - nn > 0 ? whole - nn : nn - whole)]), review: whole + ' × ' + frac(1, nn),
+        hint: whole + ' × ' + frac(1, nn) + ' ＝ ' + frac(whole, nn) + '，再約分。', explain: '<p class="ex-line">' + whole + ' × ' + frac(1, nn) + ' ＝ ' + frac(whole, nn) + (ans !== frac(whole, nn) ? ' ＝ <b>' + ans + '</b>' : '') + ' ' + unit[0] + '</p>' };
+    }
     if (t === 0) { var a = R(1, 15), b = R(2, 15); if (a === b) b++; return { text: a + ' ÷ ' + b + ' 用分數表示是多少？', say: a + '除以' + b + '，用分數表示是多少？', answer: frac(a, b), options: opts(frac(a, b), [frac(b, a), frac(1, b), frac(a, a + b)]),
       hint: '被除數當分子，除數當分母：a ÷ b ＝ a/b。', explain: '<p class="ex-line">' + a + ' ÷ ' + b + ' ＝ <b>' + frac(a, b) + '</b></p>' }; }
     if (t === 1) { var n = pick([2, 3, 4, 5, 6, 8]), per = n * R(2, 6), item = pick(['個鳳梨酥', '顆水餃', '個餅乾']);
@@ -449,31 +457,48 @@
   }
   function mix(list) { return function () { return pick(list)(); }; }
 
+  /* 跑酷的難度（初階、中階、進階）：依題型標 q.lv */
+  function lv(gen, fn) { return function () { var q = gen(); q.lv = fn(q); return q; }; }
+  function has(q, re) { return re.test(q.text); }
+  var genLineChartL = lv(genLineChart, function (q) { return has(q, /是多少人/) ? 1 : has(q, /每一格/) ? 2 : 3; });
+  var genDistAvgL = lv(mix([genDist, genAvg]), function (q) {
+    if (has(q, /平均/)) return q.text.split('、').length <= 3 ? 1 : 2;
+    return has(q, /× (99|101)/) ? 3 : 2;
+  });
+  var genFracOfL = lv(genFracOf, function (q) { return has(q, /用分數表示/) ? 1 : has(q, /約成最簡分數/) ? 3 : 2; });
+  var genSectorL = lv(genSector, function (q) { return has(q, /圓的圓心角是幾度/) ? 1 : has(q, /大扇形/) ? 2 : 3; });
+  var genDecDivRunL = lv(genDecDivRun, function (q) { return has(q, /四捨五入/) ? 3 : /\./.test(q.answer) ? 2 : 1; });
+  var genRatioL = lv(genRatio, function (q) { return has(q, /比值/) ? 2 : has(q, /\./) ? 3 : 1; });
+  var genTwoQtyL = lv(genTwoQty, function (q) { return has(q, /要付多少元/) ? 1 : has(q, /原價是/) ? 3 : 2; });
+  var genCircumL = lv(genCircum, function (q) { return has(q, /^直徑 \d+ 公分的圓，圓周長/) ? 1 : has(q, /弧長/) ? 3 : 2; });
+  var genScaleL = lv(genScale, function (q) { return has(q, /放大圖/) ? 1 : has(q, /比例尺是多少/) ? 3 : 2; });
+  var genSolveL = lv(genSolve, function (q) { return has(q, /組合/) ? 1 : has(q, /重複|兩端都不種/) ? 3 : 2; });
+
   var NINE = { id: '99', name: '九九乘法大冒險', ic: '🦊', stages: [{ id: '99', mode: 'nine', ic: '🗺️', label: '九九大冒險', name: '九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！' }] };
   function st(id, mode, name, desc, gen, extra) { var o = { id: id, mode: mode, name: name, desc: desc, gen: gen }; for (var k in extra || {}) o[k] = extra[k]; return o; }
   var Q = { tut: 'quiz', ic: '⭕', label: '比大小快答' }, Z = { tut: 'quiz', ic: '🧩', label: '選對答案' }, S = { tut: 'sort', ic: '🗑️', label: '分類丟丟樂' }, F = { tut: 'fillnum', ic: '📝', label: '自己填' };
 
   var G5 = [NINE,
-    { id: 1, name: '折線圖', ic: '📈', stages: [st('1-1', 'run', '看折線圖', '上升最多？每一格代表多少？', genLineChart)] },
+    { id: 1, name: '折線圖', ic: '📈', stages: [st('1-1', 'run', '看折線圖', '上升最多？每一格代表多少？', genLineChartL)] },
     { id: 2, name: '倍數與因數', ic: '🔢', stages: [st('2-1', 'round', '是不是倍數', '能整除就是倍數', genMultipleSort, S), st('2-2', 'round', '因數還是倍數', '大的是倍數，小的是因數', genFactorOrMultiple, Q)] },
     { id: 3, name: '平面圖形', ic: '🔺', stages: [st('3-1', 'round', '求內角', '三角形 180 度、四邊形 360 度', genAngleSum, F), st('3-2', 'round', '能不能圍成三角形', '兩短邊加起來要比長邊長', genTriangleSides, Q)] },
     { id: 4, name: '公倍數與公因數', ic: '🧮', stages: [st('4-1', 'round', '最大公因數、最小公倍數', '找出來填進格子', genGcdLcmFill(100, 300), F), st('4-2', 'round', '要用哪一個？', '切開用公因數，拼起來用公倍數', genGcdLcmWhich, Z)] },
     { id: 5, name: '立體形體', ic: '🧊', stages: [st('5-1', 'round', '面、邊、頂點', '幾角柱、幾角錐', genSolidCount, Q), st('5-2', 'round', '柱體、錐體、球', '看圖分一分', genSolidSort, S)] },
-    { id: 6, name: '整數四則運算', ic: '➗', stages: [st('6-1', 'round', '先乘除後加減', '括號先算', genOrderOps, F), st('6-2', 'run', '分配律和平均', '湊成 100 比較好算', mix([genDist, genAvg]))] },
+    { id: 6, name: '整數四則運算', ic: '➗', stages: [st('6-1', 'round', '先乘除後加減', '括號先算', genOrderOps, F), st('6-2', 'run', '分配律和平均', '湊成 100 比較好算', genDistAvgL)] },
     { id: 7, name: '擴分、約分與加減', ic: '🍰', stages: [st('7-1', 'round', '分數比大小', '先通分再比', genFracCompare, Q), st('7-2', 'round', '異分母加減', '通分、相加減、約分', genFracAddFill, F)] },
     { id: 8, name: '面積', ic: '📐', stages: [st('8-1', 'round', '算面積', '高要和底垂直，斜邊不是高', genArea, F)] },
-    { id: 9, name: '乘以幾分之一', ic: '🥧', stages: [st('9-1', 'run', '整數相除、幾分之一', 'a ÷ b ＝ a/b', genFracOf)] },
-    { id: 10, name: '扇形', ic: '🍕', stages: [st('10-1', 'run', '圓心角', '一整圈是 360 度', genSector)] }
+    { id: 9, name: '乘以幾分之一', ic: '🥧', stages: [st('9-1', 'run', '整數相除、幾分之一', 'a ÷ b ＝ a/b', genFracOfL)] },
+    { id: 10, name: '扇形', ic: '🍕', stages: [st('10-1', 'run', '圓心角', '一整圈是 360 度', genSectorL)] }
   ];
   var G6 = [NINE,
     { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'round', '質數和合數', '2 是質數，1 都不是', genPrimeSort, S), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z)] },
     { id: 2, name: '分數除法', ic: '🍰', stages: [st('2-1', 'round', '商會變大還是變小', '除以比 1 小的數，商變大', genFracDivCompare, Q), st('2-2', 'round', '分數除法', '乘以倒數，再約分', genFracDivFill, F)] },
-    { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRun)] },
-    { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatio), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },
-    { id: 5, name: '兩量關係', ic: '🏷️', stages: [st('5-1', 'run', '打折、和差', '打八折＝× 0.8', genTwoQty)] },
-    { id: 6, name: '圓周長與扇形周長', ic: '⭕', stages: [st('6-1', 'run', '圓周長', '直徑 × 3.14', genCircum)] },
-    { id: 7, name: '放大、縮小與比例尺', ic: '🗺️', stages: [st('7-1', 'run', '比例尺', '公分換公尺別忘了', genScale)] },
-    { id: 8, name: '怎樣解題', ic: '💡', stages: [st('8-1', 'run', '間隔、規律、組合', '兩端都種要 ＋1', genSolve)] }
+    { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRunL)] },
+    { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatioL), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },
+    { id: 5, name: '兩量關係', ic: '🏷️', stages: [st('5-1', 'run', '打折、和差', '打八折＝× 0.8', genTwoQtyL)] },
+    { id: 6, name: '圓周長與扇形周長', ic: '⭕', stages: [st('6-1', 'run', '圓周長', '直徑 × 3.14', genCircumL)] },
+    { id: 7, name: '放大、縮小與比例尺', ic: '🗺️', stages: [st('7-1', 'run', '比例尺', '公分換公尺別忘了', genScaleL)] },
+    { id: 8, name: '怎樣解題', ic: '💡', stages: [st('8-1', 'run', '間隔、規律、組合', '兩端都種要 ＋1', genSolveL)] }
   ];
 
   root.MathQ = root.MathQ || {};

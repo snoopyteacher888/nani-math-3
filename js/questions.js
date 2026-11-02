@@ -462,7 +462,7 @@
       hint: '拿三角板的直角來比：剛好疊在一起是直角；張開比較多是比直角大。',
       explain: '<p class="ex-line">' + c.deg + ' 度的角' + (c.kind === 0 ? '剛好是直角' : c.kind === 1 ? '張開得比直角大' : '張開得比直角小') + '，放進「<b>' + ans + '</b>」。</p>' };
   }
-  function genAngleRun() { var q = genAngleQuick(); delete q.kind; return q; }
+  function genAngleRun() { var q = genAngleQuick(); delete q.kind; q.lv = q.options.indexOf('一樣大') >= 0 ? 1 : q.options.length === 3 ? 2 : 3; return q; }
 
   /* ---------- 第 6 單元 除法 ---------- */
   function divCase() {
@@ -718,8 +718,15 @@
       answer: frac(n, n), options: opts(frac(n, n), [frac(1, n), frac(n, 1), frac(n - 1, n)]), hint: '平分成 ' + n + ' 份，全部 ' + n + ' 份都拿，就是 ' + frac(n, n) + '，也就是 1。',
       explain: '<p class="ex-line">' + n + ' 個 ' + frac(1, n) + ' ＝ <b>' + frac(n, n) + '</b> ＝ 1</p>' };
   }
-  function more9() { // 9-1：圓規
-    if (Math.random() < .5) {
+  function more9() { // 9-1：圓規、圓排在一起（進階）
+    var t9 = Math.random();
+    if (t9 < .4) { // 進階：幾個一樣大的圓排成一排，剛好放進長方形
+      var rr = R(2, 9), k = R(2, 4);
+      return { text: '長方形裡剛好排了 ' + k + ' 個一樣大的圓（排成一排），圓的半徑是 ' + rr + ' 公分，長方形有多長？', say: '長方形裡剛好排了' + k + '個一樣大的圓，排成一排，圓的半徑是' + rr + '公分，長方形有多長？',
+        answer: String(rr * 2 * k), options: opts(rr * 2 * k, [rr * k, rr * 2, rr * 2 * k + rr]), review: k + ' 個半徑 ' + rr + ' 公分的圓排成一排',
+        hint: '每個圓的直徑是半徑 × 2，長方形的長是 ' + k + ' 個直徑。', explain: '<p class="ex-line">直徑 ' + rr + ' × 2 ＝ ' + rr * 2 + '，' + rr * 2 + ' × ' + k + ' ＝ <b>' + rr * 2 * k + '</b> 公分</p>' };
+    }
+    if (t9 < .7) {
       var r = R(2, 9);
       return { text: '圓規張開 ' + r + ' 公分畫圓，這個圓的半徑是幾公分？', say: '圓規張開' + r + '公分畫圓，這個圓的半徑是幾公分？',
         answer: String(r), options: opts(r, [r * 2, r + 1, Math.max(1, r - 1)]), hint: '圓規兩隻腳張開的長度，就是畫出來的圓的半徑。',
@@ -729,8 +736,45 @@
       hint: '針固定在中間不動，另一腳轉一圈，針的位置就是圓心。', explain: '<p class="ex-line">針放在<b>圓心</b>，筆的那一腳轉一圈。</p>' };
   }
   function bank(base, extra, p) { return function () { return Math.random() < (p || .3) ? extra() : base(); }; }
-  var genReadWriteB = bank(genReadWrite, more1), genMmB = bank(genMm, more4), genDivRunB = bank(genDivRun, more6, .35),
-      genLiterB = bank(genLiter, more7), genFracRunB = bank(genFracRun, more8), genCircleRunB = bank(genCircleRun, more9, .35);
+  /* 跑酷的難度（老師要求：初階、中階、進階）：依題型標 q.lv＝1、2、3，開始時從選的難度挑題 */
+  function lv(gen, fn) { return function () { var q = gen(); q.lv = fn(q); return q; }; }
+  function has(q, re) { return re.test(q.text); }
+  var genReadWriteB = lv(bank(genReadWrite, more1), function (q) {
+    if (has(q, /合起來|的(個|十|百|千)位數字/)) return 1;  // 位值
+    if (has(q, /寫成數字|比較大/)) return 2;              // 國字寫成數字、比大小
+    return 3;                                            // 數字寫成國字
+  });
+  var genMmB = lv(bank(genMm, more4), function (q) {
+    if (has(q, /^\d+ 公分 ＝ ？ 毫米|大約/)) return 1;
+    if (has(q, /比較長/)) return 3;
+    return 2;
+  });
+  var genDivRunB = lv(bank(genDivRun, more6, .35), function (q) {
+    if (has(q, /^□/)) return 3;
+    if (has(q, /餘數可能/)) return 2;
+    var a = +(/^(\d+)/.exec(q.text) || [0, 50])[1];
+    return a < 30 ? 1 : a < 60 ? 2 : 3;
+  });
+  var genLiterB = lv(bank(genLiter, more7), function (q) {
+    if (has(q, /大約|^\d 公升 ＝/)) return 1;
+    var m = /公升 (\d+) 毫升 ＝/.exec(q.text);
+    if (m) return +m[1] < 100 ? 3 : 2;                    // 中間要補 0 的最難
+    if (has(q, /毫升 ＝ ？$/)) return 3;
+    return 2;
+  });
+  var genFracRunB = lv(bank(genFracRun, more8), function (q) {
+    if (has(q, /塗色的部分是全部|整個披薩/)) return 1;
+    if (has(q, /打/)) return 3;
+    return 2;
+  });
+  var genCircleRunB = lv(bank(genCircleRun, more9, .45), function (q) {
+    if (has(q, /排成一排/)) return 3;
+    if (has(q, /^半徑 \d+ 公分，直徑|圓規/)) return 1;
+    if (has(q, /^直徑/)) return 2;
+    return has(q, /幾條半徑/) ? 3 : 2;
+  });
+  var genNumberLineB = lv(genNumberLine, function (q) { var st = +(/1 格是 (\d+)/.exec(q.review) || [0, 10])[1]; return st >= 100 ? 1 : st === 10 ? 2 : 3; });
+  var genRulerPickB = lv(genRulerPick, function (q) { return /從 0 公分/.test(q.review) ? 1 : 3; });
 
   /* ---------- 加油小站：混合闖關 ---------- */
   function mix(list) { return function () { var q = pick(list)(); q.kind = undefined; return q; }; }
@@ -767,7 +811,7 @@
       { id: '5-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '直角分類', desc: '直角、比直角大、比直角小', gen: genAngleSort }
     ] },
     { id: 'p1', name: '加油小站一', ic: '⛽', stages: [
-      { id: 'p1', mode: 'run', name: '闖關：1～5 單元', desc: '數字讀寫、數線、公分毫米、量長度、角', gen: mix([genReadWriteB, genNumberLine, genMmB, genRulerPick, genAngleRun]) }
+      { id: 'p1', mode: 'run', name: '闖關：1～5 單元', desc: '數字讀寫、數線、公分毫米、量長度、角', gen: mix([genReadWriteB, genNumberLineB, genMmB, genRulerPickB, genAngleRun]) }
     ] },
     { id: 6, name: '除法', ic: '➗', stages: [
       { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRunB },
