@@ -184,7 +184,7 @@
     $('q-big').hidden = !q.big; $('q-big').textContent = q.big || '';
     var vis = $('q-visual'); vis.hidden = !q.visual; vis.innerHTML = q.visual || '';
     $('q-opts').classList.toggle('zh', q.cls === 'zh');
-    document.querySelectorAll('.qa').forEach(function (b, i) {
+    document.querySelectorAll('#q-opts .qa').forEach(function (b, i) {
       b.hidden = i >= q.options.length;
       if (!b.hidden) b.innerHTML = App.fmt(q.options[i]);
       b.className = 'qa' + (q.cls === 'zh' ? ' zh' : ''); b.disabled = false;
@@ -194,11 +194,11 @@
     if (store.autoSay) speak(q.say);
   }
   $('q-say').onclick = function () { if (G && G.q) speak(G.q.say); };
-  document.querySelectorAll('.qa').forEach(function (b) { b.onclick = function () { answer(+b.dataset.i); }; });
+  document.querySelectorAll('#q-opts .qa').forEach(function (b) { b.onclick = function () { answer(+b.dataset.i); }; });
 
   function answer(i) {
     if (!G || G.phase !== 'question') return;
-    var q = G.q, ok = q.options[i] === q.answer, btns = document.querySelectorAll('.qa');
+    var q = G.q, ok = q.options[i] === q.answer, btns = document.querySelectorAll('#q-opts .qa');
     if (i >= q.options.length) return;
     btns.forEach(function (b, j) { b.disabled = true; if (q.options[j] === q.answer) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
     G.answered++;
