@@ -127,16 +127,15 @@
   /* =====================================================
    * 地圖
    * ===================================================== */
-  var MODE_IC = { run: '🏃', timed: '⏱️', spot: '🔍', round: '🎯', nine: '🗺️' };
   function renderMap() {
     var total = 0, html = '', soon = '';
     UNITS.forEach(function (u) {
       var no = typeof u.id === 'number' ? '第 ' + u.id + ' 單元' : '';
       if (!u.stages.length) {
-        soon += '<div class="soon-card"><span>' + u.ic + '</span><span>' + (no ? no + ' ' : '') + esc(u.name) + '</span><span class="tag">準備中</span></div>';
+        soon += '<div class="soon-card"><span>' + (no ? no + ' ' : '') + esc(u.name) + '</span><span class="tag">準備中</span></div>';
         return;
       }
-      html += '<section class="unit"><h2 class="unit-title"><span>' + u.ic + '</span><span class="no">' + no + '</span><span>' + esc(u.name) + '</span></h2><div class="stages">';
+      html += '<section class="unit"><h2 class="unit-title"><span class="no">' + no + '</span><span>' + esc(u.name) + '</span></h2><div class="stages">';
       u.stages.forEach(function (s) {
         var rec = store.stages[s.id] || {}, st = rec.stars || 0;
         total += st;
@@ -148,7 +147,7 @@
           starRow = '<span class="medals">🏅 × ' + medals + '</span>'; best = '破了 ' + medals + ' / 9 座島';
         }
         html += '<div class="cell">' + sayBtn((s.mode === 'nine' ? '' : '關卡 ' + s.id + '，') + s.name + '，' + mn + '。' + s.desc) +
-          '<button class="stage-card" type="button" data-stage="' + s.id + '" data-ic="' + (s.ic || MODE_IC[s.mode]) + '">' +
+          '<button class="stage-card" type="button" data-stage="' + s.id + '">' +
           '<span class="sid">' + (s.mode === 'nine' ? '每天練一練' : '關卡 ' + s.id + '・' + mn) + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
           '<span class="srow"><span class="stars">' + starRow + '</span><span class="best">' + best + '</span></span></button></div>';
       });

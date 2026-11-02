@@ -30,7 +30,7 @@
   }
   function open(s) {
     App.intro({
-      mode: 'timed', title: '⏱️ 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(s),
+      mode: 'timed', title: '關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(s),
       start: function (box) {
         box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { $('t-q').innerHTML = ''; $('t-msg').innerHTML = ''; App.showScreen('timed'); App.countdown(function () { start(s); }); };
@@ -223,7 +223,7 @@
     var title = stars === 3 ? '太厲害了！' : stars === 2 ? '很棒喔！' : stars === 1 ? '完成了！再挑戰更多題！' : '時間到！多練習幾次會越來越快喔！';
     var seen = {}, rv = '';
     var list = T.wrongList.filter(function (p) { var k = p.a + p.op + p.b; if (seen[k]) return false; seen[k] = 1; return true; });
-    if (list.length) rv = '<h3>📝 這次算錯的題目</h3><ul>' + list.map(function (p) { return '<li>' + p.a + ' ' + p.op + ' ' + p.b + ' ＝ <b>' + p.ans + '</b></li>'; }).join('') + '</ul>';
+    if (list.length) rv = '<h3>這次算錯的題目</h3><ul>' + list.map(function (p) { return '<li>' + p.a + ' ' + p.op + ' ' + p.b + ' ＝ <b>' + p.ans + '</b></li>'; }).join('') + '</ul>';
     var next3 = stars < 3 ? '<p class="sub">再答對 ' + (g[stars] - n) + ' 題就能拿到 ' + (stars + 1) + ' 顆星！</p>' : '';
     App.showEnd({
       stars: stars, title: title, scoreHTML: '答對 <b>' + n + '</b> 題', isRecord: r.isRecord && n > 0,

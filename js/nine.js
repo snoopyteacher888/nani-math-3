@@ -24,7 +24,7 @@
 
   function open(s) {
     App.intro({
-      mode: 'nine', title: '🦊 九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！', slides: SLIDES,
+      mode: 'nine', title: '九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！', slides: SLIDES,
       start: function (box) { box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始，選一座島">▶</button>'; box.querySelector('button').onclick = picker; }
     });
   }
@@ -33,13 +33,13 @@
   /* ---------- 選島 ---------- */
   function picker() {
     App.showScreen('nine');
-    $('n-title').textContent = '🦊 九九乘法大冒險';
+    $('n-title').textContent = '九九乘法大冒險';
     $('n-hearts').innerHTML = ''; $('n-left').textContent = '選一座島';
     $('nine').className = 'screen game nine-pick';
     var h = '<p class="n-pick-title">選一座島開始冒險！</p><div class="islands">';
     [2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(function (t) {
       var rec = App.store.stages['99-' + t] || {}, st = rec.stars || 0;
-      h += '<button class="island' + (t ? '' : ' mix') + '" type="button" data-t="' + t + '"><span class="i-ic">' + (t ? '🏝️' : '🌈') + '</span><b>' + (t ? t + ' 的乘法' : '綜合挑戰') + '</b>' +
+      h += '<button class="island' + (t ? '' : ' mix') + '" type="button" data-t="' + t + '"><b>' + (t ? t + ' 的乘法' : '綜合挑戰') + '</b>' +
         '<span class="stars">' + App.starsHTML(st) + '</span>' + (st ? '<span class="medal">🏅</span>' : '') + '</button>';
     });
     $('n-board').innerHTML = h + '</div>';
@@ -169,7 +169,7 @@
     var t = N.t, stars = win ? N.hearts : 0, r = win ? App.saveResult('99-' + t, stars, N.score) : { rec: App.store.stages['99-' + t] || {}, isRecord: false };
     var name = t ? t + ' 的乘法島' : '綜合挑戰';
     var title = win ? '🏅 打倒大魔王！' + name + '破關了！' : '愛心用完了，背一背口訣再來一次！';
-    var rv = N.wrongs.length ? '<h3>📝 要再背一背</h3><ul>' + N.wrongs.filter(function (w, i, a) { return a.indexOf(w) === i; }).map(function (w) {
+    var rv = N.wrongs.length ? '<h3>要再背一背</h3><ul>' + N.wrongs.filter(function (w, i, a) { return a.indexOf(w) === i; }).map(function (w) {
       return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>' : '';
     App.showEnd({
       stars: stars, title: title, scoreHTML: '得到 <b>' + N.score + '</b> 分', isRecord: win && r.isRecord,

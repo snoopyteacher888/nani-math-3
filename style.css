@@ -71,8 +71,6 @@ html.zhuyin .timer-sec b, html.zhuyin .score b {
 .stars { letter-spacing: 2px; font-size: 1.2em; }
 .stars .off { filter: grayscale(1); opacity: .3; }
 .best { font-size: .8em; color: var(--ink-soft); }
-.stage-card[data-ic]::before { content: attr(data-ic); position: absolute; right: 14px; top: 10px; font-size: 1.5em; }
-.stage-card[data-ic] .sid, .stage-card[data-ic] .sname { padding-right: 48px; } /* 右上角的圖示不要蓋到字 */
 .soon-card { border-radius: var(--radius); border: 3px dashed var(--line); background: var(--muted); color: var(--ink-soft); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
 .soon-card .tag { margin-left: auto; white-space: nowrap; flex: none; font-size: .75em; background: var(--surface); border-radius: 999px; padding: 0 10px; }
 .soon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 22px; }
@@ -147,8 +145,7 @@ html.dev-phone .q-opts, .q-opts.zh { grid-template-columns: 1fr; } /* 國字選�
 .dialog .sub { margin: 0; color: var(--ink-soft); font-size: .9em; }
 .dialog .tip { margin: 0; font-size: .9em; }
 .speed-list { display: grid; gap: 10px; }
-.speed { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; text-align: left; align-items: center; min-height: 64px; padding: 8px 16px; border-radius: 16px; border: 3px solid var(--line); background: var(--bg); }
-.speed .ic { grid-row: 1 / 3; font-size: 2em; }
+.speed { display: grid; grid-template-columns: 1fr; text-align: left; align-items: center; min-height: 64px; padding: 8px 16px; border-radius: 16px; border: 3px solid var(--line); background: var(--bg); }
 .speed b { font-size: 1.2em; }
 .speed small { color: var(--ink-soft); }
 .speed:hover, .speed.last { border-color: var(--math); }
@@ -385,7 +382,6 @@ html.zhuyin .r-fields .box, html.zhuyin .card-num, html.zhuyin .frac { font-fami
 .island { position: relative; min-height: 112px; border-radius: 22px; border: 3px solid #2D8A57; background: linear-gradient(#DFF3FF, #BFE6FA); box-shadow: 0 6px 0 rgba(45,138,87,.3);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px; }
 .island.mix { border-color: #9B59B6; background: linear-gradient(#FCE9FF, #EAD5F5); box-shadow: 0 6px 0 rgba(155,89,182,.3); }
-.island .i-ic { font-size: 2em; line-height: 1; }
 .island b { font-size: 1.15em; }
 .island .stars { font-size: .9em; letter-spacing: 0; }
 .island .medal { position: absolute; top: 6px; right: 8px; font-size: 1.4em; }

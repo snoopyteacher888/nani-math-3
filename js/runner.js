@@ -19,7 +19,7 @@
   /* obs：每一排出現障礙物的機會（老師說太多，調少）；fence：幾秒沒撞到就放柵欄 */
   /* 速度大家都一樣（老師要求）；選的是題目難度。f：跑多快、obs：障礙物多寡、fence：幾秒沒撞到就放柵欄 */
   var SPEED = { f: .5, obs: .2, fence: 13 };
-  var LEVELS = { 1: '🌱 初階', 2: '🌿 中階', 3: '🌳 進階' };
+  var LEVELS = { 1: '初階', 2: '中階', 3: '進階' };
   var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
 
@@ -38,12 +38,12 @@
     ];
   }
   var SPEED_BTNS = '<p class="tut-start-title">選一個難度，開始跑！</p><div class="speed-list">' +
-    '<button class="speed" type="button" data-level="1"><span class="ic">🌱</span><b>初階</b><small>基本題，先從這裡開始</small></button>' +
-    '<button class="speed" type="button" data-level="2"><span class="ic">🌿</span><b>中階</b><small>多想一步的題目</small></button>' +
-    '<button class="speed" type="button" data-level="3"><span class="ic">🌳</span><b>進階</b><small>最容易錯的挑戰題</small></button></div>';
+    '<button class="speed" type="button" data-level="1"><b>初階</b><small>基本題，先從這裡開始</small></button>' +
+    '<button class="speed" type="button" data-level="2"><b>中階</b><small>多想一步的題目</small></button>' +
+    '<button class="speed" type="button" data-level="3"><b>進階</b><small>最容易錯的挑戰題</small></button></div>';
   function openSpeed(s) {
     App.intro({
-      mode: 'run', title: '🏃 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(),
+      mode: 'run', title: '關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: slides(),
       start: function (box) {
         box.innerHTML = SPEED_BTNS;
         box.querySelectorAll('.speed').forEach(function (b) {
@@ -255,12 +255,12 @@
     var rv = '';
     if (G.wrongList.length) {
       var seen = {};
-      rv = '<h3>📝 這次答錯的題目</h3><ul>' + G.wrongList.filter(function (q) { var k = (q.review || q.text) + q.big; if (seen[k]) return false; seen[k] = 1; return true; })
+      rv = '<h3>這次答錯的題目</h3><ul>' + G.wrongList.filter(function (q) { var k = (q.review || q.text) + q.big; if (seen[k]) return false; seen[k] = 1; return true; })
         .map(function (q) { return '<li>' + App.fmt(q.review || q.text) + (q.big ? '　' + esc(q.big) : '') + ' → <b>' + App.fmt(q.answer) + '</b></li>'; }).join('') + '</ul>';
     }
     var id = G.stage.id, sp = G.level;
     App.showEnd({
-      stars: stars, title: '🏁 ' + title, scoreHTML: '吃到 <b>' + G.coins + '</b> 個金幣 🪙', isRecord: r.isRecord,
+      stars: stars, title: title, scoreHTML: '吃到 <b>' + G.coins + '</b> 個金幣 🪙', isRecord: r.isRecord,
       bestText: '這關最多：' + r.rec.best + ' 個金幣', reviewHTML: rv,
       again: function () { startGame(id, sp); }, say: '到終點了！' + title + '吃到' + G.coins + '個金幣。'
     });

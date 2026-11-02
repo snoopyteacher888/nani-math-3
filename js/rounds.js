@@ -50,7 +50,7 @@
 
   function open(s) {
     App.intro({
-      mode: 'round-' + s.tut, title: (s.ic || '') + ' 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES[s.tut],
+      mode: 'round-' + s.tut, title: '關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES[s.tut],
       start: function (box) {
         box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { clearScreen(); App.showScreen('round'); App.countdown(function () { start(s); }); };
@@ -284,7 +284,7 @@
     var s = Q.stage, stars = Q.wrong <= 1 ? 3 : Q.wrong <= 3 ? 2 : 1, r = App.saveResult(s.id, stars, Q.score);
     var title = stars === 3 ? '太厲害了！' : stars === 2 ? '很棒喔！' : '完成了！再試試拿更多星星！', seen = {};
     var rv = Q.wrongList.filter(function (q) { var k = q.review || q.text; if (seen[k]) return false; seen[k] = 1; return true; });
-    rv = rv.length ? '<h3>📝 這次答錯的題目</h3><ul>' + rv.map(function (q) { return '<li>' + fmt(q.review || q.text) + ' → <b>' + fmt(q.answerText || q.answer) + '</b></li>'; }).join('') + '</ul>' : '';
+    rv = rv.length ? '<h3>這次答錯的題目</h3><ul>' + rv.map(function (q) { return '<li>' + fmt(q.review || q.text) + ' → <b>' + fmt(q.answerText || q.answer) + '</b></li>'; }).join('') + '</ul>' : '';
     App.showEnd({
       stars: stars, title: title, scoreHTML: '得到 <b>' + Q.score + '</b> 分', isRecord: r.isRecord,
       bestText: '這關最高紀錄：' + r.rec.best + ' 分', reviewHTML: rv,

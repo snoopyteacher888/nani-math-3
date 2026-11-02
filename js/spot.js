@@ -23,7 +23,7 @@
   ];
   function open(s) {
     App.intro({
-      mode: 'spot', title: '🔍 關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES,
+      mode: 'spot', title: '關卡 ' + s.id + '　' + s.name, desc: s.desc, slides: SLIDES,
       start: function (box) {
         box.innerHTML = '<button class="big-btn go-btn" type="button" aria-label="開始">▶</button>';
         box.querySelector('button').onclick = function () { $('s-q').innerHTML = ''; $('s-result').hidden = true; App.showScreen('spot'); App.countdown(function () { start(s); }); };
@@ -119,7 +119,7 @@
     var s = S.stage, stars = S.wrong <= 1 ? 3 : S.wrong <= 3 ? 2 : 1;
     var r = App.saveResult(s.id, stars, S.score);
     var title = stars === 3 ? '神探出動！太厲害了！' : stars === 2 ? '很棒的小偵探！' : '完成了！再當一次小偵探吧！';
-    var rv = S.wrongList.length ? '<h3>📝 這次沒抓到的題目</h3><ul>' + S.wrongList.map(function (p) {
+    var rv = S.wrongList.length ? '<h3>這次沒抓到的題目</h3><ul>' + S.wrongList.map(function (p) {
       return '<li>' + p.a + ' ' + p.op + ' ' + p.b + '：同學寫 ' + p.shown + '，' +
         (p.shown === p.ans ? '<b>其實算對了</b>' : '正確是 <b>' + p.ans + '</b>') + '</li>';
     }).join('') + '</ul>' : '';
