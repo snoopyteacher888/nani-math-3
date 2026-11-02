@@ -21,6 +21,8 @@ for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
     if (s.gen) {
       const q = s.gen(), k = q.kind || 'run';
       assert.ok(q.text && q.say !== undefined && q.answer && q.hint, s.id + ' missing fields');
+      if (s.mode === 'run') assert.ok(k === 'run', s.id + ' 跑酷關卡只能出有選項的題目，不能是 ' + k);
+      if (s.mode === 'round') assert.ok(k !== 'run', s.id + ' 小遊戲關卡的題目要有 kind');
       if (k === 'run' || k === 'quiz') {
         assert.ok(q.options.length >= 2, s.id + ' options');
         assert.strictEqual(new Set(q.options).size, q.options.length, s.id + ' dup ' + q.options);

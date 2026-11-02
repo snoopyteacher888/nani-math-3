@@ -349,8 +349,8 @@
       hint: '除數變成整數：被除數和除數的小數點一起往右移一樣多位。', explain: '<p class="ex-line">' + dstr(aa) + ' ÷ ' + dv + ' ＝ <b>' + ansS + '</b>（驗算：' + ansS + ' × ' + dv + ' ＝ ' + dstr(aa) + '）</p>' };
   }
   /* 4 比與比值 */
-  function genRatio() {
-    var t = R(0, 2);
+  function genRatio() { // 跑酷：最簡整數比、比值（只出有選項的題目）
+    var t = R(0, 1);
     if (t === 0) { var g = R(2, 12), x = R(1, 12), y = R(1, 12); if (gcd(x, y) !== 1 || x === y) return genRatio(); var useDec = Math.random() < .3;
       var A = useDec ? dec(x * g, 1) : x * g, B = useDec ? dec(y * g, 1) : y * g, ans = x + '：' + y;
       return { text: A + '：' + B + ' 的最簡整數比是多少？', say: A + '比' + B + '的最簡整數比是多少？', answer: ans, options: opts(ans, [y + '：' + x, (x * 2) + '：' + (y * 2), A + '：' + B]),
@@ -358,6 +358,9 @@
     if (t === 1) { var p = R(1, 9), q = R(2, 12), m = R(2, 9); if (p === q) q++; var s = sfrac(p, q);
       return { text: (p * m) + '：' + (q * m) + ' 的比值是多少？', say: (p * m) + '比' + (q * m) + '的比值是多少？', answer: s, options: opts(s, [sfrac(q, p), frac(p * m, q), String(p * m - q * m < 0 ? q * m - p * m : p * m - q * m)]),
         hint: '比值＝前項 ÷ 後項，再約分。', explain: '<p class="ex-line">' + (p * m) + ' ÷ ' + (q * m) + ' ＝ <b>' + s + '</b></p>' }; }
+    return genRatioFill();
+  }
+  function genRatioFill() { // 自己填：相等的比
     var a2 = R(2, 15), b2 = R(2, 15), k = R(2, 9); if (a2 === b2) b2++;
     var wantFirst = Math.random() < .5, ansN = wantFirst ? a2 * k : b2 * k;
     var text = wantFirst ? a2 + '：' + b2 + ' ＝ ？：' + (b2 * k) : a2 + '：' + b2 + ' ＝ ' + (a2 * k) + '：？';
@@ -466,7 +469,7 @@
     { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'round', '質數和合數', '2 是質數，1 都不是', genPrimeSort, S), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z)] },
     { id: 2, name: '分數除法', ic: '🍰', stages: [st('2-1', 'round', '商會變大還是變小', '除以比 1 小的數，商變大', genFracDivCompare, Q), st('2-2', 'round', '分數除法', '乘以倒數，再約分', genFracDivFill, F)] },
     { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRun)] },
-    { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatio)] },
+    { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatio), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },
     { id: 5, name: '兩量關係', ic: '🏷️', stages: [st('5-1', 'run', '打折、和差', '打八折＝× 0.8', genTwoQty)] },
     { id: 6, name: '圓周長與扇形周長', ic: '⭕', stages: [st('6-1', 'run', '圓周長', '直徑 × 3.14', genCircum)] },
     { id: 7, name: '放大、縮小與比例尺', ic: '🗺️', stages: [st('7-1', 'run', '比例尺', '公分換公尺別忘了', genScale)] },
