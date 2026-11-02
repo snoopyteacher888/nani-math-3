@@ -395,7 +395,7 @@
   function genRulerFill() { // 4-2 📏 自己填
     var c = rulerCase(), t = rulerTexts(c);
     return { kind: 'fill', text: '鉛筆有多長？', say: '鉛筆有多長？看看鉛筆從哪裡開始，到哪裡結束。', visual: rulerSVG(c.start, c.len), wide: true,
-      fields: [{ label: '公分', ans: c.cm }, { label: '毫米', ans: c.mm }], answer: cmmm(c.cm, c.mm), review: '鉛筆從 ' + c.start / 10 + ' 公分 量到 ' + cmmm(Math.floor(c.end / 10), c.end % 10),
+      fields: [{ label: '公分', ans: c.cm }, { label: '毫米', ans: c.mm }], autoNext: true, answer: cmmm(c.cm, c.mm), review: '鉛筆從 ' + c.start / 10 + ' 公分 量到 ' + cmmm(Math.floor(c.end / 10), c.end % 10),
       hint: t.hint, explain: t.explain };
   }
   function genRulerPick() { // 闖關用：選答案

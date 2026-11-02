@@ -6,8 +6,8 @@
   'use strict';
 
   /* 年級：學習樂園的五、六年級數學還沒有課本單元，先用 ?grade=5 / ?grade=6 打開「只有九九乘法」的版本（自己的紀錄、預設不加注音） */
-  var GRADE = (/[?&]grade=([356])\b/.exec(location.search) || [])[1] || '3';
-  var UNITS = window.MathQ.UNITS.filter(function (u) { return GRADE === '3' || u.id === '99'; });
+  var GRADE = (/[?&]grade=([356])\b/.exec(location.search) || [])[1] || window.SITE_GRADE || '3'; // 每個網站的 js/site.js 設定年級
+  var UNITS = GRADE === '5' ? window.MathQ.G5 : GRADE === '6' ? window.MathQ.G6 : window.MathQ.UNITS; // 五、六年級：翰林版
   var STAGES = {};
   UNITS.forEach(function (u) { u.stages.forEach(function (s) { s.unit = u; s.mode = s.mode || 'run'; STAGES[s.id] = s; }); });
 
@@ -274,10 +274,10 @@
   };
   if (GRADE !== '3') {
     var gname = GRADE === '5' ? '五' : '六';
-    document.title = gname + '年級數學：九九乘法';
-    document.querySelector('.map-hero h1').innerHTML = '<span class="brand">' + gname + '年級</span>數學';
-    $('grade-sub').textContent = '先練九九乘法（課本單元準備中）';
-    document.querySelector('.map-hero .say').dataset.say = gname + '年級數學。先來練九九乘法！';
+    document.title = '數學' + gname + '上學習樂園';
+    document.querySelector('.map-hero h1').innerHTML = '<span class="brand">數學</span>' + gname + '上學習樂園';
+    $('grade-sub').textContent = '翰林版・' + gname + '年級上學期';
+    document.querySelector('.map-hero .say').dataset.say = '數學' + gname + '上學習樂園。選一個關卡開始練習吧！';
   }
   setDevice(detectDevice());
   renderMap();

@@ -450,3 +450,10 @@ html.dev-phone #game .moves { display: none; }
 /* 跑酷題目：選項 2～4 個，排得下就並排 */
 .q-opts { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
 .q-opts .qa[hidden] { display: none; }
+
+/* 自己填：分數（上分子、下分母） */
+.ffrac { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+.ffrac .fline { width: 1.9em; height: 5px; border-radius: 3px; background: currentColor; }
+.r-fields .box { min-width: 1.4em; width: auto; padding: 0 .2em; }
+.fhint { font-size: .35em; font-weight: 400; color: var(--ink-soft); align-self: center; max-width: 7em; }
+.chart { width: min(100%, 560px); height: auto; }

@@ -38,6 +38,10 @@
       { img: IMG + 'paint-1.webp', text: '看題目要塗幾分之幾。分母是平分成幾份，分子是要塗幾份。' },
       { img: IMG + 'paint-2.webp', text: '點一塊就會塗上顏色，再點一下可以擦掉。塗好了按「塗好了」。', say: '點一塊就會塗上顏色，再點一下可以擦掉。塗好了，按塗好了。' },
       END_SLIDE],
+    fillnum: [
+      { img: IMG + 'fillnum-1.webp', text: '看清楚題目，點一下格子，用數字鍵盤把答案打進去，再按「確定」。', say: '看清楚題目，點一下格子，用數字鍵盤把答案打進去，再按確定。' },
+      { img: IMG + 'fillnum-2.webp', text: '答案是分數的時候，上面填分子、下面填分母，記得約成最簡分數。' },
+      END_SLIDE],
     find: [
       { img: IMG + 'find-1.webp', text: '看題目要找半徑還是直徑。' },
       { img: IMG + 'find-2.webp', text: '在圓上點一下那一條線。點對了就答對！' },
@@ -202,8 +206,13 @@
   /* ---------- fill ---------- */
   function renderFields() {
     var q = Q.q;
+    function box(i) { return '<button class="box' + (Q.phase === 'play' && i === Q.cur ? ' cur' : '') + (Q.res ? ' ' + Q.res[i] : '') + '" type="button" data-f="' + i + '" aria-label="' + (q.layout === 'frac' ? (i ? '分母' : '分子') : '答案') + '">' + Q.vals[i] + '</button>'; }
+    if (q.layout === 'frac') { // 分數：上面分子、下面分母
+      $('r-fields').innerHTML = '<span class="ffrac">' + box(0) + '<span class="fline"></span>' + box(1) + '</span><span class="fhint">上面填分子，下面填分母</span>';
+      return;
+    }
     $('r-fields').innerHTML = q.fields.map(function (f, i) {
-      return '<span class="fbox-wrap"><button class="box' + (Q.phase === 'play' && i === Q.cur ? ' cur' : '') + (Q.res ? ' ' + Q.res[i] : '') + '" type="button" data-f="' + i + '">' + Q.vals[i] + '</button><span class="flabel">' + esc(f.label) + '</span></span>';
+      return '<span class="fbox-wrap">' + box(i) + '<span class="flabel">' + esc(f.label) + '</span></span>';
     }).join('');
   }
   $('r-fields').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (b && Q.phase === 'play') { Q.cur = +b.dataset.f; SFX.key(); renderFields(); } });
@@ -218,7 +227,10 @@
       return;
     }
     if (k === 'del') { if (Q.vals[Q.cur] === '' && Q.cur > 0) Q.cur--; Q.vals[Q.cur] = ''; }
-    else { Q.vals[Q.cur] = Q.vals[Q.cur].length >= 2 ? k : Q.vals[Q.cur] + k; if (Q.vals[Q.cur].length === 1 && Q.cur < q.fields.length - 1 && q.fields[Q.cur].ans < 10) Q.cur++; }
+    else {
+      Q.vals[Q.cur] = Q.vals[Q.cur].length >= 4 ? Q.vals[Q.cur] : Q.vals[Q.cur] + k; // 最多 4 位數
+      if (q.autoNext && Q.vals[Q.cur].length === 1 && Q.cur < q.fields.length - 1) Q.cur++; // 量長度：公分填好自動跳到毫米
+    }
     SFX.key(); renderFields();
   }
   $('r-keypad').addEventListener('click', function (e) { var b = e.target.closest('[data-rk]'); if (b) fillKey(b.dataset.rk); });

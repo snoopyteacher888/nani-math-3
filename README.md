@@ -93,9 +93,24 @@
 | 3-1 乘法進位 | ⏱️ | 二、三位數 × 一位數，含 105×4 這類 |
 | 3-2 找出乘法的錯 | 🔍 | 忘記加進位、沒有進位 |
 
+## 三個數學網站共用一套程式
+| 網站 | 年級 | 題目 |
+|---|---|---|
+| `nani-math-3`（這裡） | 南一版三上 | `js/questions.js` 的 `UNITS` |
+| `hanlin-math-5` | 翰林版五上 | `js/questions56.js` 的 `G5` |
+| `hanlin-math-6` | 翰林版六上 | `js/questions56.js` 的 `G6` |
+
+- 只有 `js/site.js`（`window.SITE_GRADE`）和 README 不一樣；其他程式都在這裡改。
+- 改好後執行 `bash tools/sync.sh`，會把程式、字型、說明圖片複製到旁邊的 `../hanlin-math-5`、`../hanlin-math-6`，再分別 commit。
+- 也可以用 `?grade=5`、`?grade=6` 在這個網站預覽五、六年級。
+- 五、六年級預設不加注音；紀錄分開存（`math-g5:v1`、`math-g6:v1`）。
+
 ## 檔案
 - `index.html`、`style.css`：畫面
-- `js/questions.js`：出題，關卡清單在最下面的 `UNITS`
+- `js/site.js`：這個網站是幾年級
+- `js/questions.js`：三上出題，關卡清單在最下面的 `UNITS`
+- `js/questions56.js`：五上（`G5`）、六上（`G6`）出題
+- `tools/sync.sh`：把程式同步到五、六年級的網站
 - `js/common.js`：紀錄、念出來、音效、注音、地圖、共用對話框
 - `js/zhuyin.js`：注音字型的破音字修正
 - `js/tutorial.js`：遊戲說明（一頁一頁、自動念、翻到最後一頁才能開始）

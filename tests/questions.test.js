@@ -1,6 +1,7 @@
 // 執行：node tests/questions.test.js
 const assert = require('assert');
 require('../js/questions.js');
+require('../js/questions56.js');
 const Q = globalThis.MathQ;
 
 // 國字
@@ -14,7 +15,7 @@ const N = 3000;
 const chants = { '7,8': '七八五十六', '8,7': '七八五十六', '3,3': '三三得九', '2,5': '二五一十', '9,9': '九九八十一', '2,6': '二六十二', '4,5': '四五二十', '1,7': '一七得七' };
 for (const [k, v] of Object.entries(chants)) { const [a, b] = k.split(',').map(Number); assert.strictEqual(Q.chant(a, b), v, k); }
 
-for (const u of Q.UNITS) for (const s of u.stages) {
+for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
   if (s.mode === 'nine') continue; // 九九大冒險不用出題程式
   for (let i = 0; i < N; i++) {
     if (s.gen) {
@@ -24,11 +25,11 @@ for (const u of Q.UNITS) for (const s of u.stages) {
         assert.ok(q.options.length >= 2, s.id + ' options');
         assert.strictEqual(new Set(q.options).size, q.options.length, s.id + ' dup ' + q.options);
         assert.ok(q.options.includes(q.answer), s.id + ' no answer');
-        if (!/^(可以|不可以|奇數|偶數|毫升|公升)$/.test(q.answer)) assert.ok(q.options.length >= 3, s.id + ' needs 3+ options ' + q.text);
+        if (!/^(可以|不可以|奇數|偶數|毫升|公升|因數|倍數|最大公因數|最小公倍數|互質|不互質|.色)$/.test(q.answer)) assert.ok(q.options.length >= 3, s.id + ' needs 3+ options ' + q.text);
       }
       if (k === 'sort') assert.ok(q.bins.includes(q.answer), s.id + ' bin');
       if (k === 'tap') assert.ok(q.svg.includes('data-hit="' + q.answer + '"'), s.id + ' hit');
-      if (k === 'fill') assert.ok(q.fields.every(f => Number.isInteger(f.ans) && f.ans >= 0), s.id + ' fill');
+      if (k === 'fill') assert.ok(q.fields.every(f => Number.isInteger(f.ans) && f.ans >= 0 && f.ans < 10000), s.id + ' fill');
       if (k === 'paint') assert.ok(q.paint.k > 0 && q.paint.k < q.paint.n, s.id + ' paint');
     } else {
       const p = s.make();
