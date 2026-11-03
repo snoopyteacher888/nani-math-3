@@ -488,3 +488,38 @@ html.dev-phone #game .moves { display: none; }
 .m-msg.bad { color: var(--bad); } .m-msg.good { color: var(--good); } .m-msg.miss { color: var(--brand); }
 .m-msg.flash { animation: cd .35s; }
 .m-list { margin: 2px 0 6px; line-height: 1.6; }
+.m-stage { position: relative; }
+.m-banner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 26px; background: rgba(43, 42, 40, .45); }
+.m-banner p { margin: 0; padding: 16px 26px; border-radius: 20px; background: #FFF8DC; border: 4px solid #F2B705; font-size: 1.5em; font-weight: 800; text-align: center; line-height: 1.5; animation: cd .4s; }
+.m-banner b { color: var(--brand); font-size: 1.2em; }
+.m-num.long { font-size: calc(var(--s) * .2); }
+
+/* ===== 小遊戲上方的打怪獸 ===== */
+.arena { flex: none; position: relative; height: 78px; margin: 6px auto 0; width: min(100% - 24px, 560px); border-radius: 18px; background: linear-gradient(#EAF4FB, #F6F1E4 70%); border: 2px solid var(--line); overflow: hidden; }
+.arena::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 14px; background: #CFE3A8; border-top: 2px solid #A9C77A; }
+.ar-fox, .ar-mon { position: absolute; bottom: 4px; width: 64px; height: 64px; z-index: 1; }
+.ar-fox { left: 14px; }
+.ar-mon { right: 14px; width: 70px; height: 70px; }
+.ar-fox svg, .ar-mon svg { width: 100%; height: 100%; display: block; }
+.ar-hp { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 42%; height: 14px; border-radius: 999px; background: #fff; border: 2px solid var(--ink-soft); overflow: hidden; z-index: 1; }
+.ar-hp i { display: block; height: 100%; width: 100%; background: var(--bad); border-radius: 999px; transition: width .35s; }
+.ar-hp i.low { animation: pulse 1s infinite; }
+.ar-mon .mf-hurt, .ar-mon .mf-laugh { display: none; }
+.ar-mon.hurt .mf-normal, .ar-mon.hurt-big .mf-normal, .ar-mon.down .mf-normal, .ar-mon.laugh .mf-normal { display: none; }
+.ar-mon.hurt .mf-hurt, .ar-mon.hurt-big .mf-hurt, .ar-mon.down .mf-hurt { display: inline; }
+.ar-mon.laugh .mf-laugh { display: inline; }
+.ar-mon.hurt { animation: monHit .45s; }
+.ar-mon.hurt-big { animation: monHitBig .55s; }
+.ar-mon.laugh { animation: monLaugh .5s 2; }
+.ar-mon.down { animation: monDown 1.1s .35s forwards; }
+.ar-fox.throw { animation: foxThrow .35s; }
+.ar-fox.bonk { animation: shake .25s 2; }
+.ar-shot { position: absolute; left: 60px; bottom: 30px; width: 28px; height: 28px; opacity: 0; z-index: 2; pointer-events: none; }
+.ar-shot svg { width: 100%; height: 100%; }
+.ar-shot.fly { animation: shotFly .4s ease-in; }
+@keyframes shotFly { 0% { opacity: 1; transform: translateX(0) rotate(0); } 90% { opacity: 1; } 100% { opacity: 0; transform: translateX(calc(min(100vw - 24px, 560px) - 150px)) rotate(360deg); } }
+@keyframes foxThrow { 40% { transform: translateY(-8px) rotate(-8deg); } }
+@keyframes monHit { 30% { transform: translateX(10px) rotate(8deg); } 60% { transform: translateX(-4px); } }
+@keyframes monHitBig { 20% { transform: translateX(16px) rotate(14deg) scale(.9); } 50% { transform: translateX(-8px) rotate(-6deg); } }
+@keyframes monLaugh { 50% { transform: translateY(-6px) scale(1.05); } }
+@keyframes monDown { 0% { transform: none; opacity: 1; } 40% { transform: translateY(-14px) rotate(20deg); } 100% { transform: translateY(60px) rotate(120deg); opacity: 0; } }

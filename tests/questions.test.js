@@ -17,15 +17,28 @@ for (const [k, v] of Object.entries(chants)) { const [a, b] = k.split(',').map(N
 
 for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
   if (s.mode === 'nine') continue; // 九九大冒險不用出題程式
-  if (s.mode === 'mole') { // 質數打地鼠：只出數字
-    let pr = 0;
-    for (let i = 0; i < N; i++) {
-      const m = s.gen(); assert.ok(Number.isInteger(m.n) && m.n >= 1 && m.n <= 60, s.id + ' mole n');
-      let p = m.n > 1; for (let d = 2; d * d <= m.n; d++) if (m.n % d === 0) p = false;
-      assert.strictEqual(m.prime, p, s.id + ' prime ' + m.n); if (p) pr++;
-      if (!p && m.n > 1) { const [a, b] = m.why.match(/＝ (\d+) × (\d+)/).slice(1).map(Number); assert.strictEqual(a * b, m.n); }
+  if (s.mode === 'mole') { // 打地鼠：每條規則的地鼠都要對，該打的要多一點
+    for (let t = 0; t < 50; t++) {
+      const ws = s.waves(); assert.ok(ws.length >= 1 && ws.length <= 3, s.id + ' waves');
+      for (const w of ws) {
+        assert.ok(w.ask && w.say && w.banner && w.ref, s.id + ' rule text');
+        let ok = 0;
+        for (let i = 0; i < 300; i++) {
+          const m = w.gen(); assert.ok(Number.isInteger(m.n) && m.n >= 1 && m.n <= 9999 && m.why, s.id + ' mole n ' + m.n);
+          let want;
+          if (w.kind === 'prime') { want = m.n > 1; for (let d = 2; d * d <= m.n; d++) if (m.n % d === 0) want = false; }
+          else if (w.kind === 'even') want = m.n % 2 === 0;
+          else if (w.kind === 'odd') want = m.n % 2 === 1;
+          else if (w.kind === 'mul') { want = m.n % w.k === 0; assert.ok(m.n <= 99); }
+          else if (w.kind === 'fac') { want = w.k % m.n === 0; assert.ok(m.n <= w.k); }
+          assert.strictEqual(m.ok, want, s.id + ' ' + w.kind + w.k + ' ' + m.n);
+          const mt = m.why.match(/(\d+) ＝ (\d+) × (\d+)/); if (mt) assert.strictEqual(mt[2] * mt[3], +mt[1], m.why);
+          const dv = m.why.match(/(\d+) ÷ (\d+) ＝ (\d+) … (\d+)/); if (dv) assert.strictEqual(dv[2] * dv[3] + +dv[4], +dv[1], m.why);
+          if (m.ok) ok++;
+        }
+        assert.ok(ok / 300 > .4 && ok / 300 < .75, s.id + ' ' + w.kind + ' 該打的比例 ' + ok / 300);
+      }
     }
-    assert.ok(pr / N > .5, s.id + ' 質數要多一點');
     continue;
   }
   for (let i = 0; i < N; i++) {

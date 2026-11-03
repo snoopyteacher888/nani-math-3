@@ -62,11 +62,53 @@
 
   function clearScreen() { ['r-text', 'r-visual', 'r-opts', 'r-fields'].forEach(function (id) { $(id).innerHTML = ''; }); $('r-fb').hidden = true; }
 
+
+  /* ---------- 打怪獸：答對一題，小橘丟一顆星星打怪獸；10 題全對（含訂正）怪獸就被打倒 ---------- */
+  var FOX = '<svg viewBox="0 0 100 100"><g stroke="#5A3A22" stroke-width="3" stroke-linejoin="round">' +
+    '<path d="M22 40 L18 8 L44 28 Z" fill="#F08A3C"/><path d="M78 40 L82 8 L56 28 Z" fill="#F08A3C"/>' +
+    '<path d="M50 24 C76 24 88 44 84 62 C80 80 64 90 50 90 C36 90 20 80 16 62 C12 44 24 24 50 24 Z" fill="#F08A3C"/>' +
+    '<path d="M50 56 C62 56 72 66 70 76 C66 86 58 90 50 90 C42 90 34 86 30 76 C28 66 38 56 50 56 Z" fill="#FFF3E2"/></g>' +
+    '<path d="M18 40 Q50 30 82 40" stroke="#2A63A8" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="37" cy="54" r="4.5" fill="#2B2A28"/><circle cx="63" cy="54" r="4.5" fill="#2B2A28"/>' +
+    '<ellipse cx="50" cy="66" rx="5" ry="3.6" fill="#2B2A28"/><path d="M44 74 Q50 79 56 74" stroke="#2B2A28" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
+  var MON_COLORS = [['#8E7CC3', '#6B5AA6'], ['#5DB4A0', '#3F8C7A'], ['#E88AA8', '#C2607F'], ['#7FB0E0', '#4F84B8'], ['#B5C95A', '#879A33']];
+  function monSVG(c) {
+    return '<svg viewBox="0 0 100 100"><g stroke="' + c[1] + '" stroke-width="3" stroke-linejoin="round">' +
+      '<path d="M30 30 L24 8 L42 24 Z M70 30 L76 8 L58 24 Z" fill="#FFE9A8"/>' +
+      '<path d="M50 20 C80 20 92 46 90 70 C88 86 76 94 50 94 C24 94 12 86 10 70 C8 46 20 20 50 20 Z" fill="' + c[0] + '"/></g>' +
+      '<g class="mf-normal"><circle cx="37" cy="52" r="9" fill="#fff"/><circle cx="63" cy="52" r="9" fill="#fff"/><circle cx="39" cy="54" r="4.5" fill="#2B2A28"/><circle cx="61" cy="54" r="4.5" fill="#2B2A28"/>' +
+        '<path d="M38 72 Q50 80 62 72" stroke="#2B2A28" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44 74 l3 5 l3 -4 l3 4 l3 -5" fill="#fff" stroke="#2B2A28" stroke-width="1.5"/></g>' +
+      '<g class="mf-hurt" stroke="#2B2A28" stroke-width="3.2" stroke-linecap="round" fill="none"><path d="M30 48 l12 8 M30 58 l12 -2 M70 48 l-12 8 M70 58 l-12 -2"/><ellipse cx="50" cy="75" rx="6" ry="5" fill="#2B2A28"/></g>' +
+      '<g class="mf-laugh" stroke="#2B2A28" stroke-width="3.2" stroke-linecap="round" fill="none"><path d="M30 54 Q37 46 44 54 M56 54 Q63 46 70 54"/><path d="M36 68 Q50 86 64 68 Z" fill="#C2405A"/></g>' +
+      '<g class="cheeks" fill="#F2A7A0" opacity=".7"><ellipse cx="24" cy="66" rx="6" ry="3.5"/><ellipse cx="76" cy="66" rx="6" ry="3.5"/></g></svg>';
+  }
+  var STAR = '<svg viewBox="0 0 40 40"><path d="M20 3 L25 15 L38 15.5 L28 24 L31.5 37 L20 29.5 L8.5 37 L12 24 L2 15.5 L15 15 Z" fill="#F2B705" stroke="#C98F00" stroke-width="2" stroke-linejoin="round"/></svg>';
+  function arenaInit(s) {
+    var h = 0; for (var i = 0; i < s.id.length; i++) h = h * 31 + s.id.charCodeAt(i);
+    $('r-fox').innerHTML = FOX; $('r-mon').innerHTML = monSVG(MON_COLORS[Math.abs(h) % MON_COLORS.length]);
+    $('r-mon').className = 'ar-mon'; $('r-fox').className = 'ar-fox'; $('r-shot').className = 'ar-shot'; $('r-shot').innerHTML = STAR;
+    Q.hp = ROUND; arenaHP();
+  }
+  function arenaHP() { $('r-hp').style.width = (Q.hp / ROUND * 100) + '%'; $('r-hp').classList.toggle('low', Q.hp <= 3); }
+  function replay(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function arenaHit(big) {
+    Q.hp = Math.max(0, Q.hp - 1);
+    replay($('r-fox'), 'throw'); replay($('r-shot'), 'fly');
+    setTimeout(function () {
+      if (!Q) return;
+      var mon = $('r-mon'); mon.classList.remove('laugh');
+      replay(mon, big ? 'hurt-big' : 'hurt'); arenaHP();
+      if (Q.hp === 0) mon.classList.add('down');
+    }, 380);
+  }
+  function arenaMiss() { var mon = $('r-mon'); mon.classList.remove('hurt', 'hurt-big'); replay(mon, 'laugh'); replay($('r-fox'), 'bonk'); }
+
   /* ---------- 一局 ---------- */
   function start(s) {
     Q = { stage: s, newCount: 0, retry: [], answered: 0, wrong: 0, score: 0, combo: 0, wrongList: [], phase: 'play', q: null };
     $('r-title').textContent = s.id + ' ' + s.name;
     App.showScreen('round');
+    arenaInit(s);
     next();
   }
   function next() {
@@ -244,11 +286,11 @@
       Q.combo++;
       var quick = q.kind === 'quiz' ? Math.max(0, 5 - Math.floor((Date.now() - Q.t0) / 1500)) : 0;
       Q.score += 10 + Math.min(Q.combo - 1, 5) * 2 + quick; SFX.good();
-      hud();
-      setTimeout(function () { if (Q && Q.phase === 'fb') { Q.frogX = null; next(); } }, 1000);
+      hud(); arenaHit(Q.combo >= 3);
+      setTimeout(function () { if (Q && Q.phase === 'fb') { Q.frogX = null; next(); } }, Q.hp === 0 ? 1500 : 1000);
     } else {
       Q.combo = 0; Q.wrong++; Q.wrongList.push(q); Q.retry.push({ q: q, due: Q.answered + 2 });
-      SFX.bad(); hud();
+      SFX.bad(); hud(); arenaMiss();
       var ans = q.answerText || q.answer;
       $('r-fb').innerHTML = '<div class="fb-ans">' + App.sayBtn('正確答案是' + ans.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint) + '<span>正確答案是 <b>' + fmt(ans) + '</b></span></div>' +
         '<p class="ex-hint">' + esc(q.hint) + '</p><div class="ex-work">' + (q.explain || '') + '</div>' +

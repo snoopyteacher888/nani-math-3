@@ -111,8 +111,8 @@
     </header>
     <div class="timer" aria-label="剩下的時間"><div class="timer-fill" id="m-fill"></div><span class="timer-sec">剩下 <b id="m-sec">2 分 0 秒</b></span></div>
     <main class="mole-main">
-      <p class="m-ask"><button class="say" type="button" data-say="是質數就打！1 和合數不要打。" aria-label="念出來">🔊</button><span>是<b>質數</b>就打！1 和合數不要打</span></p>
-      <div class="m-board" id="m-board"></div>
+      <p class="m-ask"><button class="say" type="button" id="m-ask-say" data-say="" aria-label="念出來">🔊</button><span id="m-ask-text"></span></p>
+      <div class="m-stage"><div class="m-board" id="m-board"></div><div class="m-banner" id="m-banner" hidden><p id="m-banner-text"></p></div></div>
       <p class="m-msg" id="m-msg" aria-live="polite"></p>
     </main>
   </section>
@@ -126,6 +126,12 @@
       <div class="combo" id="r-combo" hidden></div>
       <div class="score">⭐ <b id="r-score">0</b></div>
     </header>
+    <div class="arena" id="r-arena" aria-hidden="true">
+      <div class="ar-fox" id="r-fox"></div>
+      <div class="ar-hp"><i id="r-hp"></i></div>
+      <div class="ar-mon" id="r-mon"></div>
+      <span class="ar-shot" id="r-shot"></span>
+    </div>
     <main class="calc round-main">
       <div class="qtext r-q"><button class="say" type="button" id="r-say" aria-label="念題目">🔊</button><span id="r-text"></span></div>
       <div class="qbig" id="r-big" hidden></div>

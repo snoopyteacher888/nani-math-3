@@ -307,21 +307,10 @@
       hint: '質數：因數只有 1 和自己（2 是質數！）。合數：還有別的因數。1 不是質數也不是合數。',
       explain: '<p class="ex-line">' + n + ' 的因數：' + fs.join('、') + '，是<b>' + ans + '</b>。</p>' };
   }
-  /* 質數打地鼠：大多是質數；合數挑容易看錯的奇數 */
-  var PRIMES60 = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59];
-  var TRICKY = [9, 15, 21, 25, 27, 33, 35, 39, 45, 49, 51, 55, 57];
-  function factorWhy(n) {
-    if (n === 1) return '1 不是質數，也不是合數';
-    for (var i = 2; i * i <= n; i++) if (n % i === 0) return n + ' ＝ ' + i + ' × ' + (n / i) + '，是合數';
-    return n + ' 是質數';
-  }
-  function genMole() {
-    var r = Math.random(), n;
-    if (r < .6) n = pick(PRIMES60);
-    else if (r < .88) n = pick(TRICKY);
-    else if (r < .94) n = 1;
-    else n = 2 * R(2, 30);
-    return { n: n, prime: isPrime(n), why: factorWhy(n) };
+  /* 2-1 倍數因數打地鼠：倍數 → 因數 → 倍數 */
+  function mulFacWaves() {
+    var ks = [3, 4, 6, 7, 8, 9].sort(function () { return Math.random() - .5; }), MR = root.MathQ.moleRule;
+    return [MR('mul', ks[0]), MR('fac', pick([12, 18, 24, 30, 36, 40, 48])), MR('mul', ks[1])];
   }
   function genCoprimeWhich() {
     if (Math.random() < .5) return genGcdLcmWhich();
@@ -496,7 +485,7 @@
 
   var G5 = [NINE,
     { id: 1, name: '折線圖', ic: '📈', stages: [st('1-1', 'run', '看折線圖', '上升最多？每一格代表多少？', genLineChartL)] },
-    { id: 2, name: '倍數與因數', ic: '🔢', stages: [st('2-1', 'round', '是不是倍數', '能整除就是倍數', genMultipleSort, S), st('2-2', 'round', '因數還是倍數', '大的是倍數，小的是因數', genFactorOrMultiple, Q)] },
+    { id: 2, name: '倍數與因數', ic: '🔢', stages: [st('2-1', 'mole', '倍數因數打地鼠', '能整除就是倍數；規則會換喔', null, { label: '打地鼠', tut: 'mole-switch', waves: mulFacWaves }), st('2-2', 'round', '因數還是倍數', '大的是倍數，小的是因數', genFactorOrMultiple, Q)] },
     { id: 3, name: '平面圖形', ic: '🔺', stages: [st('3-1', 'round', '求內角', '三角形 180 度、四邊形 360 度', genAngleSum, F), st('3-2', 'round', '能不能圍成三角形', '兩短邊加起來要比長邊長', genTriangleSides, Q)] },
     { id: 4, name: '公倍數與公因數', ic: '🧮', stages: [st('4-1', 'round', '最大公因數、最小公倍數', '找出來填進格子', genGcdLcmFill(100, 300), F), st('4-2', 'round', '要用哪一個？', '切開用公因數，拼起來用公倍數', genGcdLcmWhich, Z)] },
     { id: 5, name: '立體形體', ic: '🧊', stages: [st('5-1', 'round', '面、邊、頂點', '幾角柱、幾角錐', genSolidCount, Q), st('5-2', 'round', '柱體、錐體、球', '看圖分一分', genSolidSort, S)] },
@@ -507,7 +496,7 @@
     { id: 10, name: '扇形', ic: '🍕', stages: [st('10-1', 'run', '圓心角', '一整圈是 360 度', genSectorL)] }
   ];
   var G6 = [NINE,
-    { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'mole', '質數打地鼠', '是質數就打！1 和合數不要打', genMole, { label: '打地鼠' }), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z)] },
+    { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'mole', '質數打地鼠', '是質數就打！1 和合數不要打', null, { label: '打地鼠', tut: 'mole', waves: function () { return [root.MathQ.moleRule('prime')]; } }), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z)] },
     { id: 2, name: '分數除法', ic: '🍰', stages: [st('2-1', 'round', '商會變大還是變小', '除以比 1 小的數，商變大', genFracDivCompare, Q), st('2-2', 'round', '分數除法', '乘以倒數，再約分', genFracDivFill, F)] },
     { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRunL)] },
     { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatioL), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },
@@ -519,5 +508,5 @@
 
   root.MathQ = root.MathQ || {};
   root.MathQ.G5 = G5; root.MathQ.G6 = G6;
-  root.MathQ._g56 = { gcd: gcd, lcm: lcm, isPrime: isPrime, PRIMES60: PRIMES60 };
+  root.MathQ._g56 = { gcd: gcd, lcm: lcm, isPrime: isPrime };
 })(typeof window !== 'undefined' ? window : globalThis);

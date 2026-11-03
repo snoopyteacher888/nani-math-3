@@ -815,7 +815,7 @@
     ] },
     { id: 6, name: '除法', ic: '➗', stages: [
       { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRunB },
-      { id: '6-2', mode: 'round', tut: 'sort', ic: '🗑️', label: '分類丟丟樂', name: '奇數和偶數', desc: '只要看個位', gen: genOddEven },
+      { id: '6-2', mode: 'mole', tut: 'mole-switch', label: '打地鼠', name: '奇數偶數打地鼠', desc: '只要看個位！規則會換喔', waves: oddEvenWaves },
       { id: '6-3', mode: 'round', tut: 'quiz', ic: '🧩', label: '選對答案', name: '剩下的怎麼辦？', desc: '要幾輛車？剩下的人也要坐', gen: genLeftover }
     ] },
     { id: 7, name: '公升和毫升', ic: '🥛', stages: [
@@ -834,6 +834,61 @@
     ] }
   ];
 
-  root.MathQ = { UNITS: UNITS, zh: zh, chant: chant, literal: literal, vertical: vertical, len: len, dig: dig,
+  /* =====================================================
+   * 打地鼠的規則：每一波一條規則，gen() 出一隻地鼠 { n, ok, why }
+   * kind：prime 質數／even 偶數／odd 奇數／mul k 的倍數／fac k 的因數
+   * ===================================================== */
+  function isPrimeN(n) { if (n < 2) return false; for (var i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; }
+  var PRIMES60 = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59];
+  function moleRule(kind, k) {
+    var r = { kind: kind, k: k };
+    if (kind === 'prime') {
+      var TRICKY = [9, 15, 21, 25, 27, 33, 35, 39, 45, 49, 51, 55, 57];
+      r.ask = '是<b>質數</b>就打！1 和合數不要打'; r.say = '是質數就打！1 和合數不要打。'; r.banner = '打質數';
+      r.ref = '<h3>60 以內的質數</h3><p class="m-list">' + PRIMES60.join('、') + '</p>';
+      r.gen = function () {
+        var x = Math.random(), n = x < .6 ? pick(PRIMES60) : x < .88 ? pick(TRICKY) : x < .94 ? 1 : 2 * R(2, 30), why;
+        if (n === 1) why = '1 不是質數，也不是合數';
+        else if (isPrimeN(n)) why = n + ' 是質數';
+        else for (var i = 2; i * i <= n; i++) if (n % i === 0) { why = n + ' ＝ ' + i + ' × ' + (n / i) + '，是合數'; break; }
+        return { n: n, ok: isPrimeN(n), why: why };
+      };
+    } else if (kind === 'even' || kind === 'odd') {
+      var nm = kind === 'even' ? '偶數' : '奇數', other = kind === 'even' ? '奇數' : '偶數';
+      r.ask = '是<b>' + nm + '</b>就打！' + other + '不要打'; r.say = '是' + nm + '就打！' + other + '不要打。只要看個位喔。'; r.banner = '打' + nm;
+      r.ref = '<h3>只要看個位</h3><p class="m-list">個位是 0、2、4、6、8 → 偶數<br>個位是 1、3、5、7、9 → 奇數</p>';
+      r.gen = function () {
+        var want = Math.random() < .55, d = pick((kind === 'even') === want ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9]);
+        var len = pick([2, 3, 3, 4, 4]), head = R(Math.pow(10, len - 2), Math.pow(10, len - 1) - 1), n = head * 10 + d;
+        var ev = d % 2 === 0;
+        return { n: n, ok: (kind === 'even') === ev, why: n + ' 的個位是 ' + d + '，是' + (ev ? '偶數' : '奇數') };
+      };
+    } else if (kind === 'mul') {
+      r.ask = '是 <b>' + k + ' 的倍數</b>就打！'; r.say = '是' + k + '的倍數就打！'; r.banner = '打 ' + k + ' 的倍數';
+      var ms = []; for (var m = k; m <= 99; m += k) ms.push(m);
+      r.ref = '<h3>' + k + ' 的倍數</h3><p class="m-list">' + ms.join('、') + '</p>';
+      r.gen = function () {
+        var n;
+        if (Math.random() < .55) n = k * R(2, Math.floor(99 / k));
+        else do { n = Math.random() < .6 ? k * R(2, Math.floor(99 / k)) + pick([-2, -1, 1, 2]) : R(10, 99); } while (n % k === 0 || n < 2 || n > 99);
+        var q = Math.floor(n / k), rem = n % k;
+        return { n: n, ok: rem === 0, why: rem === 0 ? n + ' ＝ ' + k + ' × ' + q + '，是 ' + k + ' 的倍數' : n + ' ÷ ' + k + ' ＝ ' + q + ' … ' + rem + '，不是 ' + k + ' 的倍數' };
+      };
+    } else if (kind === 'fac') {
+      var fs = [], non = [];
+      for (var i = 1; i <= k; i++) (k % i === 0 ? fs : non).push(i);
+      r.ask = '是 <b>' + k + ' 的因數</b>就打！'; r.say = '是' + k + '的因數就打！'; r.banner = '打 ' + k + ' 的因數';
+      r.ref = '<h3>' + k + ' 的因數</h3><p class="m-list">' + fs.join('、') + '</p>';
+      r.gen = function () {
+        var n = Math.random() < .55 ? pick(fs) : pick(non), q = Math.floor(k / n), rem = k % n;
+        return { n: n, ok: rem === 0, why: rem === 0 ? n + ' × ' + q + ' ＝ ' + k + '，' + n + ' 是 ' + k + ' 的因數' : k + ' ÷ ' + n + ' ＝ ' + q + ' … ' + rem + '，' + n + ' 不是 ' + k + ' 的因數' };
+      };
+    }
+    return r;
+  }
+  /* 6-2 奇數偶數打地鼠：三波，偶數、奇數輪流 */
+  function oddEvenWaves() { var a = Math.random() < .5 ? 'even' : 'odd', b = a === 'even' ? 'odd' : 'even'; return [moleRule(a), moleRule(b), moleRule(a)]; }
+
+  root.MathQ = { moleRule: moleRule, PRIMES60: PRIMES60, UNITS: UNITS, zh: zh, chant: chant, literal: literal, vertical: vertical, len: len, dig: dig,
     _gen: { genReadWrite: genReadWrite, genNumberLine: genNumberLine, genFrog: genFrog, genPaint: genPaint, genCircleFind: genCircleFind, makeAdd: makeAdd, makeSub: makeSub, makeMul: makeMul } };
 })(typeof window !== 'undefined' ? window : globalThis);
