@@ -17,6 +17,17 @@ for (const [k, v] of Object.entries(chants)) { const [a, b] = k.split(',').map(N
 
 for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
   if (s.mode === 'nine') continue; // 九九大冒險不用出題程式
+  if (s.mode === 'mole') { // 質數打地鼠：只出數字
+    let pr = 0;
+    for (let i = 0; i < N; i++) {
+      const m = s.gen(); assert.ok(Number.isInteger(m.n) && m.n >= 1 && m.n <= 60, s.id + ' mole n');
+      let p = m.n > 1; for (let d = 2; d * d <= m.n; d++) if (m.n % d === 0) p = false;
+      assert.strictEqual(m.prime, p, s.id + ' prime ' + m.n); if (p) pr++;
+      if (!p && m.n > 1) { const [a, b] = m.why.match(/＝ (\d+) × (\d+)/).slice(1).map(Number); assert.strictEqual(a * b, m.n); }
+    }
+    assert.ok(pr / N > .5, s.id + ' 質數要多一點');
+    continue;
+  }
   for (let i = 0; i < N; i++) {
     if (s.gen) {
       const q = s.gen(), k = q.kind || 'run';
@@ -46,7 +57,7 @@ for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
       }
     }
   }
-  if (s.mode === 'nine') continue;
+  if (s.mode === 'nine' || s.mode === 'mole') continue;
   const ex = s.gen ? s.gen() : s.make();
   console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }

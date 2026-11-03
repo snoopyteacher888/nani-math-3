@@ -156,7 +156,7 @@
     $('units').innerHTML = html + (soon ? '<div class="soon-grid">' + soon + '</div>' : '');
     $('total-stars').textContent = total;
   }
-  function modeName(m) { return { run: '跑酷', timed: '2 分鐘挑戰', spot: '小偵探' }[m]; }
+  function modeName(m) { return { run: '跑酷', timed: '2 分鐘挑戰', spot: '小偵探', mole: '打地鼠' }[m]; }
   $('units').addEventListener('click', function (e) {
     var b = e.target.closest('[data-stage]');
     if (b) { var s = STAGES[b.dataset.stage]; App.modes[s.mode].open(s); }
@@ -198,7 +198,7 @@
 
   /* 切換畫面：map、game（跑酷）、timed、spot */
   function showScreen(id) {
-    ['map', 'game', 'timed', 'spot', 'round', 'nine'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['map', 'game', 'timed', 'spot', 'round', 'nine', 'mole'].forEach(function (s) { $(s).hidden = s !== id; });
     window.scrollTo(0, 0);
   }
   function toMap() {

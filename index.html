@@ -100,6 +100,23 @@
     </main>
   </section>
 
+  <!-- ===== 質數打地鼠 ===== -->
+  <section class="screen game" id="mole" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="m-pause" type="button" aria-label="暫停">⏸</button>
+      <button class="hud-btn help" id="help-mole" type="button" aria-label="再看一次說明">📖</button>
+      <div class="hud-mid"><span id="m-title"></span></div>
+      <div class="combo" id="m-combo" hidden></div>
+      <div class="score">⭐ <b id="m-count">0</b></div>
+    </header>
+    <div class="timer" aria-label="剩下的時間"><div class="timer-fill" id="m-fill"></div><span class="timer-sec">剩下 <b id="m-sec">2 分 0 秒</b></span></div>
+    <main class="mole-main">
+      <p class="m-ask"><button class="say" type="button" data-say="是質數就打！1 和合數不要打。" aria-label="念出來">🔊</button><span>是<b>質數</b>就打！1 和合數不要打</span></p>
+      <div class="m-board" id="m-board"></div>
+      <p class="m-msg" id="m-msg" aria-live="polite"></p>
+    </main>
+  </section>
+
   <!-- ===== 一局 10 題的小遊戲（快答、點圖、分類、塗色、自己填） ===== -->
   <section class="screen game" id="round" hidden>
     <header class="hud">
@@ -245,5 +262,6 @@
   <script src="js/spot.js"></script>
   <script src="js/rounds.js"></script>
   <script src="js/nine.js"></script>
+  <script src="js/mole.js"></script>
 </body>
 </html>
