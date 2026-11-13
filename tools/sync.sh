@@ -13,6 +13,6 @@ for g in 4 5 6; do
   cp "$here"/tests/*.js "$dst/tests/"
   cp "$here"/tools/sync.sh "$dst/tools/"
   rm -rf "$dst/fonts" "$dst/images"; cp -r "$here/fonts" "$here/images" "$dst/"
-  [ -f "$dst/js/site.js" ] || printf "/* 這個網站是幾年級（三個數學網站共用同一套程式，只有這個檔案不一樣） */\nwindow.SITE_GRADE = '%s';\n" "$g" > "$dst/js/site.js"
+  [ -f "$dst/js/site.js" ] || printf "/* 這個網站是幾年級（四個數學網站共用同一套程式，只有這個檔案不一樣） */\nwindow.SITE_GRADE = '%s';\n" "$g" > "$dst/js/site.js"
   echo "已更新 hanlin-math-$g"
 done
