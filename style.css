@@ -523,3 +523,9 @@ html.dev-phone #game .moves { display: none; }
 @keyframes monHitBig { 20% { transform: translateX(16px) rotate(14deg) scale(.9); } 50% { transform: translateX(-8px) rotate(-6deg); } }
 @keyframes monLaugh { 50% { transform: translateY(-6px) scale(1.05); } }
 @keyframes monDown { 0% { transform: none; opacity: 1; } 40% { transform: translateY(-14px) rotate(20deg); } 100% { transform: translateY(60px) rotate(120deg); opacity: 0; } }
+
+/* 關卡插圖：放在卡片右上，文字留出空間不會被蓋到；星星那一列用整個寬度 */
+.stage-card.has-art { padding-right: 112px; }
+.stage-card .sart { position: absolute; right: 10px; top: 12px; width: 96px; height: 96px; object-fit: contain; pointer-events: none; }
+.stage-card.has-art .srow { margin-right: -96px; }
+@media (max-width: 600px) { .stage-card.has-art { padding-right: 96px; } .stage-card .sart { width: 82px; height: 82px; right: 8px; } .stage-card.has-art .srow { margin-right: -80px; } }

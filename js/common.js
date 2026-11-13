@@ -147,7 +147,8 @@
           starRow = '<span class="medals">🏅 × ' + medals + '</span>'; best = '破了 ' + medals + ' / 9 座島';
         }
         html += '<div class="cell">' + sayBtn((s.mode === 'nine' ? '' : '關卡 ' + s.id + '，') + s.name + '，' + mn + '。' + s.desc) +
-          '<button class="stage-card" type="button" data-stage="' + s.id + '">' +
+          '<button class="stage-card has-art" type="button" data-stage="' + s.id + '">' +
+          '<img class="sart" src="images/cards/' + (s.mode === 'nine' ? 'nine' : 'g' + GRADE + '-' + s.id) + '.webp" alt="" loading="lazy" onerror="this.remove()">' +
           '<span class="sid">' + (s.mode === 'nine' ? '每天練一練' : '關卡 ' + s.id + '・' + mn) + '</span><span class="sname">' + esc(s.name) + '</span><span class="sdesc">' + esc(s.desc) + '</span>' +
           '<span class="srow"><span class="stars">' + starRow + '</span><span class="best">' + best + '</span></span></button></div>';
       });
