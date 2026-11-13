@@ -2,6 +2,7 @@
 const assert = require('assert');
 require('../js/questions.js');
 require('../js/questions56.js');
+require('../js/questions4.js');
 const Q = globalThis.MathQ;
 
 // 國字
@@ -15,7 +16,7 @@ const N = 3000;
 const chants = { '7,8': '七八五十六', '8,7': '七八五十六', '3,3': '三三得九', '2,5': '二五一十', '9,9': '九九八十一', '2,6': '二六十二', '4,5': '四五二十', '1,7': '一七得七' };
 for (const [k, v] of Object.entries(chants)) { const [a, b] = k.split(',').map(Number); assert.strictEqual(Q.chant(a, b), v, k); }
 
-for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
+for (const u of Q.UNITS.concat(Q.G4, Q.G5, Q.G6)) for (const s of u.stages) {
   if (s.mode === 'nine') continue; // 九九大冒險不用出題程式
   if (s.mode === 'mole') { // 打地鼠：每條規則的地鼠都要對，該打的要多一點
     for (let t = 0; t < 50; t++) {
@@ -24,8 +25,11 @@ for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
         assert.ok(w.ask && w.say && w.banner && w.ref, s.id + ' rule text');
         let ok = 0;
         for (let i = 0; i < 300; i++) {
-          const m = w.gen(); assert.ok(Number.isInteger(m.n) && m.n >= 1 && m.n <= 9999 && m.why, s.id + ' mole n ' + m.n);
+          const m = w.gen(); assert.ok(m.why, s.id + ' why');
+          if (['prime', 'even', 'odd', 'mul', 'fac'].includes(w.kind)) assert.ok(Number.isInteger(m.n) && m.n >= 1 && m.n <= 9999, s.id + ' mole n ' + m.n);
           let want;
+          if (w.kind === 'improper' || w.kind === 'proper') { const [nu, de] = m.n.split('/').map(Number); assert.ok(nu >= 1 && de >= 2); want = w.kind === 'improper' ? nu >= de : nu < de; }
+          else if (w.kind === 'gt' || w.kind === 'lt') { assert.ok(/^\d+\.\d{1,2}$/.test(m.n), m.n); const v = Math.round(parseFloat(m.n) * 100), K = Math.round(w.k * 100); assert.ok(v > 0); want = w.kind === 'gt' ? v > K : v < K; }
           if (w.kind === 'prime') { want = m.n > 1; for (let d = 2; d * d <= m.n; d++) if (m.n % d === 0) want = false; }
           else if (w.kind === 'even') want = m.n % 2 === 0;
           else if (w.kind === 'odd') want = m.n % 2 === 1;
@@ -75,7 +79,7 @@ for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
   console.log(s.id, s.mode, '|', ex.text || (ex.a + ' ' + ex.op + ' ' + ex.b + ' = ' + ex.ans + (ex.shown !== undefined ? '，同學寫 ' + ex.shown + (ex.why ? '（' + ex.why + '）' : '（對）') : '')));
 }
 // 跑酷難度：每一關的題目都要標 lv（1～3），初階和中階都至少要有 8 種不同的題目
-for (const u of Q.UNITS.concat(Q.G5, Q.G6)) for (const s of u.stages) {
+for (const u of Q.UNITS.concat(Q.G4, Q.G5, Q.G6)) for (const s of u.stages) {
   if (s.mode !== 'run') continue;
   const pools = { 1: new Set(), 2: new Set(), 3: new Set() };
   for (let i = 0; i < 800; i++) { const q = s.gen(); assert.ok([1, 2, 3].includes(q.lv), s.id + ' 沒有標難度 ' + q.text); pools[q.lv].add(q.text + q.answer + (q.big || '') + (q.review || '')); }

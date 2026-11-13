@@ -883,6 +883,35 @@
         var n = Math.random() < .55 ? pick(fs) : pick(non), q = Math.floor(k / n), rem = k % n;
         return { n: n, ok: rem === 0, why: rem === 0 ? n + ' × ' + q + ' ＝ ' + k + '，' + n + ' 是 ' + k + ' 的因數' : k + ' ÷ ' + n + ' ＝ ' + q + ' … ' + rem + '，' + n + ' 不是 ' + k + ' 的因數' };
       };
+    } else if (kind === 'improper' || kind === 'proper') { // 四上：真分數、假分數（分子＝分母也是假分數）
+      var nm2 = kind === 'improper' ? '假分數' : '真分數', ot2 = kind === 'improper' ? '真分數' : '假分數';
+      r.ask = '是<b>' + nm2 + '</b>就打！' + ot2 + '不要打'; r.say = '是' + nm2 + '就打！' + ot2 + '不要打。'; r.banner = '打' + nm2;
+      r.ref = '<h3>真分數和假分數</h3><p class="m-list">分子比分母小 → 真分數<br>分子比分母大，或分子和分母一樣 → 假分數</p>';
+      r.gen = function () {
+        var d = R(2, 9), x = Math.random(), want = Math.random() < .55, imp = (kind === 'improper') === want, nu;
+        if (imp) nu = x < .3 ? d : R(d + 1, 3 * d); else nu = R(1, d - 1);
+        var why = nu === d ? nu + '/' + d + ' 分子和分母一樣，是假分數' : nu > d ? nu + '/' + d + ' 分子比分母大，是假分數' : nu + '/' + d + ' 分子比分母小，是真分數';
+        return { n: nu + '/' + d, ok: imp === (kind === 'improper'), why: why, val: nu / d };
+      };
+    } else if (kind === 'gt' || kind === 'lt') { // 四上：二位小數比大小（k 是一位小數）
+      var ks = String(k), word = kind === 'gt' ? '大' : '小';
+      r.ask = '比 <b>' + ks + ' ' + word + '</b>的就打！'; r.say = '比' + ks + word + '的就打！'; r.banner = '打比 ' + ks + ' ' + word + '的';
+      r.ref = '<h3>小數比大小</h3><p class="m-list">先比個位，再比十分位，最後比百分位<br>0.58 和 0.6：十分位 5 比 6 小，所以 0.58 比較小</p>';
+      r.gen = function () {
+        var K = Math.round(k * 100), v, x, s, want = Math.random() < .55, tries = 0;
+        do { x = Math.random();
+        if (x < .3) v = K + pick([-9, -8, -5, -2, -1, 1, 2, 5, 8, 9]);          // 差一點點
+        else if (x < .55) v = K - 10 + R(1, 9);                               // 0.5x 這種「位數多但比較小」
+        else if (x < .65) v = K;                                             // 一樣大（0.60）
+        else v = K + pick([-1, 1]) * pick([10, 20, 30]) + (Math.random() < .5 ? 0 : R(1, 9));
+        v = Math.max(1, v); tries++;
+        } while (tries < 30 && (kind === 'gt' ? v > K : v < K) !== want);
+        s = (v % 10 === 0 && Math.random() < .5) ? (v / 100).toFixed(1) : (v / 100).toFixed(2);
+        if (v === K) s = (v / 100).toFixed(2);
+        var ok = kind === 'gt' ? v > K : v < K;
+        var why = v === K ? s + ' 和 ' + ks + ' 一樣大' : s + (v > K ? ' 比 ' + ks + ' 大' : ' 比 ' + ks + ' 小');
+        return { n: s, ok: ok, why: why, val: v / 100 };
+      };
     }
     return r;
   }

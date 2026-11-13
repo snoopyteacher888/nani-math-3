@@ -529,3 +529,6 @@ html.dev-phone #game .moves { display: none; }
 .stage-card .sart { position: absolute; right: 10px; top: 12px; width: 96px; height: 96px; object-fit: contain; pointer-events: none; }
 .stage-card.has-art .srow { margin-right: -96px; }
 @media (max-width: 600px) { .stage-card.has-art { padding-right: 96px; } .stage-card .sart { width: 82px; height: 82px; right: 8px; } .stage-card.has-art .srow { margin-right: -80px; } }
+.m-num.fr { top: 68%; font-size: calc(var(--s) * .21); line-height: 1.1; padding: .1em .3em; }
+.m-num .frac > span:first-child { border-bottom-width: 2px; }
+.mixed { white-space: nowrap; }

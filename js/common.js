@@ -6,8 +6,8 @@
   'use strict';
 
   /* 年級：學習樂園的五、六年級數學還沒有課本單元，先用 ?grade=5 / ?grade=6 打開「只有九九乘法」的版本（自己的紀錄、預設不加注音） */
-  var GRADE = (/[?&]grade=([356])\b/.exec(location.search) || [])[1] || window.SITE_GRADE || '3'; // 每個網站的 js/site.js 設定年級
-  var UNITS = GRADE === '5' ? window.MathQ.G5 : GRADE === '6' ? window.MathQ.G6 : window.MathQ.UNITS; // 五、六年級：翰林版
+  var GRADE = (/[?&]grade=([3456])\b/.exec(location.search) || [])[1] || window.SITE_GRADE || '3'; // 每個網站的 js/site.js 設定年級
+  var UNITS = GRADE === '4' ? window.MathQ.G4 : GRADE === '5' ? window.MathQ.G5 : GRADE === '6' ? window.MathQ.G6 : window.MathQ.UNITS; // 四、五、六年級：翰林版
   var STAGES = {};
   UNITS.forEach(function (u) { u.stages.forEach(function (s) { s.unit = u; s.mode = s.mode || 'run'; STAGES[s.id] = s; }); });
 
@@ -16,7 +16,7 @@
   var store = (function () { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })();
   store.stages = store.stages || {};
   if (store.sound === undefined) store.sound = true;
-  if (store.zhuyin === undefined) store.zhuyin = GRADE === '3'; // 三年級預設加注音；五、六年級不用
+  if (store.zhuyin === undefined) store.zhuyin = GRADE === '3'; // 三年級預設加注音；四、五、六年級不用
   if ((store.v || 1) < 2) { // 第 2、3 單元從跑酷改成計時挑戰／小偵探，舊的分數意思不一樣了，清掉
     ['2-1', '2-2', '3-1', '3-2'].forEach(function (id) { delete store.stages[id]; });
     store.v = 2;
@@ -56,7 +56,8 @@
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   /* 分數 3/8 顯示成上下的分數 */
-  function fmt(s) { return esc(s).replace(/(\d+)\/(\d+)/g, '<span class="frac"><span>$1</span><span>$2</span></span>'); }
+  function fmt(s) { // 3/5 → 上下的分數；2又3/5 → 帶分數
+    return esc(s).replace(/(\d+)又(\d+)\/(\d+)/g, '<span class="mixed">$1<span class="frac"><span>$2</span><span>$3</span></span></span>').replace(/(\d+)\/(\d+)/g, '<span class="frac"><span>$1</span><span>$2</span></span>'); }
   function starsHTML(n) { var h = ''; for (var i = 0; i < 3; i++) h += '<span' + (i < n ? '' : ' class="off"') + '>⭐</span>'; return h; }
   /* 🔊 按鈕（班上有不識字的學生，看得到字的地方都要能念出來） */
   function plain(html) { return String(html).replace(/<[^>]+>/g, '').replace(/[⭐✔✏️💡📝🔍⏱️🏃]/g, '').replace(/\s+/g, ' ').trim(); }
@@ -273,7 +274,7 @@
     modes: {}
   };
   if (GRADE !== '3') {
-    var gname = GRADE === '5' ? '五' : '六';
+    var gname = { 4: '四', 5: '五', 6: '六' }[GRADE];
     document.title = '數學' + gname + '上學習樂園';
     document.querySelector('.map-hero h1').innerHTML = '<span class="brand">數學</span>' + gname + '上學習樂園';
     $('grade-sub').textContent = '翰林版・' + gname + '年級上學期';

@@ -123,7 +123,7 @@
     var gold = q.ok && Math.random() < .08;
     M.holes[i] = { q: q, until: M.t + p.stay * (gold ? .8 : 1), gold: gold, done: false };
     var el = holeEl(i), num = el.querySelector('.m-num');
-    num.textContent = q.n; num.classList.toggle('long', String(q.n).length >= 4);
+    num.innerHTML = App.fmt(String(q.n)); num.classList.toggle('long', /^\d{4,}$|\./.test(String(q.n))); num.classList.toggle('fr', /\//.test(String(q.n)));
     el.className = 'hole up' + (gold ? ' gold' : '');
   }
 
@@ -140,7 +140,7 @@
     t.textContent = txt; t.className = 'pop-txt ' + cls; void t.offsetWidth; t.className = 'pop-txt show ' + cls;
   }
 
-  function msg(text, cls) { var el = $('m-msg'); el.textContent = text; el.className = 'm-msg ' + cls; void el.offsetWidth; el.classList.add('flash'); }
+  function msg(text, cls) { var el = $('m-msg'); el.innerHTML = App.fmt(text); el.className = 'm-msg ' + cls; void el.offsetWidth; el.classList.add('flash'); }
 
   function remember(list, q) { if (!list.some(function (x) { return x.n === q.n && x.rule === M.wave; })) list.push({ n: q.n, why: q.why, rule: M.wave }); }
 
@@ -252,8 +252,8 @@
     var r = App.saveResult(s.id, stars, M.score);
     var title = stars === 3 ? '打地鼠高手！太厲害了！' : stars === 2 ? '打得好！再快一點就三顆星！' : '完成了！看看下面再來挑戰！';
     var rv = '';
-    if (M.wrongs.length) rv += '<h3>不該打的</h3><ul>' + M.wrongs.slice(0, 8).map(function (x) { return '<li>' + esc(x.why) + '</li>'; }).join('') + '</ul>';
-    if (M.missed.length) rv += '<h3>該打卻溜走的</h3><ul>' + M.missed.slice(0, 8).map(function (x) { return '<li>' + esc(x.why) + '</li>'; }).join('') + '</ul>';
+    if (M.wrongs.length) rv += '<h3>不該打的</h3><ul>' + M.wrongs.slice(0, 8).map(function (x) { return '<li>' + App.fmt(x.why) + '</li>'; }).join('') + '</ul>';
+    if (M.missed.length) rv += '<h3>該打卻溜走的</h3><ul>' + M.missed.slice(0, 8).map(function (x) { return '<li>' + App.fmt(x.why) + '</li>'; }).join('') + '</ul>';
     var seen = {};
     M.waves.forEach(function (w) { if (!seen[w.ref]) { seen[w.ref] = 1; rv += w.ref; } });
     App.showEnd({

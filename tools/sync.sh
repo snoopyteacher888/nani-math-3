@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 把共用的程式從 nani-math-3 複製到五、六年級的網站（hanlin-math-5、hanlin-math-6）。
+# 把共用的程式從 nani-math-3 複製到四、五、六年級的網站（hanlin-math-4、hanlin-math-5、hanlin-math-6）。
 # 用法：在 nani-math-3 資料夾執行  bash tools/sync.sh
 # 每個網站自己的 js/site.js（年級）和 README.md 不會被覆蓋。
 set -e
 here="$(cd "$(dirname "$0")/.." && pwd)"
-for g in 5 6; do
+for g in 4 5 6; do
   dst="$here/../hanlin-math-$g"
   [ -d "$dst" ] || { echo "找不到 $dst，略過"; continue; }
   mkdir -p "$dst/js" "$dst/tests" "$dst/tools"
