@@ -381,7 +381,7 @@
     if (!add && val <= 0) return genDec();
     var wrong = add ? A / 10 + B : Math.abs(A / 10 - B);
     var ans = d2(val), text = d2(A) + (add ? ' ＋ ' : ' － ') + d2(B) + ' ＝ ？';
-    return { text: text, say: d2(A) + (add ? '加' : '減') + d2(B) + '是多少？', answer: ans, options: opts(ans, [d2(wrong), d2(val + 10), d2(val - 10)]), review: text,
+    return { text: text, say: d2(A) + (add ? '加' : '減') + d2(B) + '是多少？', answer: ans, options: opts(ans, [d2(wrong), d2(val + 10), d2(val - 10), d2(val + 1), d2(val * 10)]), review: text,
       hint: '直式要把小數點對齊，' + d2(A) + ' 可以想成 ' + (A / 100).toFixed(2) + '。', explain: '<p class="ex-line">' + (A / 100).toFixed(2) + (add ? ' ＋ ' : ' － ') + (B / 100).toFixed(2) + ' ＝ <b>' + ans + '</b>（小數點對齊才不會錯）</p>', lv: t === 3 ? 2 : 3 };
   }
 
