@@ -16,9 +16,8 @@
       speak = App.speak, SFX = App.SFX, show = App.show, hide = App.hide, STAGES = App.STAGES;
   var ROUND = 10;                 // 一局撞 10 個障礙物＝答 10 題
   var BANK = 150;                 // 題庫：開始時先出這麼多題（不重複），再從選的難度裡隨機挑 10 題
-  /* obs：每一排出現障礙物的機會（老師說太多，調少）；fence：幾秒沒撞到就放柵欄 */
   /* 速度大家都一樣（老師要求）；選的是題目難度。f：跑多快、obs：障礙物多寡、fence：幾秒沒撞到就放柵欄 */
-  var SPEED = { f: .5, obs: .2, fence: 13 };
+  var SPEED = { f: .5, obs: .45, fence: 11 }; // 老師說障礙物太少：調多一點
   var LEVELS = { 1: '初階', 2: '中階', 3: '進階' };
   var BASE_FONT = '"LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   function FONTF() { return (App.store.zhuyin ? "'Bpmf Zihi Kai Std', " : '') + BASE_FONT; }
@@ -130,8 +129,10 @@
     if (G.safeRows > 0) { G.safeRows--; addObj('coin', G.coinLane != null ? G.coinLane : lanes[0], y); return; } // 剛答完題，先給幾排金幣
     if (G.sinceHit > G.sp.fence && !G.fenceOnField) { addObj('fence', 1, y); G.fenceOnField = true; G.safeRows = 1; return; } // 太久沒撞到：柵欄擋整條路
     if (Math.random() < G.sp.obs) {
-      addObj('obs', lanes[0], y, Math.floor(Math.random() * 3)); // 一排最多一個障礙物
-      if (Math.random() < .6) addObj('coin', lanes[1], y);
+      addObj('obs', lanes[0], y, Math.floor(Math.random() * 3));
+      if (G.answered >= 3 && Math.random() < .35) addObj('obs', lanes[1], y, Math.floor(Math.random() * 3)); // 後半段：一排兩個，只留一條路
+      else if (Math.random() < .6) addObj('coin', lanes[1], y);
+      if (Math.random() < .5) addObj('coin', lanes[2], y);
       G.safeRows = 1; // 障礙物後面空一排，不會連續
     } else {
       // 一排金幣：沿用上一排的跑道，看起來是一條金幣線
@@ -240,7 +241,9 @@
   function afterQuestion() {
     if (!G) return;
     G.safeRows = 2; G.sinceHit = 0;
-    G.boost = Math.min(1.3, G.boost + .02);    // 越跑越快一點點
+    var nb = 1 + .07 * Math.min(G.answered, ROUND);  // 越跑越快：答完 10 題大約 1.7 倍
+    if (G.answered % 3 === 0 && G.answered < ROUND) G.floats.push({ x: W / 2, y: H * .45, t: 0, text: '加速！' });
+    G.boost = nb;
     if (G.answered >= ROUND) { G.finishing = true; G.finishRow = G.rows + 3; }
     renderHud();
     G.phase = 'count';

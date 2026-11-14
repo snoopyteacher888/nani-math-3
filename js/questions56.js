@@ -392,8 +392,10 @@
     ['妹妹的體重', '爸爸的體重', '妹妹的體重是爸爸的 R', '爸爸重 X 公斤', '妹妹重 X 公斤', '妹妹重幾公斤？', '爸爸重幾公斤？', '公斤', [48, 90]],
     ['蘋果的價錢', '西瓜的價錢', '一顆蘋果的價錢是一顆西瓜的 R', '一顆西瓜 X 元', '一顆蘋果 X 元', '一顆蘋果幾元？', '一顆西瓜幾元？', '元', [60, 300]]
   ];
-  function genBaseCompare() {
-    var c = pick(BC), t = R(0, 3), fr, B;
+  /* 五年級還沒學分數除法：只出「認基準量、比較量」和「求比較量（用乘的）」 */
+  function genBaseCompare5() { return genBaseCompare(true); }
+  function genBaseCompare(multOnly) {
+    var c = pick(BC), t = R(0, multOnly === true ? 2 : 3), fr, B;
     do {
       fr = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8]]);
       B = fr[1] * R(Math.ceil(c[8][0] / fr[1]), Math.floor(c[8][1] / fr[1]));
@@ -528,7 +530,7 @@
     { id: 6, name: '整數四則運算', ic: '➗', stages: [st('6-1', 'round', '先乘除後加減', '括號先算', genOrderOps, F), st('6-2', 'run', '分配律和平均', '湊成 100 比較好算', genDistAvgL)] },
     { id: 7, name: '擴分、約分與加減', ic: '🍰', stages: [st('7-1', 'round', '分數比大小', '先通分再比', genFracCompare, Q), st('7-2', 'round', '異分母加減', '通分、相加減、約分', genFracAddFill, F)] },
     { id: 8, name: '面積', ic: '📐', stages: [st('8-1', 'round', '算面積', '高要和底垂直，斜邊不是高', genArea, F)] },
-    { id: 9, name: '乘以幾分之一', ic: '🥧', stages: [st('9-1', 'run', '整數相除、幾分之一', 'a ÷ b ＝ a/b', genFracOfL)] },
+    { id: 9, name: '乘以幾分之一', ic: '🥧', stages: [st('9-1', 'run', '整數相除、幾分之一', 'a ÷ b ＝ a/b', genFracOfL), st('9-2', 'round', '基準量和比較量', '「是」後面、「的」前面是基準量', genBaseCompare5, Z)] },
     { id: 10, name: '扇形', ic: '🍕', stages: [st('10-1', 'run', '圓心角', '一整圈是 360 度', genSectorL)] }
   ];
   var G6 = [NINE,

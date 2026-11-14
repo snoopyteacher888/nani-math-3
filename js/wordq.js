@@ -338,6 +338,8 @@
       use: [String(n), num + '/' + den], steps: [step(n + ' × ' + num + '/' + den, [n + ' ÷ ' + num + '/' + den, n + ' － ' + num + '/' + den], n + ' 人的 ' + num + '/' + den + '，用乘的。', { expr: n + ' × ' + num + '/' + den })],
       ans: n * num / den, unit: '人', explain: n + ' × ' + num + '/' + den + ' ＝ ' + n * num / den });
   };
+  G5.f9 = G5[9];
+  G5[9] = function () { return Math.random() < .5 ? wBase(true) : G5.f9(); };
   G5[10] = function () { // 扇形
     var n = pick([3, 4, 5, 6, 8, 9, 10, 12]), d = R(20, 40);
     return P({ sents: ['一個圓形披薩，', '平分成 ' + n + ' 塊一樣大的扇形。', '每一塊的圓心角是幾度？'],
@@ -376,7 +378,7 @@
       ans: a * k, unit: '人', explain: b * k + ' ÷ ' + b + ' ＝ ' + k + '，' + k + ' × ' + a + ' ＝ ' + a * k });
   };
   /* 六上 5 兩量關係：基準量和比較量（孩子最不會的）。先選誰是基準量，再選算法 */
-  function wBase() {
+  function wBase(multOnly) {
     var c = pick(root.MathQ._g56.BC), fr, B;
     do {
       fr = pick([[1, 2], [2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8]]);
@@ -384,7 +386,7 @@
     } while (B < c[8][0]);
     var r = fr[0] + '/' + fr[1], C = B / fr[1] * fr[0], u = c[7], stmt = c[2].replace('R', r);
     var who = { q: '「' + stmt + '」，誰是基準量？', opts: shuffle([c[1], c[0], r]), ans: c[1], noWork: true, why: '「是」後面、「的」前面的是基準量（拿來比的標準）：' + c[1] + '。' };
-    if (Math.random() < .55) { // 知道比較量，求基準量：用除的
+    if (multOnly !== true && Math.random() < .55) { // 知道比較量，求基準量：用除的（六年級才學）
       who.val = C;
       return P({ sents: [c[4].replace('X', C) + '，', stmt + '。', c[6]], use: [String(C), r],
         steps: [who, step(C + ' ÷ ' + r, [C + ' × ' + r, r + ' ÷ ' + C], '要求的是基準量（' + c[1] + '），知道的是比較量，用除的：比較量 ÷ ' + r + '。', { expr: C + ' ÷ ' + r, q: '要怎麼算？' })],
