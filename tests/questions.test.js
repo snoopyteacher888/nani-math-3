@@ -3,6 +3,7 @@ const assert = require('assert');
 require('../js/questions.js');
 require('../js/questions56.js');
 require('../js/questions4.js');
+require('../js/wordq.js');
 const Q = globalThis.MathQ;
 
 // 國字
@@ -84,5 +85,30 @@ for (const u of Q.UNITS.concat(Q.G4, Q.G5, Q.G6)) for (const s of u.stages) {
   const pools = { 1: new Set(), 2: new Set(), 3: new Set() };
   for (let i = 0; i < 800; i++) { const q = s.gen(); assert.ok([1, 2, 3].includes(q.lv), s.id + ' 沒有標難度 ' + q.text); pools[q.lv].add(q.text + q.answer + (q.big || '') + (q.review || '')); }
   assert.ok(pools[1].size >= 8 && pools[2].size >= 8, s.id + ' 初階／中階題目太少 ' + pools[1].size + '/' + pools[2].size);
+}
+// 應用題：每個有關卡的單元都要有；問句對、數字都在題目裡、一定有用不到的數字、照步驟算會得到答案
+const W = Q.WORD, evalStep = (expr, prev) => Function('return ' + expr.replace(/(\d+)\/(\d+)/g, '($1/$2)').replace(/□/g, '(' + prev + ')').replace(/×/g, '*').replace(/÷/g, '/').replace(/＋/g, '+').replace(/－/g, '-'))();
+const valOf = x => { x = String(x); if (x.includes('/')) { const [a, b] = x.split('/').map(Number); return a / b; } return parseFloat(x); };
+for (const [g, units] of [['3', Q.UNITS], ['4', Q.G4], ['5', Q.G5], ['6', Q.G6]]) for (const u of units) {
+  if (!u.stages.length) continue;
+  const gen = W[g][String(u.id)]; assert.ok(gen, 'G' + g + ' 單元 ' + u.id + ' 沒有應用題');
+  for (let i = 0; i < 400; i++) {
+    const p = gen(), id = 'G' + g + '-' + u.id + ' ' + p.sents.join('');
+    assert.ok(p.sents[p.ask] && p.sents[p.ask].includes('？'), id + ' 問句');
+    const toks = p.sents.join('').match(/\d+(?:\.\d+)?(?:\/\d+)?/g) || [];
+    p.use.forEach(v => assert.ok(toks.includes(v), id + ' 少了數字 ' + v));
+    assert.ok(toks.some(t => !p.use.includes(t) && !p.opt.includes(t)), id + ' 要有用不到的數字');
+    let prev;
+    for (const st of p.steps) {
+      assert.strictEqual(new Set(st.opts).size, st.opts.length, id + ' 選項重複');
+      assert.ok(st.opts.length === 3 && st.opts.includes(st.ans) && st.why, id + ' 選項');
+      assert.ok(st.val !== undefined || st.expr, id + ' 步驟要能算');
+      prev = st.val !== undefined ? st.val : evalStep(st.expr, prev);
+    }
+    const a = valOf(p.ans);
+    assert.ok(a > 0 && Math.abs(prev - a) < 1e-6, id + ' 答案 ' + p.ans + ' 但步驟算出 ' + prev);
+    if (!String(p.ans).includes('/')) assert.ok(/^\d+(\.\d{1,2})?$/.test(String(p.ans)), id + ' 答案格式 ' + p.ans);
+  }
+  const ex = gen(); console.log('應用題 G' + g + '-' + u.id, '|', ex.sents.join(''), '→', ex.ans, ex.unit);
 }
 console.log('全部通過');

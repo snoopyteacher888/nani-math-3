@@ -117,11 +117,48 @@
     </main>
   </section>
 
+  <!-- ===== 先做一題應用題 ===== -->
+  <section class="screen game" id="word" hidden>
+    <header class="hud">
+      <button class="hud-btn" id="w-back" type="button" aria-label="回關卡地圖">↩</button>
+      <div class="hud-mid"><span id="w-title">先完成一題應用題，就能開始玩！</span><span class="left" id="w-prog"></span></div>
+      <button class="hud-btn scratch-btn" id="w-scratch" type="button" aria-label="計算紙">✏️</button>
+    </header>
+    <main class="word-main">
+      <div class="w-card"><button class="say" type="button" id="w-say" aria-label="念題目">🔊</button><div class="w-text" id="w-text"></div></div>
+      <div class="w-work" id="w-work"></div>
+      <div class="w-step" id="w-step-box">
+        <div class="w-prompt"><button class="say" type="button" id="w-psay" aria-label="念出來">🔊</button><span id="w-prompt"></span></div>
+        <p class="w-fb" id="w-fb" aria-live="polite" hidden></p>
+        <div id="w-area"></div>
+      </div>
+    </main>
+    <nav class="keypad w-keypad" id="w-keypad" hidden>
+      <button type="button" data-wk="7">7</button><button type="button" data-wk="8">8</button><button type="button" data-wk="9">9</button>
+      <button type="button" data-wk="4">4</button><button type="button" data-wk="5">5</button><button type="button" data-wk="6">6</button>
+      <button type="button" data-wk="1">1</button><button type="button" data-wk="2">2</button><button type="button" data-wk="3">3</button>
+      <button type="button" data-wk="." id="w-dot">.</button><button type="button" data-wk="0">0</button><button type="button" data-wk="del" class="k-del" aria-label="刪除">⌫</button>
+      <button type="button" data-wk="ok" class="k-ok w-ok">✔ 確定</button>
+    </nav>
+  </section>
+
+  <!-- ===== 計算紙（半透明，蓋在題目上） ===== -->
+  <div class="scratch" id="scratch" hidden>
+    <canvas id="scratch-cv" aria-label="計算紙，用手指或滑鼠寫"></canvas>
+    <div class="scratch-bar">
+      <button type="button" data-tool="pen" class="on">✏️ 筆</button>
+      <button type="button" data-tool="eraser">🧽 橡皮擦</button>
+      <button type="button" id="scratch-clear">🗑️ 全部擦掉</button>
+      <button type="button" id="scratch-close">✕ 收起來</button>
+    </div>
+  </div>
+
   <!-- ===== 一局 10 題的小遊戲（快答、點圖、分類、塗色、自己填） ===== -->
   <section class="screen game" id="round" hidden>
     <header class="hud">
       <button class="hud-btn" id="r-pause" type="button" aria-label="暫停">⏸</button>
       <button class="hud-btn help" id="help-round" type="button" aria-label="再看一次說明">📖</button>
+      <button class="hud-btn scratch-btn" type="button" data-scratch aria-label="計算紙">✏️</button>
       <div class="hud-mid"><span id="r-title"></span><span class="left" id="r-prog"></span></div>
       <div class="combo" id="r-combo" hidden></div>
       <div class="score">⭐ <b id="r-score">0</b></div>
@@ -205,6 +242,7 @@
   <div class="overlay" id="ov-q" hidden>
     <div class="dialog qdialog">
       <div class="q-badge" aria-hidden="true">?</div>
+      <button class="scratch-btn q-scratch" type="button" data-scratch aria-label="計算紙">✏️</button>
       <div class="qtext"><button class="say" type="button" id="q-say" aria-label="念題目">🔊</button><span id="q-text"></span></div>
       <div class="qbig" id="q-big" hidden></div>
       <div class="qvisual" id="q-visual" hidden></div>
@@ -270,5 +308,7 @@
   <script src="js/rounds.js"></script>
   <script src="js/nine.js"></script>
   <script src="js/mole.js"></script>
+  <script src="js/wordq.js"></script>
+  <script src="js/word.js"></script>
 </body>
 </html>

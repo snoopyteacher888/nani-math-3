@@ -117,6 +117,7 @@
     if (due >= 0 || Q.newCount >= ROUND) { q = Q.retry.splice(due >= 0 ? due : 0, 1)[0].q; q.again = true; if (q.options) q.options = q.options.slice().sort(function () { return Math.random() - .5; }); }
     else { q = Q.stage.gen(); Q.newCount++; }
     Q.q = q; Q.phase = 'play'; Q.t0 = Date.now();
+    if (App.scratch) { App.scratch.close(); App.scratch.clear(); }
     render();
     if (App.store.autoSay) speak(q.say);
   }

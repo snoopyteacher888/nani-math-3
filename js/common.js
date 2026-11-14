@@ -161,7 +161,7 @@
   function modeName(m) { return { run: '跑酷', timed: '2 分鐘挑戰', spot: '小偵探', mole: '打地鼠' }[m]; }
   $('units').addEventListener('click', function (e) {
     var b = e.target.closest('[data-stage]');
-    if (b) { var s = STAGES[b.dataset.stage]; App.modes[s.mode].open(s); }
+    if (b) { var s = STAGES[b.dataset.stage]; gate(s, function () { App.modes[s.mode].open(s); }); }
   });
   /* ---------- 注音：全站改用注音字型，新出現的文字自動標上正確的破音字讀音 ---------- */
   var zyObserver = null;
@@ -200,21 +200,25 @@
 
   /* 切換畫面：map、game（跑酷）、timed、spot */
   function showScreen(id) {
-    ['map', 'game', 'timed', 'spot', 'round', 'nine', 'mole'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['map', 'game', 'timed', 'spot', 'round', 'nine', 'mole', 'word'].forEach(function (s) { $(s).hidden = s !== id; });
     window.scrollTo(0, 0);
   }
   function toMap() {
+    if (App.scratch) App.scratch.close();
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     clearTimeout(countTimer);
     ['ov-tut', 'ov-pause', 'ov-end', 'ov-count', 'ov-q', 'ov-explain'].forEach(hide);
     showScreen('map'); renderMap();
   }
 
+  /* 玩之前先做一題應用題（js/word.js）；還沒載入就直接玩 */
+  function gate(s, cb) { if (s && App.gate) App.gate(s, cb); else cb(); }
+
   /* ---------- 通用對話框 ---------- */
   var pauseCb = null;
   function pause(o) { pauseCb = o; show('ov-pause'); } // { resume, restart }
   $('pause-resume').onclick = function () { hide('ov-pause'); if (pauseCb) pauseCb.resume(); };
-  $('pause-restart').onclick = function () { hide('ov-pause'); if (pauseCb) pauseCb.restart(); };
+  $('pause-restart').onclick = function () { hide('ov-pause'); if (pauseCb) gate(App.curStage, pauseCb.restart); };
   $('pause-quit').onclick = function () { hide('ov-pause'); if (pauseCb && pauseCb.quit) pauseCb.quit(); toMap(); };
 
   /* ---------- 倒數 3、2、1 ----------（fast：答完題繼續跑時用，快一點） */
@@ -246,7 +250,7 @@
     if (o.stars > 0) SFX.win();
     speak(o.say || o.title);
   }
-  $('end-again').onclick = function () { hide('ov-end'); if (againCb) againCb(); };
+  $('end-again').onclick = function () { hide('ov-end'); if (againCb) gate(App.curStage, againCb); };
   $('end-map').onclick = function () { hide('ov-end'); toMap(); };
 
   /* ---------- 直式（可以點的格子） ----------
@@ -268,7 +272,7 @@
 
   window.App = {
     vgrid: vgrid, sayBtn: sayBtn, fmt: fmt, plain: plain, countdown: countdown, setDevice: setDevice, device: 'web',
-    UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
+    GRADE: GRADE, UNITS: UNITS, STAGES: STAGES, store: store, save: save, saveResult: saveResult,
     $: $, esc: esc, starsHTML: starsHTML, show: show, hide: hide, speak: speak, SFX: SFX,
     showScreen: showScreen, toMap: toMap, speakThen: speakThen, pause: pause, showEnd: showEnd, renderMap: renderMap,
     modes: {}

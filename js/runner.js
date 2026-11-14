@@ -183,6 +183,7 @@
     setTimeout(function () { if (G && G.phase === 'hit') openQuestion(); }, 450); // 先看到撞到，再出題
   }
   function openQuestion() {
+    if (App.scratch) App.scratch.clear();
     G.phase = 'question'; G.q = G.bank[G.answered];
     var q = G.q;
     $('q-text').innerHTML = (q.again ? '🔁 ' : '') + App.fmt(q.text);
@@ -214,11 +215,11 @@
       G.coins += pts; SFX.good();
       burst(laneCX(G.laneX), charY() - 30, 30, true);
       G.floats.push({ x: laneCX(G.laneX), y: charY() - 60, t: 0, text: '答對 +' + pts });
-      setTimeout(function () { hide('ov-q'); afterQuestion(); }, 700);
+      setTimeout(function () { hide('ov-q'); if (App.scratch) App.scratch.close(); afterQuestion(); }, 700);
     } else {
       G.combo = 0; G.wrong++; G.wrongList.push(q); // 一局固定 10 題，答錯的列在結算畫面
       SFX.bad();
-      setTimeout(function () { hide('ov-q'); showExplain(); }, 600);
+      setTimeout(function () { hide('ov-q'); if (App.scratch) App.scratch.close(); showExplain(); }, 600);
     }
     renderHud();
   }

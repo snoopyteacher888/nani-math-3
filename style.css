@@ -532,3 +532,53 @@ html.dev-phone #game .moves { display: none; }
 .m-num.fr { top: 68%; font-size: calc(var(--s) * .21); line-height: 1.1; padding: .1em .3em; }
 .m-num .frac > span:first-child { border-bottom-width: 2px; }
 .mixed { white-space: nowrap; }
+
+/* ===== 先做一題應用題 ===== */
+.word-main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 14px 20px; }
+.w-card { width: min(100%, 680px); display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 3px solid var(--math); border-radius: 20px; padding: 14px 16px; box-shadow: 0 6px 0 var(--math-soft); }
+.w-text { font-size: 1.25em; line-height: 1.9; }
+.w-text .ws { border-radius: 8px; padding: 2px 2px; transition: background .15s; }
+.w-text.phase-ask .ws { cursor: pointer; background: #F1F5FB; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.w-text.phase-ask .ws:hover { background: #DCE8F7; }
+.w-text .ws.ask-ok { background: #FFF1C9; box-shadow: inset 0 -3px 0 #F2B705; }
+.w-text .ws.hint { animation: pulse 1s infinite; background: #FFF1C9; }
+.w-text .wn { display: inline-block; font-weight: 800; color: var(--math); padding: 0 .2em; border-radius: 10px; border: 2.5px solid transparent; }
+.w-text.phase-nums .wn { cursor: pointer; border-color: #9DB8D9; background: #F1F5FB; }
+.w-text .wn.on { background: #FFE07A; border-color: #E0A800; color: var(--ink); }
+.w-text .wn.use { background: #D9F0E1; border-color: var(--good); color: var(--good); }
+.w-text .wn.nouse { color: #A9A398; text-decoration: line-through; }
+.w-work { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: center; font-size: 1.2em; font-weight: 700; }
+.w-work:empty { display: none; }
+.w-work-h { font-size: .75em; color: #fff; background: var(--math); border-radius: 999px; padding: 2px 10px; }
+.w-line { background: var(--surface); border: 2px solid var(--line); border-radius: 12px; padding: 2px 12px; }
+.w-step { width: min(100%, 680px); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.w-prompt { display: flex; gap: 8px; align-items: center; font-size: 1.15em; font-weight: 700; color: var(--brand); text-align: left; }
+.w-fb { margin: 0; text-align: center; font-weight: 700; font-size: 1.05em; padding: 8px 14px; border-radius: 14px; max-width: 100%; }
+.w-fb.good { background: #E3F4EA; color: var(--good); }
+.w-fb.bad { background: #FDECEA; color: var(--bad); }
+.w-fb.shake { animation: shake .25s 2; }
+.w-opts { display: grid; grid-template-columns: 1fr; gap: 10px; width: min(100%, 480px); }
+.w-opts .qa { min-height: 58px; font-size: 1.25em; }
+.w-opts .qa.hint { border-color: var(--good); background: #E3F4EA; animation: pulse 1s infinite; }
+.w-ans { display: flex; align-items: center; gap: 12px; justify-content: center; }
+.w-ans .box { min-width: 120px; height: 62px; font-size: 1.7em; font-weight: 800; border-radius: 14px; border: 3px solid var(--line); background: var(--surface); }
+.w-ans .ffrac .box { min-width: 90px; height: 54px; }
+.w-ans .box.cur { border-color: var(--math); box-shadow: 0 0 0 4px #D6E3F5; }
+.w-unit { font-size: 1.3em; font-weight: 700; }
+.w-done { display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; }
+.w-keypad .w-ok { grid-column: 1 / -1; min-height: 54px; }
+html.zhuyin .w-text { line-height: 2.4; }
+
+/* ===== 計算紙 ===== */
+.scratch { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: rgba(255, 253, 247, .62); }
+.scratch canvas { flex: 1; width: 100%; min-height: 0; touch-action: none; cursor: crosshair;
+  background-image: linear-gradient(rgba(42, 99, 168, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 99, 168, .08) 1px, transparent 1px); background-size: 32px 32px; }
+.scratch-bar { flex: none; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 3px solid var(--math); }
+.scratch-bar button { min-height: 48px; padding: 0 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--bg); font-size: 1em; font-weight: 700; }
+.scratch-bar button.on { border-color: var(--math); background: #E6EEF9; }
+.scratch-btn { background: #EEF6E8; border-color: #9CC27E; }
+.q-scratch { position: absolute; right: 14px; top: 14px; min-width: 48px; min-height: 44px; border-radius: 14px; border: 2px solid #9CC27E; font-size: 1.3em; }
+.qdialog { position: relative; }
+.w-keypad button { min-height: 46px; font-size: 1.5em; }
+.w-keypad .w-ok { min-height: 48px; font-size: 1.15em; }
+.w-keypad { gap: 6px; padding-top: 8px; }
