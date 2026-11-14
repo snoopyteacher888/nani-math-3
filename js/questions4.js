@@ -261,6 +261,37 @@
       hint: '去掉 0 算出來的餘數，要把去掉的 0 補回來！', explain: '<p class="ex-line">' + n / u + ' ÷ ' + d / u + ' ＝ ' + q + ' … ' + r / u + '，餘數要補回 ' + z + ' 個 0 → <b>' + r + '</b>（驗算：' + q + ' × ' + d + ' ＋ ' + r + ' ＝ ' + n + '）</p>' };
   }
 
+  /* 6-3 除法的關係（推理）：被除數 ＝ 除數 × 商 ＋ 餘數；餘數比除數小；乘法的未知數用除的找 */
+  function genDivRelation() {
+    var t = R(0, 3), d, q, r, n;
+    if (t === 0) {
+      d = R(6, 25); q = R(12, 60); r = R(1, d - 1); n = d * q + r;
+      var form = Math.random() < .5;
+      return { kind: 'quiz', text: form ? '□ ÷ ' + d + ' ＝ ' + q + ' … ' + r + '，□ 是多少？' : '一個數除以 ' + d + '，商是 ' + q + '，餘數是 ' + r + '。這個數是多少？',
+        say: form ? '方框除以' + d + '等於' + q + '餘' + r + '，方框是多少？' : '一個數除以' + d + '，商是' + q + '，餘數是' + r + '。這個數是多少？',
+        answer: String(n), options: opts(n, [d * q, d * q - r, q * r + d]), review: '□ ÷ ' + d + ' ＝ ' + q + ' … ' + r,
+        hints: ['用驗算的方法倒回去想：被除數 ＝ 除數 × 商 ＋ 餘數。'], hint: '先算 ' + d + ' × ' + q + ' ＝ ' + d * q + '，再加上餘數 ' + r + '。',
+        explain: '<p class="ex-line">' + d + ' × ' + q + ' ＋ ' + r + ' ＝ ' + d * q + ' ＋ ' + r + ' ＝ <b>' + n + '</b></p>' };
+    }
+    if (t === 1) {
+      d = R(4, 15);
+      return { kind: 'quiz', text: '一個數除以 ' + d + '，餘數最大可能是多少？', say: '一個數除以' + d + '，餘數最大可能是多少？', answer: String(d - 1), options: opts(d - 1, [d, d + 1, d - 2]), review: '除以 ' + d + ' 的最大餘數',
+        hints: ['想一想：如果餘數是 ' + d + '，是不是還可以再分 1 次？'], hint: '餘數一定要比除數小，所以最大是 ' + d + ' － 1。',
+        explain: '<p class="ex-line">餘數比除數 ' + d + ' 小，最大是 <b>' + (d - 1) + '</b>。</p>' };
+    }
+    if (t === 2) {
+      d = R(12, 48); q = R(13, 89); n = d * q;
+      return { kind: 'quiz', text: '□ × ' + d + ' ＝ ' + n + '，□ 是多少？', say: '方框乘以' + d + '等於' + n + '，方框是多少？', answer: String(q), options: opts(q, [n - d, q + 10, q * 10]), review: '□ × ' + d + ' ＝ ' + n,
+        hints: ['乘法裡不知道的數，用除的找回來。'], hint: '□ ＝ ' + n + ' ÷ ' + d + '，可以用計算紙列直式。',
+        explain: '<p class="ex-line">' + n + ' ÷ ' + d + ' ＝ <b>' + q + '</b>（' + q + ' × ' + d + ' ＝ ' + n + '）</p>' };
+    }
+    var k = R(3, 9), small = R(110, 990), big = small * k, w = pick([['姐姐', '妹妹'], ['爸爸', '小明'], ['老師', '小華']]);
+    if (big > 9999) return genDivRelation();
+    return { kind: 'quiz', text: w[0] + '存了 ' + big + ' 元，是' + w[1] + '的 ' + k + ' 倍。' + w[1] + '存了多少元？', say: w[0] + '存了' + big + '元，是' + w[1] + '的' + k + '倍。' + w[1] + '存了多少元？',
+      answer: String(small), options: opts(small, [big * k, big - k, small + k * 10]), review: w[0] + ' ' + big + ' 元，是' + w[1] + '的 ' + k + ' 倍',
+      hints: [w[0] + '是' + w[1] + '的 ' + k + ' 倍，' + w[0] + '比較多；要找比較少的' + w[1] + '。'], hint: w[1] + ' × ' + k + ' ＝ ' + big + '，所以' + w[1] + ' ＝ ' + big + ' ÷ ' + k + '。',
+      explain: '<p class="ex-line">' + big + ' ÷ ' + k + ' ＝ <b>' + small + '</b> 元</p>' };
+  }
   /* =====================================================
    * 7 三角形與全等
    * ===================================================== */
@@ -432,7 +463,7 @@
     { id: 4, name: '假分數與帶分數', stages: [st('4-1', 'round', '假分數和帶分數互換', '分子 ÷ 分母', genMixedFill, F), st('4-2', 'mole', '真分數假分數打地鼠', '分子和分母一樣，也是假分數', null, MOLE(fracWaves))] },
     { id: 5, name: '公里', stages: [st('5-1', 'run', '公里和公尺', '1 公里 ＝ 1000 公尺', genKm)] },
     { id: 'p1', name: '學習加油讚一', stages: [st('p1', 'run', '闖關：1～5 單元', '大數、乘法、角度、公里', mix([genBigRWL, genMulZero, genAngleCalc, genKm]))] },
-    { id: 6, name: '除法', stages: [st('6-1', 'run', '商中間有 0', '不夠商的那一位要寫 0', genDivZero), st('6-2', 'round', '末尾有 0 的除法', '餘數要把 0 補回來', genDivTailZero, Z)] },
+    { id: 6, name: '除法', stages: [st('6-1', 'run', '商中間有 0', '不夠商的那一位要寫 0', genDivZero), st('6-2', 'round', '末尾有 0 的除法', '餘數要把 0 補回來', genDivTailZero, Z), st('6-3', 'round', '除法的關係', '被除數 ＝ 除數 × 商 ＋ 餘數', genDivRelation, Z)] },
     { id: 7, name: '三角形與全等', stages: [st('7-1', 'round', '三角形分類', '看最大的角', genTriSort, S), st('7-2', 'round', '等腰、正三角形、全等', '正三角形也是等腰三角形', genTriSides, Z)] },
     { id: 8, name: '兩步驟問題與併式', stages: [st('8-1', 'run', '列併式', '先算的加減要加括號', genEquation)] },
     { id: 9, name: '二位小數', stages: [st('9-1', 'mole', '小數比大小打地鼠', '0.58 比 0.6 小喔', null, MOLE(decWaves)), st('9-2', 'run', '化聚與加減', '小數點要對齊', genDec)] },

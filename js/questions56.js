@@ -313,6 +313,58 @@
     var ks = [3, 4, 6, 7, 8, 9].sort(function () { return Math.random() - .5; }), MR = root.MathQ.moleRule;
     return [MR('mul', ks[0]), MR('fac', pick([12, 18, 24, 30, 36, 40, 48])), MR('mul', ks[1])];
   }
+  /* 五上 2-3 誰是誰的倍數、因數（推理）：先用大的 ÷ 小的，整除才有關係 */
+  function genFMRelation() {
+    var t = R(0, 3);
+    if (t <= 1) {
+      var a = R(3, 15), b, yes = t === 0;
+      if (yes) b = a * R(2, 9); else { do { b = R(a + 2, a * 9); } while (b % a === 0); }
+      var o1 = b + ' 是 ' + a + ' 的倍數', o2 = a + ' 是 ' + b + ' 的倍數', o3 = b + ' 是 ' + a + ' 的因數', none = '三句都不對';
+      var ans = yes ? pick([o1, a + ' 是 ' + b + ' 的因數']) : none, op = yes ? shuffle([ans, o2, o3]) : shuffle([o1, a + ' 是 ' + b + ' 的因數', none]);
+      return { kind: 'quiz', text: a + ' 和 ' + b + '，哪一句是對的？', say: a + '和' + b + '，哪一句是對的？', answer: ans, options: op, review: a + ' 和 ' + b + ' 的關係',
+        hints: ['先算算看：' + b + ' ÷ ' + a + ' 能不能整除（沒有餘數）？'],
+        hint: yes ? b + ' ÷ ' + a + ' ＝ ' + b / a + '，整除。大的 ' + b + ' 是小的 ' + a + ' 的「倍數」；小的 ' + a + ' 是大的 ' + b + ' 的「因數」。' : b + ' ÷ ' + a + ' 有餘數，不能整除，兩個數沒有倍數、因數的關係。',
+        explain: '<p class="ex-line">' + b + ' ÷ ' + a + ' ＝ ' + Math.floor(b / a) + (b % a ? ' … ' + b % a + '（不能整除）' : '（整除）') + '</p><p class="ex-line">答案：<b>' + ans + '</b></p>' };
+    }
+    if (t === 2) {
+      var f = R(3, 9), ms = [], k;
+      for (k = 2; k <= 9; k++) ms.push(f * k);
+      var good = pick(ms), bads = []; while (bads.length < 2) { var x = R(f + 1, f * 9); if (x % f && bads.indexOf(x) < 0) bads.push(x); }
+      return { kind: 'quiz', text: f + ' 是 □ 的因數，□ 可能是多少？', say: f + '是方框的因數，方框可能是多少？', answer: String(good), options: shuffle([String(good)].concat(bads.map(String))), review: f + ' 是 □ 的因數',
+        hints: ['「' + f + ' 是 □ 的因數」反過來說，就是「□ 是 ' + f + ' 的倍數」。'], hint: f + ' 的倍數：' + ms.slice(0, 4).join('、') + '……找出哪一個在裡面。',
+        explain: '<p class="ex-line">' + good + ' ÷ ' + f + ' ＝ ' + good / f + '，整除，所以 ' + f + ' 是 ' + good + ' 的因數，答案 <b>' + good + '</b>。</p>' };
+    }
+    var g = pick([3, 4, 5, 6]), m = pick([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5]]), A = g * m[0], B = g * m[1];
+    return { kind: 'quiz', text: '□ 是 ' + A + ' 的因數，也是 ' + B + ' 的因數。□ 最大是多少？', say: '方框是' + A + '的因數，也是' + B + '的因數。方框最大是多少？', answer: String(g), options: opts(g, [A * B, m[0], A, Math.abs(B - A) === g ? g + 1 : Math.abs(B - A)]), review: A + ' 和 ' + B + ' 的公因數',
+      hints: ['同時是兩個數的因數，叫「公因數」。先列出 ' + A + ' 的因數，再看哪些也能整除 ' + B + '。'], hint: A + ' 和 ' + B + ' 都能被 ' + g + ' 整除，而且沒有更大的。',
+      explain: '<p class="ex-line">' + A + ' ÷ ' + g + ' ＝ ' + m[0] + '，' + B + ' ÷ ' + g + ' ＝ ' + m[1] + '，最大公因數是 <b>' + g + '</b>。</p>' };
+  }
+  /* 六上 1-4 倍數因數推理（挑戰） */
+  function genFMReason() {
+    var t = R(0, 3);
+    if (t <= 1) {
+      var s = R(4, 15), k = R(2, 6), b = s * k, askG = t === 0, ans = askG ? s : b;
+      return { kind: 'quiz', text: b + ' 是 ' + s + ' 的倍數。' + b + ' 和 ' + s + ' 的' + (askG ? '最大公因數' : '最小公倍數') + '是多少？', say: b + '是' + s + '的倍數。' + b + '和' + s + '的' + (askG ? '最大公因數' : '最小公倍數') + '是多少？',
+        answer: String(ans), options: opts(ans, [askG ? b : s, b * s, k, s + b]), review: b + ' 是 ' + s + ' 的倍數時的' + (askG ? '最大公因數' : '最小公倍數'),
+        hints: [askG ? s + ' 能整除 ' + b + '，也能整除自己。有沒有比 ' + s + ' 更大、又能整除 ' + s + ' 的數？' : b + ' 本身就是 ' + s + ' 的倍數，也是 ' + b + ' 的倍數。'],
+        hint: askG ? '一個數是另一個數的倍數時，最大公因數就是「小的那個」。' : '一個數是另一個數的倍數時，最小公倍數就是「大的那個」。',
+        explain: '<p class="ex-line">' + b + ' ＝ ' + s + ' × ' + k + '，' + (askG ? '最大公因數是小的數 <b>' + s + '</b>' : '最小公倍數是大的數 <b>' + b + '</b>') + '。</p>' };
+    }
+    if (t === 2) {
+      var x, y; do { x = R(3, 12); y = R(5, 16); } while (x === y || gcd(x, y) !== 1);
+      return { kind: 'quiz', text: x + ' 和 ' + y + ' 互質，它們的最小公倍數是多少？', say: x + '和' + y + '互質，它們的最小公倍數是多少？', answer: String(x * y), options: opts(x * y, [x + y, 1, Math.max(x, y)]), review: x + ' 和 ' + y + '（互質）的最小公倍數',
+        hints: ['互質：兩個數的公因數只有 1。'], hint: '互質的兩個數，最小公倍數就是兩個數相乘：' + x + ' × ' + y + '。',
+        explain: '<p class="ex-line">' + x + ' × ' + y + ' ＝ <b>' + x * y + '</b></p>' };
+    }
+    var P = shuffle([2, 3, 5, 7]), c = P[0], A = [c, P[1]], B = [c, P[2]];
+    if (Math.random() < .5) A.push(2); else B.push(3);
+    var a = A.reduce(function (p, v) { return p * v; }, 1), bb = B.reduce(function (p, v) { return p * v; }, 1), g = gcd(a, bb);
+    A.sort(function (p, q) { return p - q; }); B.sort(function (p, q) { return p - q; });
+    return { kind: 'quiz', text: '甲 ＝ ' + A.join(' × ') + '，乙 ＝ ' + B.join(' × ') + '。甲和乙的最大公因數是多少？', say: '甲等於' + A.join('乘') + '，乙等於' + B.join('乘') + '。甲和乙的最大公因數是多少？',
+      answer: String(g), options: opts(g, [lcm(a, bb), a, 1, g * 2]), review: '甲 ＝ ' + A.join(' × ') + '，乙 ＝ ' + B.join(' × '),
+      hints: ['找兩邊都有的質因數。'], hint: '兩邊都有的質因數乘起來，就是最大公因數。',
+      explain: '<p class="ex-line">甲 ＝ ' + a + '，乙 ＝ ' + bb + '，兩邊都有的質因數乘起來 ＝ <b>' + g + '</b></p>' };
+  }
   function genCoprimeWhich() {
     if (Math.random() < .5) return genGcdLcmWhich();
     var a = R(2, 30), b = R(2, 30); if (a === b) b++;
@@ -523,7 +575,7 @@
 
   var G5 = [NINE,
     { id: 1, name: '折線圖', ic: '📈', stages: [st('1-1', 'run', '看折線圖', '上升最多？每一格代表多少？', genLineChartL)] },
-    { id: 2, name: '倍數與因數', ic: '🔢', stages: [st('2-1', 'mole', '倍數因數打地鼠', '能整除就是倍數；規則會換喔', null, { label: '打地鼠', tut: 'mole-switch', waves: mulFacWaves }), st('2-2', 'round', '因數還是倍數', '大的是倍數，小的是因數', genFactorOrMultiple, Q)] },
+    { id: 2, name: '倍數與因數', ic: '🔢', stages: [st('2-1', 'mole', '倍數因數打地鼠', '能整除就是倍數；規則會換喔', null, { label: '打地鼠', tut: 'mole-switch', waves: mulFacWaves }), st('2-2', 'round', '因數還是倍數', '大的是倍數，小的是因數', genFactorOrMultiple, Q), st('2-3', 'round', '誰是誰的倍數、因數', '先用大的 ÷ 小的，整除才有關係', genFMRelation, Z)] },
     { id: 3, name: '平面圖形', ic: '🔺', stages: [st('3-1', 'round', '求內角', '三角形 180 度、四邊形 360 度', genAngleSum, F), st('3-2', 'round', '能不能圍成三角形', '兩短邊加起來要比長邊長', genTriangleSides, Q)] },
     { id: 4, name: '公倍數與公因數', ic: '🧮', stages: [st('4-1', 'round', '最大公因數、最小公倍數', '找出來填進格子', genGcdLcmFill(100, 300), F), st('4-2', 'round', '要用哪一個？', '切開用公因數，拼起來用公倍數', genGcdLcmWhich, Z)] },
     { id: 5, name: '立體形體', ic: '🧊', stages: [st('5-1', 'round', '面、邊、頂點', '幾角柱、幾角錐', genSolidCount, Q), st('5-2', 'round', '柱體、錐體、球', '看圖分一分', genSolidSort, S)] },
@@ -534,7 +586,7 @@
     { id: 10, name: '扇形', ic: '🍕', stages: [st('10-1', 'run', '圓心角', '一整圈是 360 度', genSectorL)] }
   ];
   var G6 = [NINE,
-    { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'mole', '質數打地鼠', '是質數就打！1 和合數不要打', null, { label: '打地鼠', tut: 'mole', waves: function () { return [root.MathQ.moleRule('prime')]; } }), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z)] },
+    { id: 1, name: '最大公因數與最小公倍數', ic: '🧮', stages: [st('1-1', 'mole', '質數打地鼠', '是質數就打！1 和合數不要打', null, { label: '打地鼠', tut: 'mole', waves: function () { return [root.MathQ.moleRule('prime')]; } }), st('1-2', 'round', '短除法', '求最大公因數、最小公倍數', genGcdLcmFill(150, 1000), F), st('1-3', 'round', '互質、要用哪一個', '切開用公因數，拼起來用公倍數', genCoprimeWhich, Z), st('1-4', 'round', '倍數因數推理（挑戰）', '一個是另一個的倍數時……', genFMReason, Z)] },
     { id: 2, name: '分數除法', ic: '🍰', stages: [st('2-1', 'round', '商會變大還是變小', '除以比 1 小的數，商變大', genFracDivCompare, Q), st('2-2', 'round', '分數除法', '乘以倒數，再約分', genFracDivFill, F)] },
     { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRunL)] },
     { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatioL), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },

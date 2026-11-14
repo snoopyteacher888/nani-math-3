@@ -478,6 +478,24 @@
       hint: '想 ' + c.b + ' 的乘法：' + c.b + ' × ' + c.q + ' ＝ ' + c.b * c.q + '，' + c.a + ' － ' + c.b * c.q + ' ＝ ' + c.r + '。餘數一定要比 ' + c.b + ' 小！',
       explain: '<p class="ex-line">' + c.b + ' × ' + c.q + ' ＝ ' + c.b * c.q + '，' + c.a + ' － ' + c.b * c.q + ' ＝ ' + c.r + '</p><p class="ex-line">' + c.a + ' ÷ ' + c.b + ' ＝ <b>' + ans + '</b>（商 ' + c.q + '，餘數 ' + c.r + '）</p><p class="ex-line">驗算：' + c.b + ' × ' + c.q + ' ＋ ' + c.r + ' ＝ ' + c.a + '</p>' };
   }
+  /* 6-4 誰是誰的幾倍（推理；提示分兩層：hints[0] 先給方向，hint 再給算式） */
+  function genTimes() {
+    var a = R(2, 9), k = R(2, 9), big = a * k, t = R(0, 3), who = pick([['哥哥', '弟弟'], ['姐姐', '妹妹'], ['爸爸', '小明']]), it = pick([['顆', '糖'], ['張', '貼紙'], ['本', '書']]);
+    function o3(ans, ws) { var out = [String(ans)]; ws.forEach(function (w) { w = String(w); if (out.length < 3 && out.indexOf(w) < 0 && +w > 0) out.push(w); }); [ans + 1, ans + 2, ans * 2].forEach(function (w) { if (out.length < 3 && out.indexOf(String(w)) < 0) out.push(String(w)); }); return out.sort(function () { return Math.random() - .5; }); }
+    if (t === 0) return { kind: 'quiz', text: big + ' 是 ' + a + ' 的幾倍？', say: big + '是' + a + '的幾倍？', answer: String(k), options: o3(k, [big - a, big + a]), review: big + ' 是 ' + a + ' 的幾倍',
+      hints: ['「幾倍」是問：' + big + ' 裡面有幾個 ' + a + '？'], hint: '想 ' + a + ' 的乘法：' + a + ' × □ ＝ ' + big + '，也可以算 ' + big + ' ÷ ' + a + '。',
+      explain: '<p class="ex-line">' + big + ' ÷ ' + a + ' ＝ ' + k + '，' + big + ' 是 ' + a + ' 的 <b>' + k + '</b> 倍。</p>' };
+    if (t === 1) return { kind: 'quiz', text: a + ' 的 ' + k + ' 倍是多少？', say: a + '的' + k + '倍是多少？', answer: String(big), options: o3(big, [a + k, Math.abs(a - k) || a + 1]), review: a + ' 的 ' + k + ' 倍',
+      hints: ['「' + a + ' 的 ' + k + ' 倍」就是 ' + k + ' 個 ' + a + '。'], hint: k + ' 個 ' + a + ' 用乘的：' + a + ' × ' + k + '。',
+      explain: '<p class="ex-line">' + a + ' × ' + k + ' ＝ <b>' + big + '</b></p>' };
+    if (t === 2) return { kind: 'quiz', text: who[0] + '有 ' + big + ' ' + it[0] + it[1] + '，是' + who[1] + '的 ' + k + ' 倍。' + who[1] + '有幾' + it[0] + it[1] + '？', say: who[0] + '有' + big + it[0] + it[1] + '，是' + who[1] + '的' + k + '倍。' + who[1] + '有幾' + it[0] + it[1] + '？',
+      answer: String(a), options: o3(a, [big * k, big - k]), review: who[0] + ' ' + big + '，是' + who[1] + '的 ' + k + ' 倍',
+      hints: [who[0] + '是' + who[1] + '的 ' + k + ' 倍：' + who[1] + '的 ' + k + ' 倍才是 ' + big + '，所以' + who[1] + '比較少。'], hint: who[1] + ' × ' + k + ' ＝ ' + big + '，要找' + who[1] + '：' + big + ' ÷ ' + k + '。',
+      explain: '<p class="ex-line">' + big + ' ÷ ' + k + ' ＝ <b>' + a + '</b>（' + a + ' × ' + k + ' ＝ ' + big + '，對了）</p>' };
+    return { kind: 'quiz', text: '□ × ' + k + ' ＝ ' + big + '，□ 是多少？', say: '方框乘以' + k + '等於' + big + '，方框是多少？', answer: String(a), options: o3(a, [big - k, big + k]), review: '□ × ' + k + ' ＝ ' + big,
+      hints: ['想想看：幾乘以 ' + k + ' 會等於 ' + big + '？'], hint: '用除的找：' + big + ' ÷ ' + k + '。',
+      explain: '<p class="ex-line">' + big + ' ÷ ' + k + ' ＝ <b>' + a + '</b>，' + a + ' × ' + k + ' ＝ ' + big + '</p>' };
+  }
   function genOddEven() { // 6-2 🗑️ 奇數偶數
     var n = pick([R(1, 99), R(100, 999), R(1000, 9999)]), ans = n % 2 ? '奇數' : '偶數';
     return { kind: 'sort', text: '這個數是奇數還是偶數？', say: n + '，是奇數還是偶數？', card: '<span class="card-num">' + n + '</span>', bins: ['奇數', '偶數'],
@@ -816,7 +834,8 @@
     { id: 6, name: '除法', ic: '➗', stages: [
       { id: '6-1', mode: 'run', name: '做除法', desc: '商是多少？餘數一定比除數小', gen: genDivRunB },
       { id: '6-2', mode: 'mole', tut: 'mole-switch', label: '打地鼠', name: '奇數偶數打地鼠', desc: '只要看個位！規則會換喔', waves: oddEvenWaves },
-      { id: '6-3', mode: 'round', tut: 'quiz', ic: '🧩', label: '選對答案', name: '剩下的怎麼辦？', desc: '要幾輛車？剩下的人也要坐', gen: genLeftover }
+      { id: '6-3', mode: 'round', tut: 'quiz', ic: '🧩', label: '選對答案', name: '剩下的怎麼辦？', desc: '要幾輛車？剩下的人也要坐', gen: genLeftover },
+      { id: '6-4', mode: 'round', tut: 'quiz', label: '選對答案', name: '誰是誰的幾倍', desc: '幾倍：大的 ÷ 小的', gen: genTimes }
     ] },
     { id: 7, name: '公升和毫升', ic: '🥛', stages: [
       { id: '7-1', mode: 'run', name: '公升和毫升', desc: '1 公升 ＝ 1000 毫升，中間的 0 別漏掉', gen: genLiterB }

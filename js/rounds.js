@@ -116,7 +116,7 @@
     var due = Q.retry.findIndex(function (r) { return r.due <= Q.answered; }), q;
     if (due >= 0 || Q.newCount >= ROUND) { q = Q.retry.splice(due >= 0 ? due : 0, 1)[0].q; q.again = true; if (q.options) q.options = q.options.slice().sort(function () { return Math.random() - .5; }); }
     else { q = Q.stage.gen(); Q.newCount++; }
-    Q.q = q; Q.phase = 'play'; Q.t0 = Date.now();
+    Q.q = q; Q.phase = 'play'; Q.t0 = Date.now(); Q.retried = false;
     if (App.scratch) { App.scratch.close(); App.scratch.clear(); }
     render();
     if (App.store.autoSay) speak(q.say);
@@ -160,7 +160,7 @@
   /* ---------- quiz ---------- */
   $('r-opts').addEventListener('click', function (e) {
     if (!Q || Q.phase !== 'play') return;
-    var b = e.target.closest('[data-o]'); if (b) { var o = Q.q.options[+b.dataset.o]; markOpts(o); judge(o === Q.q.answer, o); return; }
+    var b = e.target.closest('[data-o]'); if (b) { var o = Q.q.options[+b.dataset.o]; if (o !== Q.q.answer && canRetry()) { b.classList.add('wrong'); b.disabled = true; retry(o); return; } markOpts(o); judge(o === Q.q.answer, o); return; }
     var bin = e.target.closest('[data-bin]'); if (bin) { dropTo(+bin.dataset.bin); return; }
     if (e.target.closest('#paint-ok')) paintDone();
   });
@@ -232,8 +232,9 @@
     card.style.transform = 'translate(' + (br.left + br.width / 2 - cr.left - cr.width / 2) + 'px,' + (br.top + br.height / 2 - cr.top - cr.height / 2) + 'px) scale(.25)';
     card.style.opacity = '.2';
     setTimeout(function () {
-      document.querySelectorAll('.bin').forEach(function (b, j) { if (q.bins[j] === q.answer) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
       card.style.transition = ''; card.style.transform = ''; card.style.opacity = '';
+      if (chosen !== q.answer && canRetry()) { bin.classList.add('wrong'); bin.disabled = true; retry(chosen); return; }
+      document.querySelectorAll('.bin').forEach(function (b, j) { if (q.bins[j] === q.answer) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
       judge(chosen === q.answer, chosen);
     }, 360);
   }
@@ -265,8 +266,10 @@
     if (k === 'ok') {
       if (Q.vals.some(function (v) { return v === ''; })) { $('r-fields').classList.remove('shake'); void $('r-fields').offsetWidth; $('r-fields').classList.add('shake'); speak('每一格都要填喔，沒有就填0。'); return; }
       Q.res = q.fields.map(function (f, i) { return +Q.vals[i] === f.ans ? 'ok' : 'bad'; });
+      var allOk = Q.res.every(function (r) { return r === 'ok'; });
+      if (!allOk && canRetry()) { Q.vals = Q.vals.map(function (v, i) { return Q.res[i] === 'ok' ? v : ''; }); Q.cur = Q.res.indexOf('bad'); Q.res = null; renderFields(); retry(); return; }
       Q.phase = 'wait'; renderFields();
-      judge(Q.res.every(function (r) { return r === 'ok'; }), Q.vals.map(function (v, i) { return v + ' ' + q.fields[i].label; }).join(' '));
+      judge(allOk, Q.vals.map(function (v, i) { return v + ' ' + q.fields[i].label; }).join(' '));
       return;
     }
     if (k === 'del') { if (Q.vals[Q.cur] === '' && Q.cur > 0) Q.cur--; Q.vals[Q.cur] = ''; }
@@ -286,11 +289,11 @@
     if (ok) {
       Q.combo++;
       var quick = q.kind === 'quiz' ? Math.max(0, 5 - Math.floor((Date.now() - Q.t0) / 1500)) : 0;
-      Q.score += 10 + Math.min(Q.combo - 1, 5) * 2 + quick; SFX.good();
+      Q.score += Q.retried ? 5 : 10 + Math.min(Q.combo - 1, 5) * 2 + quick; SFX.good(); $('r-fb').hidden = true;
       hud(); arenaHit(Q.combo >= 3);
       setTimeout(function () { if (Q && Q.phase === 'fb') { Q.frogX = null; next(); } }, Q.hp === 0 ? 1500 : 1000);
     } else {
-      Q.combo = 0; Q.wrong++; Q.wrongList.push(q); Q.retry.push({ q: q, due: Q.answered + 2 });
+      Q.combo = 0; if (!Q.retried) Q.wrong++; Q.wrongList.push(q); Q.retry.push({ q: q, due: Q.answered + 2 });
       SFX.bad(); hud(); arenaMiss();
       var ans = q.answerText || q.answer;
       $('r-fb').innerHTML = '<div class="fb-ans">' + App.sayBtn('正確答案是' + ans.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint) + '<span>正確答案是 <b>' + fmt(ans) + '</b></span></div>' +
@@ -302,6 +305,24 @@
     }
   }
   $('r-fb').addEventListener('click', function (e) { if (e.target.closest('#r-next')) { Q.frogX = null; next(); } });
+  /* ---------- 鷹架：第一次答錯先給提示、再試一次（2 個選項的題目不給，因為剩下的就是答案） ---------- */
+  function canRetry() {
+    var q = Q.q;
+    if (Q.retried) return false;
+    if (q.kind === 'quiz') return q.options.length >= 3;
+    if (q.kind === 'sort') return q.bins.length >= 3;
+    return q.kind === 'fill';
+  }
+  function retry() {
+    var q = Q.q, h = (q.hints && q.hints[0]) || q.hint;
+    Q.retried = true; Q.wrong++; Q.combo = 0; Q.phase = 'play';
+    SFX.bad(); hud(); arenaMiss();
+    $('r-fb').innerHTML = '<div class="fb-hint">' + App.sayBtn('再想想。' + h) + '<span><b>再想想！</b>' + fmt(h) + '</span></div>';
+    $('r-fb').hidden = false;
+    setTimeout(function () { $('r-fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
+    speak('再想想。' + h.replace(/(\d+)\/(\d+)/g, '$2分之$1'));
+  }
+
   function stamp(ok) {
     var s = $('r-stamp'); s.textContent = ok ? '⭕' : '❌'; s.className = 'r-stamp'; void s.offsetWidth; s.className = 'r-stamp show ' + (ok ? 'ok' : 'no');
   }
