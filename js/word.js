@@ -2,7 +2,7 @@
  * 先做一題應用題，才能玩（練閱讀理解和推理）
  *
  * 點任何關卡（和「再玩一次」「重新開始」）之前，先做 1 題「該單元」的應用題（題庫在 js/wordq.js）：
- *   第 1 步 點出問的是哪一句 → 第 2 步 點出用得到的數字 → 第 3 步 選算法 → 最後算出答案
+ *   第 1 步 點出問的是哪一句 → 第 2 步 選算法（兩步驟的題目選兩次）→ 最後算出答案
  * 每一步答錯會說明再重來；錯兩次會把答案標出來，一定做得完。
  * 學輔班很多孩子共用一台電腦，所以不記任何東西：誰要玩，誰就先做一題。
  * 網址加 ?noword 可以跳過（測試用）。
@@ -27,7 +27,7 @@
     var gen = s && s.unit && BANK[String(s.unit.id)];
     if (SKIP || !gen) return cb();
     var prev = ['map', 'game', 'timed', 'spot', 'round', 'nine', 'mole'].filter(function (id) { return !$(id).hidden; })[0] || 'map';
-    W = { p: gen(), cb: cb, prev: prev, phase: 'ask', op: 0, tries: 0, picked: {}, vals: ['', ''], cur: 0 };
+    W = { p: gen(), cb: cb, prev: prev, phase: 'ask', op: 0, tries: 0, vals: ['', ''], cur: 0, work: [] };
     App.showScreen('word');
     App.scratch.clear();
     render();
@@ -39,8 +39,8 @@
   function tokenize(s) { // 數字變成可以點的
     return esc(s).replace(/\d+(?:\.\d+)?(?:\/\d+)?/g, function (m) { return '<span class="wn" data-v="' + m + '">' + fmt(m) + '</span>'; });
   }
-  function totalSteps() { return 3 + W.p.steps.length; }
-  function stepNo() { return W.phase === 'ask' ? 1 : W.phase === 'nums' ? 2 : W.phase === 'op' ? 3 + W.op : totalSteps(); }
+  function totalSteps() { return 2 + W.p.steps.length; }
+  function stepNo() { return W.phase === 'ask' ? 1 : W.phase === 'op' ? 2 + W.op : totalSteps(); }
   function render() {
     var p = W.p;
     $('w-text').innerHTML = p.sents.map(function (s, i) {
@@ -59,25 +59,15 @@
   function prompt() {
     var n = W.p.steps.length;
     if (W.phase === 'ask') return '這題問的是什麼？點題目裡「問問題」的那一句。';
-    if (W.phase === 'nums') return '點出用得到的數字（用不到的不要點），點好按「選好了」。';
-    if (W.phase === 'op') return n === 1 ? '要怎麼算？' : W.op === 0 ? '第一步要先算什麼？' : '接著要怎麼算？（□ 是上一步算出來的數）';
+    if (W.phase === 'op') { var q = W.p.steps[W.op].q; return q || (n === 1 ? '要怎麼算？' : W.op === 0 ? '第一步要先算什麼？' : '接著要怎麼算？（□ 是上一步算出來的數）'); }
     if (W.phase === 'ans') return '算出答案。可以按右上角的 ✏️ 打開計算紙。';
     return '';
   }
-  function markNums() {
-    var p = W.p;
-    document.querySelectorAll('#w-text .wn').forEach(function (el) {
-      var v = el.dataset.v, cls = 'wn';
-      if (W.phase === 'nums' && W.picked[v]) cls += ' on';
-      if (W.numsDone) cls += p.use.indexOf(v) >= 0 ? ' use' : p.opt.indexOf(v) >= 0 ? '' : ' nouse';
-      el.className = cls;
-    });
-  }
+  function markNums() {} // 數字在題目裡用藍色粗體標出來，方便找
   function renderArea() {
     var a = $('w-area'), p = W.p;
     $('w-keypad').hidden = W.phase !== 'ans';
     if (W.phase === 'ask') a.innerHTML = '';
-    else if (W.phase === 'nums') a.innerHTML = '<button class="big-btn" type="button" id="w-nums-ok">選好了 ✔</button>';
     else if (W.phase === 'op') {
       var st = p.steps[W.op];
       a.innerHTML = '<div class="w-opts">' + st.opts.map(function (o, i) {
@@ -103,33 +93,18 @@
     if (!W) return;
     if (W.phase === 'ask') {
       var s = e.target.closest('.ws'); if (!s) return;
-      if (+s.dataset.s === W.p.ask) { W.askDone = true; good('對！這題問的是：' + W.p.sents[W.p.ask]); next('nums'); }
+      if (+s.dataset.s === W.p.ask) { W.askDone = true; W.work = []; good('對！這題問的是：' + W.p.sents[W.p.ask]); next('op'); }
       else bad('這一句是在說「已經知道的事」。問問題的句子通常有「幾」「多少」或問號「？」。');
-    } else if (W.phase === 'nums') {
-      var n = e.target.closest('.wn'); if (!n) return;
-      var v = n.dataset.v; W.picked[v] = !W.picked[v]; SFX.pick(); markNums();
     }
   });
-  /* ---------- 第 2 步：用得到的數字 ---------- */
+  /* ---------- 第 2 步：選算法；最後算答案 ---------- */
   $('w-area').addEventListener('click', function (e) {
     if (!W) return;
-    if (e.target.closest('#w-nums-ok')) {
-      var p = W.p, on = Object.keys(W.picked).filter(function (k) { return W.picked[k]; });
-      var extra = on.filter(function (v) { return p.use.indexOf(v) < 0 && p.opt.indexOf(v) < 0; });
-      var miss = p.use.filter(function (v) { return !W.picked[v]; });
-      if (!extra.length && !miss.length) { W.numsDone = true; good('對！用得到的是 ' + p.use.join('、') + '。灰色的數字是用不到的。'); W.work = []; next('op'); return; }
-      if (W.tries >= 1) { // 第二次還不對：直接幫他標出來
-        W.picked = {}; p.use.forEach(function (v) { W.picked[v] = true; });
-        bad('用得到的數字是 ' + p.use.join('、') + '，已經幫你點好了，按「選好了」。'); return;
-      }
-      bad(extra.length ? extra.join('、') + ' 這題用不到喔！想一想：問題要算的是什麼？' : '還有用得到的數字沒點到，再讀一次題目。');
-      return;
-    }
     var o = e.target.closest('[data-o]');
     if (o && W.phase === 'op') {
       var st = W.p.steps[W.op], c = st.opts[+o.dataset.o];
       if (c === st.ans) {
-        W.work.push(c); good('對！' + st.why);
+        if (!st.noWork) W.work.push(c); good('對！' + st.why);
         if (W.op + 1 < W.p.steps.length) { W.op++; W.tries = 0; render(); } else next('ans');
       } else bad('再想想：' + st.why);
       return;

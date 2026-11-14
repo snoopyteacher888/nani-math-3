@@ -86,7 +86,7 @@ for (const u of Q.UNITS.concat(Q.G4, Q.G5, Q.G6)) for (const s of u.stages) {
   for (let i = 0; i < 800; i++) { const q = s.gen(); assert.ok([1, 2, 3].includes(q.lv), s.id + ' 沒有標難度 ' + q.text); pools[q.lv].add(q.text + q.answer + (q.big || '') + (q.review || '')); }
   assert.ok(pools[1].size >= 8 && pools[2].size >= 8, s.id + ' 初階／中階題目太少 ' + pools[1].size + '/' + pools[2].size);
 }
-// 應用題：每個有關卡的單元都要有；問句對、數字都在題目裡、一定有用不到的數字、照步驟算會得到答案
+// 應用題：每個有關卡的單元都要有；問句對、不放用不到的數字（資源班孩子讀題已經很吃力）、照步驟算會得到答案
 const W = Q.WORD, evalStep = (expr, prev) => Function('return ' + expr.replace(/(\d+)\/(\d+)/g, '($1/$2)').replace(/□/g, '(' + prev + ')').replace(/×/g, '*').replace(/÷/g, '/').replace(/＋/g, '+').replace(/－/g, '-'))();
 const valOf = x => { x = String(x); if (x.includes('/')) { const [a, b] = x.split('/').map(Number); return a / b; } return parseFloat(x); };
 for (const [g, units] of [['3', Q.UNITS], ['4', Q.G4], ['5', Q.G5], ['6', Q.G6]]) for (const u of units) {
@@ -97,7 +97,7 @@ for (const [g, units] of [['3', Q.UNITS], ['4', Q.G4], ['5', Q.G5], ['6', Q.G6]]
     assert.ok(p.sents[p.ask] && p.sents[p.ask].includes('？'), id + ' 問句');
     const toks = p.sents.join('').match(/\d+(?:\.\d+)?(?:\/\d+)?/g) || [];
     p.use.forEach(v => assert.ok(toks.includes(v), id + ' 少了數字 ' + v));
-    assert.ok(toks.some(t => !p.use.includes(t) && !p.opt.includes(t)), id + ' 要有用不到的數字');
+    toks.forEach(t => assert.ok(p.use.includes(t) || ['12', '1', '3.14'].includes(t), id + ' 有用不到的數字 ' + t));
     let prev;
     for (const st of p.steps) {
       assert.strictEqual(new Set(st.opts).size, st.opts.length, id + ' 選項重複');

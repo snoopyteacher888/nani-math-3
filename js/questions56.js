@@ -27,6 +27,7 @@
   /* 小數：用整數算再轉回來，避免 0.1＋0.2 這種誤差 */
   function dec(n, places) { return +(n / Math.pow(10, places)).toFixed(places); }
   function dstr(x) { return String(+x.toFixed(4)); }
+  function sayFrac(t) { return String(t).replace(/(\d+)\/(\d+)/g, '$2分之$1'); }
   function fracFill(n, d) { return [{ label: '', ans: n }, { label: '', ans: d }]; }
 
   /* =====================================================
@@ -381,6 +382,41 @@
       hint: '相等的比：前項和後項乘以同一個數。先看另一項乘了幾倍。', explain: '<p class="ex-line">' + (wantFirst ? b2 + ' × ' + k + ' ＝ ' + b2 * k + '，所以 ' + a2 + ' × ' + k : a2 + ' × ' + k + ' ＝ ' + a2 * k + '，所以 ' + b2 + ' × ' + k) + ' ＝ <b>' + ansN + '</b></p>' };
   }
   /* 5 兩量關係 */
+  /* 5 基準量和比較量：「甲是乙的幾倍」→ 乙是基準量（「是」後面、「的」前面）
+   * 比較量 ＝ 基準量 × 倍數；基準量 ＝ 比較量 ÷ 倍數；倍數 ＝ 比較量 ÷ 基準量 */
+  // [比較量, 基準量, 「甲是乙的 r」的說法, 知道基準量時怎麼說, 知道比較量時怎麼說, 問比較量, 問基準量, 單位, 基準量範圍]
+  var BC = [
+    ['紅緞帶的長度', '藍緞帶的長度', '紅緞帶的長度是藍緞帶的 R', '藍緞帶長 X 公分', '紅緞帶長 X 公分', '紅緞帶長幾公分？', '藍緞帶長幾公分？', '公分', [24, 120]],
+    ['弟弟的零用錢', '哥哥的零用錢', '弟弟的零用錢是哥哥的 R', '哥哥有 X 元零用錢', '弟弟有 X 元零用錢', '弟弟有幾元零用錢？', '哥哥有幾元零用錢？', '元', [100, 600]],
+    ['女生人數', '全班人數', '女生人數是全班的 R', '全班有 X 人', '女生有 X 人', '女生有幾人？', '全班有幾人？', '人', [20, 36]],
+    ['妹妹的體重', '爸爸的體重', '妹妹的體重是爸爸的 R', '爸爸重 X 公斤', '妹妹重 X 公斤', '妹妹重幾公斤？', '爸爸重幾公斤？', '公斤', [48, 90]],
+    ['蘋果的價錢', '西瓜的價錢', '一顆蘋果的價錢是一顆西瓜的 R', '一顆西瓜 X 元', '一顆蘋果 X 元', '一顆蘋果幾元？', '一顆西瓜幾元？', '元', [60, 300]]
+  ];
+  function genBaseCompare() {
+    var c = pick(BC), t = R(0, 3), fr, B;
+    do {
+      fr = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 8]]);
+      B = fr[1] * R(Math.ceil(c[8][0] / fr[1]), Math.floor(c[8][1] / fr[1]));
+    } while (B < c[8][0]);
+    var r = fr[0] + '/' + fr[1], C = B / fr[1] * fr[0], u = c[7], stmt = c[2].replace('R', r), fill = function (k, x) { return c[k].replace('X', x); };
+    if (t <= 1) {
+      var askBase = t === 0, ans = askBase ? c[1] : c[0];
+      return { kind: 'quiz', text: '「' + stmt + '」，' + (askBase ? '基準量' : '比較量') + '是哪一個？', say: sayFrac(stmt) + '。' + (askBase ? '基準量' : '比較量') + '是哪一個？', answer: ans, options: shuffle([c[1], c[0], r]), review: stmt + '，' + (askBase ? '基準量' : '比較量'),
+        hint: '「是」後面、「的」前面的，是拿來比的標準，叫基準量；「是」前面的叫比較量。',
+        explain: '<p class="ex-line">' + stmt + '：基準量是<b>' + c[1] + '</b>，比較量是<b>' + c[0] + '</b>。</p>' };
+    }
+    if (t === 2) { // 已知基準量，求比較量：用乘的
+      var w2 = [Math.round(B / fr[0] * fr[1]), B - C, B + fr[0]].filter(function (x) { return x > 0 && x !== C && x === Math.floor(x); });
+      return { kind: 'quiz', text: fill(3, B) + '，' + stmt + '。' + c[5], say: sayFrac(fill(3, B) + '，' + stmt + '。' + c[5]),
+        answer: C + ' ' + u, options: opts(C + ' ' + u, w2.map(function (x) { return x + ' ' + u; })), review: fill(3, B) + '，' + stmt,
+        hint: '知道的是基準量（' + c[1] + '），求比較量：基準量 × ' + r + '。', explain: '<p class="ex-line">' + B + ' × ' + r + ' ＝ <b>' + C + ' ' + u + '</b></p>' };
+    }
+    // 已知比較量，求基準量：用除的（最常錯：還是用乘的）
+    var w3 = [C / fr[1] * fr[0], C + B, B + fr[1]].filter(function (x) { return x > 0 && x !== B && x === Math.floor(x); });
+    return { kind: 'quiz', text: fill(4, C) + '，' + stmt + '。' + c[6], say: sayFrac(fill(4, C) + '，' + stmt + '。' + c[6]),
+      answer: B + ' ' + u, options: opts(B + ' ' + u, w3.map(function (x) { return x + ' ' + u; }).concat([(B * 2) + ' ' + u])), review: fill(4, C) + '，' + stmt,
+      hint: '知道的是比較量（' + c[0] + '），要求的是基準量（' + c[1] + '）：比較量 ÷ ' + r + '，不是乘！', explain: '<p class="ex-line">' + C + ' ÷ ' + r + ' ＝ ' + C + ' × ' + fr[1] + '/' + fr[0] + ' ＝ <b>' + B + ' ' + u + '</b></p>' };
+  }
   function genTwoQty() {
     var t = R(0, 2);
     if (t === 0) { var zhe = pick([9, 8, 75, 7, 6, 5]), pct = zhe > 10 ? zhe : zhe * 10, r = pct / 100, orig = pick([200, 400, 600, 800, 1000, 1200, 1600]), sale = orig * pct / 100, name = (zhe > 10 ? '七五' : ['', '', '', '', '', '五', '六', '七', '八', '九'][zhe]) + '折';
@@ -500,7 +536,7 @@
     { id: 2, name: '分數除法', ic: '🍰', stages: [st('2-1', 'round', '商會變大還是變小', '除以比 1 小的數，商變大', genFracDivCompare, Q), st('2-2', 'round', '分數除法', '乘以倒數，再約分', genFracDivFill, F)] },
     { id: 3, name: '小數除法', ic: '🔟', stages: [st('3-1', 'round', '比大小', '4.8 ÷ 1.3 和 4.8 誰大？', genDecCompare, Q), st('3-2', 'run', '小數除法', '小數點要一起移', genDecDivRunL)] },
     { id: 4, name: '比與比值', ic: '⚖️', stages: [st('4-1', 'run', '最簡整數比、比值', '前項 ÷ 後項', genRatioL), st('4-2', 'round', '相等的比', '前項、後項乘同一個數', genRatioFill, F)] },
-    { id: 5, name: '兩量關係', ic: '🏷️', stages: [st('5-1', 'run', '打折、和差', '打八折＝× 0.8', genTwoQtyL)] },
+    { id: 5, name: '兩量關係', ic: '🏷️', stages: [st('5-1', 'run', '打折、和差', '打八折＝× 0.8', genTwoQtyL), st('5-2', 'round', '基準量和比較量', '「是」後面、「的」前面是基準量', genBaseCompare, Z)] },
     { id: 6, name: '圓周長與扇形周長', ic: '⭕', stages: [st('6-1', 'run', '圓周長', '直徑 × 3.14', genCircumL)] },
     { id: 7, name: '放大、縮小與比例尺', ic: '🗺️', stages: [st('7-1', 'run', '比例尺', '公分換公尺別忘了', genScaleL)] },
     { id: 8, name: '怎樣解題', ic: '💡', stages: [st('8-1', 'run', '間隔、規律、組合', '兩端都種要 ＋1', genSolveL)] }
@@ -508,5 +544,5 @@
 
   root.MathQ = root.MathQ || {};
   root.MathQ.G5 = G5; root.MathQ.G6 = G6;
-  root.MathQ._g56 = { gcd: gcd, lcm: lcm, isPrime: isPrime };
+  root.MathQ._g56 = { gcd: gcd, lcm: lcm, isPrime: isPrime, BC: BC };
 })(typeof window !== 'undefined' ? window : globalThis);
