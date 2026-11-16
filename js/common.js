@@ -66,11 +66,14 @@
   function hide(id) { $(id).hidden = true; }
 
   /* ---------- 念出來（班上有不識字的學生） ---------- */
+  /* 念出來之前修正破音字：語音常把「地鼠」念成「的鼠」、「量角器」念成「亮角器」，換成同音字給語音念（畫面上的字不變） */
+  var SAY_FIX = [[/地鼠/g, '帝鼠'], [/量角器/g, '涼角器']];
+  function fixSay(t) { t = String(t); SAY_FIX.forEach(function (f) { t = t.replace(f[0], f[1]); }); return t; }
   function speak(text) {
     if (!text || !('speechSynthesis' in window)) return;
     try {
       speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = .9;
+      var u = new SpeechSynthesisUtterance(fixSay(text)); u.lang = 'zh-TW'; u.rate = .9;
       var v = speechSynthesis.getVoices().filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0];
       if (v) u.voice = v;
       speechSynthesis.speak(u);
@@ -82,7 +85,7 @@
     if (!text || !('speechSynthesis' in window)) { setTimeout(fin, Math.max(1500, String(text).length * 200)); return; }
     try {
       speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text); u.lang = 'zh-TW'; u.rate = .9;
+      var u = new SpeechSynthesisUtterance(fixSay(text)); u.lang = 'zh-TW'; u.rate = .9;
       var v = speechSynthesis.getVoices().filter(function (x) { return /zh[-_]TW/i.test(x.lang); })[0];
       if (v) u.voice = v;
       u.onend = fin; u.onerror = fin;
