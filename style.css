@@ -1,10 +1,13 @@
+/* 台灣標準字形補字：霞鶩文楷的「即、節、既…」是舊字形，學生看不懂（老師回報），這幾個字改用 Noto Serif TC */
+@font-face { font-family: "TW Std Fix"; font-weight: 400; src: url(fonts/twfix/twfix-400.woff2) format("woff2"); unicode-range: U+5373, U+7BC0, U+65E2, U+6982, U+6168, U+537F, U+9109, U+97FF; }
+@font-face { font-family: "TW Std Fix"; font-weight: 700; src: url(fonts/twfix/twfix-700.woff2) format("woff2"); unicode-range: U+5373, U+7BC0, U+65E2, U+6982, U+6168, U+537F, U+9109, U+97FF; }
 :root {
   --bg: #F8F6F0; --surface: #FFFFFF; --ink: #2B2A28; --ink-soft: #6B6760;
   --brand: #E07A2E; --math: #2A63A8; --math-soft: rgba(42, 99, 168, .22);
   --line: #E4DCCB; --muted: #ECE6DA; --good: #2D8A57; --bad: #D9483B;
   --lane0: #E35D4F; --lane1: #E99A1E; --lane2: #3C8DD9;
   --radius: 22px; --tap: 56px;
-  --font: "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font: "TW Std Fix", "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font); }
@@ -14,7 +17,7 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 
 /* 注音字型（字咍楷體注音版，跟國語網站一樣）：開啟注音時全站使用；直式、鍵盤、數線的數字維持原本字型才對得齊 */
 html.zhuyin body, html.zhuyin button, html.zhuyin input {
-  font-family: 'Bpmf Zihi Kai Std', "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-family: 'Bpmf Zihi Kai Std', "TW Std Fix", "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
 }
 /* 注音比較小，開注音時字要放大才看得清楚 */
 html.zhuyin body { font-size: clamp(19px, 1.7vw, 23px); line-height: 1.7; }
