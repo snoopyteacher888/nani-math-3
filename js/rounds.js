@@ -131,7 +131,7 @@
   function render() {
     var q = Q.q, k = q.kind;
     clearScreen();
-    $('r-text').innerHTML = (q.again ? '🔁 ' : '') + fmt(q.text);
+    $('r-text').innerHTML = (q.twin ? '<span class="twin-tag">換數字，再試一次</span> ' : q.again ? '🔁 ' : '') + fmt(q.text);
     $('r-big').hidden = !q.big; $('r-big').textContent = q.big || '';
     $('round').className = 'screen game round-' + k;
     $('r-keypad').hidden = k !== 'fill';
@@ -154,13 +154,16 @@
       Q.vals = q.fields.map(function () { return ''; }); Q.cur = 0;
       renderFields();
     }
+    // 選擇題、分類題：讀完題目才能作答
+    if (k === 'quiz' || k === 'sort') Q.lock = App.readLock($('r-read'), function () { return Array.prototype.slice.call(document.querySelectorAll('#r-opts .qa, #r-opts .bin')); }, q.text);
+    else { Q.lock = null; $('r-read').hidden = true; }
     hud();
   }
 
   /* ---------- quiz ---------- */
   $('r-opts').addEventListener('click', function (e) {
-    if (!Q || Q.phase !== 'play') return;
-    var b = e.target.closest('[data-o]'); if (b) { var o = Q.q.options[+b.dataset.o]; if (o !== Q.q.answer && canRetry()) { b.classList.add('wrong'); b.disabled = true; retry(o); return; } markOpts(o); judge(o === Q.q.answer, o); return; }
+    if (!Q || Q.phase !== 'play' || (Q.lock && Q.lock.isLocked())) return;
+    var b = e.target.closest('[data-o]'); if (b) { var o = Q.q.options[+b.dataset.o]; Q.tooFast = o !== Q.q.answer && Q.lock && Q.lock.tooFast(); if (o !== Q.q.answer && canRetry()) { b.classList.add('wrong'); b.disabled = true; retry(o); return; } markOpts(o); judge(o === Q.q.answer, o); return; }
     var bin = e.target.closest('[data-bin]'); if (bin) { dropTo(+bin.dataset.bin); return; }
     if (e.target.closest('#paint-ok')) paintDone();
   });
@@ -211,7 +214,7 @@
   function dragSetup() {
     var card = $('sort-card'), sx, sy, dragging = false;
     card.addEventListener('pointerdown', function (e) {
-      if (Q.phase !== 'play') return;
+      if (Q.phase !== 'play' || (Q.lock && Q.lock.isLocked())) return;
       dragging = true; sx = e.clientX; sy = e.clientY; card.setPointerCapture(e.pointerId); card.classList.add('dragging');
     });
     card.addEventListener('pointermove', function (e) { if (dragging) card.style.transform = 'translate(' + (e.clientX - sx) + 'px,' + (e.clientY - sy) + 'px) rotate(' + ((e.clientX - sx) / 20) + 'deg)'; });
@@ -224,8 +227,9 @@
     });
   }
   function dropTo(i) {
-    if (!Q || Q.phase !== 'play') return;
+    if (!Q || Q.phase !== 'play' || (Q.lock && Q.lock.isLocked())) return;
     var q = Q.q, chosen = q.bins[i], card = $('sort-card'), bin = document.querySelector('[data-bin="' + i + '"]');
+    Q.tooFast = chosen !== q.answer && Q.lock && Q.lock.tooFast();
     Q.phase = 'wait';
     var cr = card.getBoundingClientRect(), br = bin.getBoundingClientRect();
     card.style.transition = 'transform .35s ease-in, opacity .35s';
@@ -293,18 +297,17 @@
       hud(); arenaHit(Q.combo >= 3);
       setTimeout(function () { if (Q && Q.phase === 'fb') { Q.frogX = null; next(); } }, Q.hp === 0 ? 1500 : 1000);
     } else {
-      Q.combo = 0; if (!Q.retried) Q.wrong++; Q.wrongList.push(q); Q.retry.push({ q: q, due: Q.answered + 2 });
+      Q.combo = 0; if (!Q.retried) Q.wrong++; if (!q.twin) Q.wrongList.push(q);
       SFX.bad(); hud(); arenaMiss();
-      var ans = q.answerText || q.answer;
-      $('r-fb').innerHTML = '<div class="fb-ans">' + App.sayBtn('正確答案是' + ans.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint) + '<span>正確答案是 <b>' + fmt(ans) + '</b></span></div>' +
-        '<p class="ex-hint">' + esc(q.hint) + '</p><div class="ex-work">' + (q.explain || '') + '</div>' +
-        '<button class="big-btn" type="button" id="r-next">我懂了，下一題 ▶</button>';
+      // 一步一步看解法 → 馬上換數字再做一題同類的（最多兩次）；背答案沒有用
+      var more = (q.twin || 0) < 2, tw = more ? App.twinOf(q, Q.stage.gen) : null;
+      if (tw) Q.retry.unshift({ q: tw, due: 0 }); else if (!q.twin) Q.retry.push({ q: q, due: Q.answered + 2 });
+      $('r-fb').innerHTML = '<h3 class="sol-title">' + (Q.tooFast ? '先把題目讀完喔！' : '差一點！我們一步一步來看') + '</h3><div class="ex-steps" id="r-steps"></div>';
       $('r-fb').hidden = false;
+      App.stepper($('r-steps'), App.solSteps(q), tw ? '看懂了，換一題同類的試試看 ▶' : '我懂了，下一題 ▶', function () { Q.frogX = null; next(); });
       setTimeout(function () { $('r-fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
-      speak('差一點。正確答案是' + ans.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint);
     }
   }
-  $('r-fb').addEventListener('click', function (e) { if (e.target.closest('#r-next')) { Q.frogX = null; next(); } });
   /* ---------- 鷹架：第一次答錯先給提示、再試一次（2 個選項的題目不給，因為剩下的就是答案） ---------- */
   function canRetry() {
     var q = Q.q;
@@ -314,7 +317,7 @@
     return q.kind === 'fill';
   }
   function retry() {
-    var q = Q.q, h = (q.hints && q.hints[0]) || q.hint;
+    var q = Q.q, h = (Q.tooFast ? '先把題目讀完喔！' : '') + ((q.hints && q.hints[0]) || q.hint);
     Q.retried = true; Q.wrong++; Q.combo = 0; Q.phase = 'play';
     SFX.bad(); hud(); arenaMiss();
     $('r-fb').innerHTML = '<div class="fb-hint">' + App.sayBtn('再想想。' + h) + '<span><b>再想想！</b>' + fmt(h) + '</span></div>';
@@ -328,13 +331,13 @@
   }
   document.addEventListener('keydown', function (e) {
     if (!Q || $('round').hidden || !$('ov-pause').hidden || !$('ov-end').hidden || !$('ov-tut').hidden) return;
-    if (Q.phase === 'fb' && !$('r-fb').hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); Q.frogX = null; next(); return; }
+    if (Q.phase === 'fb' && !$('r-fb').hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); var nb = document.querySelector('#r-steps .sol-next'); if (nb) nb.click(); return; }
     if (Q.q.kind === 'quiz' && /^[1-4]$/.test(e.key)) { var b = document.querySelector('#r-opts [data-o="' + (+e.key - 1) + '"]'); if (b) b.click(); }
     if (Q.q.kind === 'sort' && /^[1-3]$/.test(e.key)) dropTo(+e.key - 1);
     if (Q.q.kind === 'fill') { if (/^[0-9]$/.test(e.key)) fillKey(e.key); else if (e.key === 'Backspace') { e.preventDefault(); fillKey('del'); } else if (e.key === 'Enter') { e.preventDefault(); fillKey('ok'); } }
     if (e.key === 'Escape') pause();
   });
-  $('r-say').onclick = function () { if (Q && Q.q) speak(Q.q.say); };
+  $('r-say').onclick = function () { if (Q && Q.q) App.speakThen(Q.q.say, function () { if (Q && Q.lock) Q.lock.unlock(); }); };
 
   function pause() {
     if (!Q || Q.phase === 'end') return;

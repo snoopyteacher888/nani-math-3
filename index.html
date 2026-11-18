@@ -174,6 +174,7 @@
       <div class="qbig" id="r-big" hidden></div>
       <div class="r-visual" id="r-visual"></div>
       <div class="r-fields" id="r-fields"></div>
+      <div class="read-bar" id="r-read" hidden><i></i><span></span></div>
       <div class="r-opts" id="r-opts"></div>
       <div class="r-fb" id="r-fb" hidden></div>
       <div class="r-stamp" id="r-stamp" aria-hidden="true"></div>
@@ -246,6 +247,7 @@
       <div class="qtext"><button class="say" type="button" id="q-say" aria-label="念題目">🔊</button><span id="q-text"></span></div>
       <div class="qbig" id="q-big" hidden></div>
       <div class="qvisual" id="q-visual" hidden></div>
+      <div class="read-bar" id="q-read" hidden><i></i><span></span></div>
       <div class="q-opts" id="q-opts">
         <button class="qa" type="button" data-i="0"></button>
         <button class="qa" type="button" data-i="1"></button>
@@ -264,11 +266,7 @@
     <div class="dialog explain">
       <h2 id="ex-title">差一點！</h2>
       <p class="ex-q" id="ex-q"></p>
-      <div class="ex-ans">正確答案是 <b id="ex-ans"></b></div>
-      <p class="ex-hint"><button class="say" type="button" id="ex-say" aria-label="念提示">🔊</button><span id="ex-hint"></span></p>
-      <div class="ex-work" id="ex-work"></div>
-      <p class="sub">這題等一下會再出現一次喔！</p>
-      <button class="big-btn" type="button" id="ex-next">我懂了，繼續跑 ▶</button>
+      <div class="ex-steps" id="ex-steps"></div>
     </div>
   </div>
 
@@ -301,6 +299,7 @@
   <script src="js/questions4.js"></script>
   <script src="js/zhuyin.js"></script>
   <script src="js/common.js"></script>
+  <script src="js/learn.js"></script>
   <script src="js/tutorial.js"></script>
   <script src="js/runner.js"></script>
   <script src="js/timed.js"></script>

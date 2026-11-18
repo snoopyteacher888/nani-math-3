@@ -168,7 +168,7 @@
   document.addEventListener('keydown', function (e) {
     if (!G || $('game').hidden) return;
     if (!$('ov-pause').hidden || !$('ov-end').hidden || !$('ov-count').hidden) return;
-    if (!$('ov-explain').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ex-next').click(); } return; }
+    if (!$('ov-explain').hidden) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); var nb = document.querySelector('#ex-steps .sol-next'); if (nb) nb.click(); } return; }
     if (!$('ov-q').hidden) { if (/^[1-4]$/.test(e.key)) answer(+e.key - 1); return; }
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); move(-1); }
     else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); move(1); }
@@ -183,11 +183,11 @@
     G.phase = 'hit';
     setTimeout(function () { if (G && G.phase === 'hit') openQuestion(); }, 450); // 先看到撞到，再出題
   }
-  function openQuestion() {
+  function openQuestion(twin) {
     if (App.scratch) App.scratch.clear();
-    G.phase = 'question'; G.q = G.bank[G.answered];
+    G.phase = 'question'; G.q = twin || G.bank[G.answered]; G.inTwin = !!twin;
     var q = G.q;
-    $('q-text').innerHTML = (q.again ? '🔁 ' : '') + App.fmt(q.text);
+    $('q-text').innerHTML = (twin ? '<span class="twin-tag">換數字，再試一次</span><br>' : q.again ? '🔁 ' : '') + App.fmt(q.text);
     $('q-big').hidden = !q.big; $('q-big').textContent = q.big || '';
     var vis = $('q-visual'); vis.hidden = !q.visual; vis.innerHTML = q.visual || '';
     $('q-opts').classList.toggle('zh', q.cls === 'zh');
@@ -198,46 +198,48 @@
     });
     show('ov-q');
     SFX.dash();
-    if (store.autoSay) speak(q.say);
+    G.lock = App.readLock($('q-read'), function () { return Array.prototype.slice.call(document.querySelectorAll('#q-opts .qa')); }, q.text);
+    if (store.autoSay) App.speakThen(q.say, function () { if (G && G.lock) G.lock.unlock(); });
   }
-  $('q-say').onclick = function () { if (G && G.q) speak(G.q.say); };
+  $('q-say').onclick = function () { if (G && G.q) App.speakThen(G.q.say, function () { if (G && G.lock) G.lock.unlock(); }); };
   document.querySelectorAll('#q-opts .qa').forEach(function (b) { b.onclick = function () { answer(+b.dataset.i); }; });
 
   function answer(i) {
     if (!G || G.phase !== 'question') return;
     var q = G.q, ok = q.options[i] === q.answer, btns = document.querySelectorAll('#q-opts .qa');
-    if (i >= q.options.length) return;
+    if (i >= q.options.length || (G.lock && G.lock.isLocked())) return;
+    G.tooFast = !ok && G.lock && G.lock.tooFast();
     btns.forEach(function (b, j) { b.disabled = true; if (q.options[j] === q.answer) b.classList.add('right'); else if (j === i) b.classList.add('wrong'); });
-    G.answered++;
+    if (!G.inTwin) G.answered++;
     G.phase = 'answered';
     if (ok) {
       G.combo++;
-      var pts = 10 + Math.min(G.combo - 1, 5) * 2;
+      var pts = G.inTwin ? 5 : 10 + Math.min(G.combo - 1, 5) * 2;
       G.coins += pts; SFX.good();
       burst(laneCX(G.laneX), charY() - 30, 30, true);
-      G.floats.push({ x: laneCX(G.laneX), y: charY() - 60, t: 0, text: '答對 +' + pts });
+      G.floats.push({ x: laneCX(G.laneX), y: charY() - 60, t: 0, text: (G.inTwin ? '訂正成功 +' : '答對 +') + pts });
       setTimeout(function () { hide('ov-q'); if (App.scratch) App.scratch.close(); afterQuestion(); }, 700);
     } else {
-      G.combo = 0; G.wrong++; G.wrongList.push(q); // 一局固定 10 題，答錯的列在結算畫面
+      G.combo = 0;
+      if (!G.inTwin) { G.wrong++; G.wrongList.push(q); G.twins = 0; } // 一局固定 10 題，答錯的列在結算畫面（換數字的題目不另外算）
       SFX.bad();
       setTimeout(function () { hide('ov-q'); if (App.scratch) App.scratch.close(); showExplain(); }, 600);
     }
     renderHud();
   }
 
+  /* 答錯：一步一步看解法 → 換數字再做一題（最多兩次），答對才算訂正 */
   function showExplain() {
-    var q = G.q;
-    $('ex-title').textContent = '差一點！';
+    var q = G.q, more = G.twins < 2;
+    $('ex-title').textContent = G.tooFast ? '先把題目讀完喔！' : '差一點！我們一步一步來看';
     $('ex-q').innerHTML = App.fmt(q.text) + (q.big ? '　' + esc(q.big) : '');
-    $('ex-ans').innerHTML = App.fmt(q.answer);
-    $('ex-hint').textContent = q.hint;
-    $('ex-work').innerHTML = q.explain || '';
     show('ov-explain');
-    speak('差一點。正確答案是' + q.answer.replace(/(\d+)\/(\d+)/g, '$2分之$1') + '。' + q.hint);
+    App.stepper($('ex-steps'), App.solSteps(q), more ? '看懂了，換一題同類的試試看 ▶' : '我懂了，繼續跑 ▶', function () {
+      hide('ov-explain');
+      var tw = more ? App.twinOf(q, G.stage.gen) : null;
+      if (tw) { G.twins++; openQuestion(tw); } else afterQuestion();
+    });
   }
-  $('ex-say').onclick = function () { if (G) speak('正確答案是' + G.q.answer + '。' + G.q.hint); };
-  $('ex-next').onclick = function () { hide('ov-explain'); afterQuestion(); };
-
   function afterQuestion() {
     if (!G) return;
     G.safeRows = 2; G.sinceHit = 0;
