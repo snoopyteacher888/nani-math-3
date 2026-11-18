@@ -491,6 +491,76 @@
       hints: ['看「的 ' + r + '」前面是誰。'], hint: '「' + bn + '的 ' + r + '」：' + c[1] + ' × ' + r + ' ＝ ' + c[0] + '。',
       explain: '<p class="ex-line">' + c[1] + ' × ' + r + ' ＝ ' + c[0] + '，答案是 <b>' + c[1] + '</b>。</p>' };
   }
+  /* 六上 5 兩量關係 進階：依課本 5-1～5-3 的例題（漲價、加成、兩量和求基準量、增量、兩量差、打折少付、
+   * 百分率的差、已知差求兩量、已知便宜多少求原價），題目長、要先想清楚誰是基準量（當作 1） */
+  function pctStr(k) { return k + '%'; }
+  function genTwoQtyHard() {
+    var t = R(0, 8), k, B, ans, w, text, hint, ex, x;
+    function ok(v) { return v > 0 && v === Math.round(v); }
+    if (t === 0) { // 漲價
+      do { B = R(2, 9) * 10; k = pick([25, 35, 40, 45, 60, 65, 75]); x = R(2, 6); } while (!ok(B * (100 + k) * x / 100) || !ok(B * k * x / 100));
+      ans = B * (100 + k) * x / 100;
+      text = '空心菜原價每公斤 ' + B + ' 元，最近漲價了 ' + pctStr(k) + '。漲價後，買 ' + x + ' 公斤空心菜要多少元？';
+      w = [B * k * x / 100, B * (100 - k) * x / 100, B * (100 + k) / 100];
+      hint = '原價是基準量（當作 1），漲價 ' + k + '% 後是原價的（1 ＋ ' + k / 100 + '）倍，再乘以 ' + x + ' 公斤。';
+      ex = B + ' ×（1 ＋ ' + k / 100 + '）× ' + x + ' ＝ ' + B * (100 + k) / 100 + ' × ' + x + ' ＝ ' + ans;
+    } else if (t === 1) { // 成本加成
+      do { B = R(3, 30) * 20; k = R(2, 6); } while (!ok(B * (10 + k) / 10));
+      ans = B * (10 + k) / 10;
+      text = '老闆把成本 ' + B + ' 元的玩具，加' + '二三四五六'[k - 2] + '成當作售價。這個玩具的售價是多少元？';
+      w = [B * k / 10, B * (10 - k) / 10, B + k];
+      hint = '成本是基準量（當作 1），加' + '二三四五六'[k - 2] + '成就是成本的（1 ＋ ' + k / 10 + '）倍。';
+      ex = B + ' ×（1 ＋ ' + k / 10 + '）＝ ' + B + ' × ' + (10 + k) / 10 + ' ＝ ' + ans;
+    } else if (t === 2) { // 整數倍＋兩量和，求基準量
+      k = R(2, 6); B = R(4, 30); x = B * (1 + k);
+      ans = B; text = '小森的花園中，玫瑰花園面積是百合花園的 ' + k + ' 倍，兩個花園的面積合起來是 ' + x + ' 公畝。百合花園的面積是多少公畝？';
+      w = [B * k, ok(x / k) ? x / k : x - k, B * (k - 1) || B + 1];
+      hint = '百合花園是基準量（當作 1），玫瑰是 ' + k + '，兩個合起來是（1 ＋ ' + k + '）倍。（　）×（1 ＋ ' + k + '）＝ ' + x + '。';
+      ex = x + ' ÷（1 ＋ ' + k + '）＝ ' + x + ' ÷ ' + (1 + k) + ' ＝ ' + B;
+    } else if (t === 3) { // 增量 %，求原來
+      do { B = R(4, 30) * 20; k = pick([10, 20, 25, 35, 40, 50]); } while (!ok(B * (100 + k) / 100));
+      x = B * (100 + k) / 100; ans = B;
+      text = '胡椒粉新包裝增量 ' + pctStr(k) + '，重量變成 ' + x + ' 公克。胡椒粉舊包裝的重量是多少公克？';
+      w = [Math.round(x * (100 - k) / 100), x - k, Math.round(x * k / 100)];
+      hint = '舊包裝是基準量（當作 1），新包裝是（1 ＋ ' + k / 100 + '）倍：（　）×（1 ＋ ' + k / 100 + '）＝ ' + x + '。不是 ' + x + ' 減掉 ' + k + '%！';
+      ex = x + ' ÷ ' + (100 + k) / 100 + ' ＝ ' + B;
+    } else if (t === 4) { // 兩量差（小數倍）
+      k = pick([.6, .7, .75, .8, .9]); do { B = R(4, 40) * 10; } while (!ok(B * k));
+      ans = Math.round(B * (1 - k) * 100) / 100;
+      text = 'A 城市的綠地面積是 B 城市的 ' + k + ' 倍，B 城市的綠地有 ' + B + ' 公頃。兩個城市的綠地面積相差多少公頃？';
+      w = [B * k, Math.round(B * (1 + k) * 100) / 100, B - k];
+      hint = 'B 城市是基準量（當作 1），A 城市是 ' + k + '，相差的是（1 － ' + k + '）倍。';
+      ex = B + ' ×（1 － ' + k + '）＝ ' + B + ' × ' + dstr(1 - k) + ' ＝ ' + ans;
+    } else if (t === 5) { // 打折，少付多少
+      k = R(3, 9); B = R(4, 30) * 100;
+      ans = B * (10 - k) / 10;
+      text = '商店大拍賣，全店商品以原價打' + '三四五六七八九'[k - 3] + '折出售。丹丹買了一個原價 ' + B + ' 元的商品，她可以少付多少元？';
+      w = [B * k / 10, B - k, B * (10 + k) / 10];
+      hint = '原價是基準量（當作 1），售價是 ' + k / 10 + '，少付的是（1 － ' + k / 10 + '）倍。';
+      ex = B + ' ×（1 － ' + k / 10 + '）＝ ' + B + ' × ' + dstr(1 - k / 10) + ' ＝ ' + ans;
+    } else if (t === 6) { // 百分率，兩個比較量相差
+      k = pick([60, 65, 70, 75, 80, 85, 90]); B = pick([20, 40, 60, 80, 100]);
+      ans = B * (2 * k - 100) / 100;
+      text = '全年級有 ' + B + ' 人，疫苗施打率是 ' + pctStr(k) + '。有打疫苗的人比沒打疫苗的人多幾人？';
+      w = [B * k / 100, B * (100 - k) / 100, B - k];
+      hint = '全年級是基準量（當作 1）：有打的是 ' + k / 100 + '，沒打的是（1 － ' + k / 100 + '）＝ ' + dstr(1 - k / 100) + '，相差 ' + dstr(k / 100) + ' － ' + dstr(1 - k / 100) + '。';
+      ex = B + ' × ' + k / 100 + ' － ' + B + ' × ' + dstr(1 - k / 100) + ' ＝ ' + B * k / 100 + ' － ' + B * (100 - k) / 100 + ' ＝ ' + ans;
+    } else if (t === 7) { // 分數倍＋兩量差，求基準量
+      var fr = pick([[3, 5], [2, 3], [3, 4], [2, 5], [4, 7], [5, 8]]); B = fr[1] * R(3, 15); x = B * (fr[1] - fr[0]) / fr[1];
+      ans = B; text = '甜點店的蛋糕賣出數量是布丁的 ' + fr[0] + '/' + fr[1] + '，布丁比蛋糕多賣了 ' + x + ' 個。布丁賣出多少個？';
+      w = [B * fr[0] / fr[1], x * fr[1] / fr[0] === Math.round(x * fr[1] / fr[0]) ? x * fr[1] / fr[0] : x + fr[1], B + x];
+      hint = '布丁是基準量（當作 1），蛋糕是 ' + fr[0] + '/' + fr[1] + '，相差（1 － ' + fr[0] + '/' + fr[1] + '）＝ ' + (fr[1] - fr[0]) + '/' + fr[1] + '：（　）× ' + (fr[1] - fr[0]) + '/' + fr[1] + ' ＝ ' + x + '。';
+      ex = x + ' ÷ ' + (fr[1] - fr[0]) + '/' + fr[1] + ' ＝ ' + B;
+    } else { // 打折便宜多少，求原價
+      k = R(6, 9); B = R(4, 30) * 100; x = B * (10 - k) / 10; // 不出五折：便宜的錢 ÷ 0.5 剛好也是答案，分不出對錯
+      ans = B; text = '一件外套打' + '五六七八九'[k - 5] + '折，比原價便宜了 ' + x + ' 元。這件外套的原價是多少元？';
+      w = [ok(x * 10 / k) ? x * 10 / k : x + 100, B * k / 10, x * 2];
+      hint = '原價是基準量（當作 1），打' + '五六七八九'[k - 5] + '折便宜的是（1 － ' + k / 10 + '）倍：（　）× ' + dstr(1 - k / 10) + ' ＝ ' + x + '。不是除以 ' + k / 10 + '！';
+      ex = x + ' ÷ ' + dstr(1 - k / 10) + ' ＝ ' + B;
+    }
+    return { text: text, say: text.replace(/%/g, '趴').replace(/(\d+)\/(\d+)/g, '$2分之$1'), answer: dstr(ans), options: opts(dstr(ans), w.concat([ans + 10, ans * 2]).filter(function (v) { return v > 0; }).map(dstr)), review: text,
+      hint: hint, explain: '<p class="ex-line">' + ex + '</p><p class="ex-line">答案是 <b>' + dstr(ans) + '</b></p>' };
+  }
   function genTwoQty() {
     var t = R(0, 2);
     if (t === 0) { var zhe = pick([9, 8, 75, 7, 6, 5]), pct = zhe > 10 ? zhe : zhe * 10, r = pct / 100, orig = pick([200, 400, 600, 800, 1000, 1200, 1600]), sale = orig * pct / 100, name = (zhe > 10 ? '七五' : ['', '', '', '', '', '五', '六', '七', '八', '九'][zhe]) + '折';
@@ -584,7 +654,11 @@
   var genSectorL = lv(genSector, function (q) { return has(q, /圓的圓心角是幾度/) ? 1 : has(q, /大扇形/) ? 2 : 3; });
   var genDecDivRunL = lv(genDecDivRun, function (q) { return has(q, /四捨五入/) ? 3 : /\./.test(q.answer) ? 2 : 1; });
   var genRatioL = lv(genRatio, function (q) { return has(q, /比值/) ? 2 : has(q, /\./) ? 3 : 1; });
-  var genTwoQtyL = lv(genTwoQty, function (q) { return has(q, /要付多少元/) ? 1 : has(q, /原價是/) ? 3 : 2; });
+  /* 5-1：初階＝打折求售價；中階＝打折求原價、兩量和、兩量差（老師說原本的進階太簡單，放中階）；進階＝課本 5-1～5-3 的長題目 */
+  var genTwoQtyL = function () {
+    if (Math.random() < .4) { var h = genTwoQtyHard(); h.lv = 3; return h; }
+    var q = genTwoQty(); q.lv = has(q, /要付多少元/) ? 1 : 2; return q;
+  };
   var genCircumL = lv(genCircum, function (q) { return has(q, /^直徑 \d+ 公分的圓，圓周長/) ? 1 : has(q, /弧長/) ? 3 : 2; });
   var genScaleL = lv(genScale, function (q) { return has(q, /放大圖/) ? 1 : has(q, /比例尺是多少/) ? 3 : 2; });
   var genSolveL = lv(genSolve, function (q) { return has(q, /組合/) ? 1 : has(q, /重複|兩端都不種/) ? 3 : 2; });
