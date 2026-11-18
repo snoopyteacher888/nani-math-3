@@ -640,6 +640,135 @@
     return { text: vals.join('、') + ' 這 ' + n + ' 個數的平均是多少？', say: vals.join('、') + '，這' + n + '個數的平均是多少？', answer: String(avg), options: opts(avg, [sum, avg + 5, Math.round(sum / (n + 1))]),
       hint: '平均＝全部加起來 ÷ 個數。', explain: '<p class="ex-line">（' + vals.join(' ＋ ') + '）÷ ' + n + ' ＝ ' + sum + ' ÷ ' + n + ' ＝ <b>' + avg + '</b></p>' };
   }
+
+  /* =====================================================
+   * 跑酷「進階」：五上依評量類題、六上依課課教案的例題，題目比較長、要多想一步。
+   * harder(原本的題目, 進階題)：原本的進階改放中階；四成是新的進階題（lv 3）。
+   * ===================================================== */
+  function sayQ(t) { return String(t).replace(/%/g, '趴').replace(/(\d+)\/(\d+)/g, '$2分之$1').replace(/(\d+):(\d+)/g, '$1比$2'); }
+  function HQ(text, ans, wrongs, hint, ex) {
+    ans = typeof ans === 'number' ? dstr(ans) : ans;
+    var extra = /^[\d.]+$/.test(ans) ? [dstr(+ans + 10), dstr(+ans * 2)] : [];
+    return { text: text, say: sayQ(text), answer: ans, options: opts(ans, wrongs.map(function (w) { return typeof w === 'number' ? dstr(w) : w; }).concat(extra)), review: text, hint: hint, explain: '<p class="ex-line">' + ex + '</p>' };
+  }
+  function harder(base, hard) { return function () { if (Math.random() < .4) { var h = hard(); h.lv = 3; return h; } var q = base(); if (q.lv === 3) q.lv = 2; return q; }; }
+  /* 五上 1 折線圖：看統計表找相鄰年分上升／下降最多、最多比最少多多少 */
+  function hard5_1() {
+    var y0 = R(105, 108), n = 5, v = [], x = R(30, 80);
+    for (var i = 0; i < n; i++) { v.push(x); x = Math.max(10, x + pick([-40, -25, -12, -6, 5, 9, 14, 22])); }
+    var d = v.slice(1).map(function (a, i) { return a - v[i]; }), up = Math.max.apply(null, d), dn = Math.min.apply(null, d);
+    if (d.filter(function (z) { return z === up; }).length > 1 || d.filter(function (z) { return z === dn; }).length > 1 || up <= 0 || dn >= 0) return hard5_1();
+    var yrs = v.map(function (a, i) { return y0 + i; }), tbl = yrs.map(function (y, i) { return y + ' 年 ' + v[i] + ' 萬'; }).join('、'), pair = function (k) { return yrs[k] + ' 年到 ' + yrs[k + 1] + ' 年'; }, t = R(0, 2);
+    var head = '公園參觀人次統計表：' + tbl + '人次。';
+    if (t === 2) { var mx = Math.max.apply(null, v), mn = Math.min.apply(null, v);
+      return HQ(head + '參觀人次最多的一年，比最少的一年多幾萬人次？', mx - mn, [mx + mn, up, -dn], '先找出最多和最少的是哪兩年，再相減（不一定是相鄰的年分）。', mx + ' － ' + mn + ' ＝ ' + (mx - mn) + ' 萬人次'); }
+    var k = t === 0 ? d.indexOf(up) : d.indexOf(dn), others = shuffle(d.map(function (z, i) { return i; }).filter(function (i) { return i !== k; })).slice(0, 2).map(pair);
+    return HQ(head + '畫成折線圖後，哪兩個相鄰的年分之間' + (t === 0 ? '上升' : '下降') + '最多？', pair(k), others, '把相鄰兩年相減，比比看哪一段' + (t === 0 ? '增加' : '減少') + '最多；折線圖上就是最陡的那一段。', pair(k) + (t === 0 ? '增加' : '減少') + ' ' + Math.abs(d[k]) + ' 萬人次，是最多的');
+  }
+  /* 五上 6 整數四則：三步驟併式、分配律、連除、四個數的平均 */
+  function hard5_6() {
+    var t = R(0, 4);
+    if (t === 0) { var per = R(10, 20), pk = R(2, 4), a = R(2, 9), b = R(5, 15), tot = per * pk + a + b;
+      return HQ('一包色紙有 ' + per + ' 張，恬恬上午摺紙鶴用了 ' + pk + ' 包，摺紙飛機用了 ' + a + ' 張，下午摺紙船用了 ' + b + ' 張。恬恬今天共用了幾張色紙？', tot, [per * (pk + a + b), per + pk + a + b, per * pk + a], '「' + pk + ' 包」要先換成張數：' + per + ' × ' + pk + '，再加上其他用掉的張數。', per + ' × ' + pk + ' ＋ ' + a + ' ＋ ' + b + ' ＝ ' + per * pk + ' ＋ ' + a + ' ＋ ' + b + ' ＝ ' + tot + ' 張'); }
+    if (t === 1) { var pr = R(60, 95), off = R(10, 25), n = R(3, 5), money = pick([500, 1000]), rest = money - (pr - off) * n;
+      if (rest <= 0) return hard5_6();
+      return HQ('佳佳帶了 ' + money + ' 元到麵包店，一個蛋糕原本賣 ' + pr + ' 元，今天特價每個便宜 ' + off + ' 元，她買了 ' + n + ' 個，還剩下多少元？', rest, [money - pr * n, money - pr - off * n, money - (pr + off) * n], '先算特價一個多少錢（' + pr + ' － ' + off + '），要加括號，再乘 ' + n + ' 個。', money + ' －（' + pr + ' － ' + off + '）× ' + n + ' ＝ ' + money + ' － ' + (pr - off) * n + ' ＝ ' + rest + ' 元'); }
+    if (t === 2) { var tk = R(15, 30) * 10, x = R(12, 38), y = 50 - x;
+      if (Math.random() < .5) y = 100 - x;
+      return HQ('一張展覽票賣 ' + tk + ' 元，甲班買了 ' + x + ' 張，乙班買了 ' + y + ' 張，兩班一共花了多少元？', tk * (x + y), [tk * x, tk + x + y, tk * (x + y) / 10], '兩班都是買 ' + tk + ' 元的票，可以用分配律：' + tk + ' ×（' + x + ' ＋ ' + y + '）。', tk + ' × ' + x + ' ＋ ' + tk + ' × ' + y + ' ＝ ' + tk + ' × ' + (x + y) + ' ＝ ' + tk * (x + y) + ' 元'); }
+    if (t === 3) { var a1 = R(10, 16), b1 = R(4, 6), bx = R(5, 12), all = a1 * b1 * bx;
+      return HQ('糖果店做了 ' + all + ' 顆糖果，每 ' + a1 + ' 顆裝成一包，每 ' + b1 + ' 包裝成一盒，共可以裝幾盒？', bx, [all / a1, all / b1 === Math.round(all / b1) ? all / b1 : bx + 1, a1 * b1], '連除：先 ÷ ' + a1 + ' 算包數，再 ÷ ' + b1 + ' 算盒數；也可以先算一盒幾顆（' + a1 + ' × ' + b1 + '）。', all + ' ÷ ' + a1 + ' ÷ ' + b1 + ' ＝ ' + all + ' ÷ ' + a1 * b1 + ' ＝ ' + bx + ' 盒'); }
+    var vs = [R(110, 150), R(110, 150), R(110, 150), R(110, 150)], sum = vs.reduce(function (p, q) { return p + q; }, 0);
+    if (sum % 4) { vs[3] += 4 - sum % 4; sum = vs.reduce(function (p, q) { return p + q; }, 0); }
+    return HQ('果園採收柚子，第一天採收 ' + vs[0] + ' 個，第二天 ' + vs[1] + ' 個，第三天 ' + vs[2] + ' 個，第四天 ' + vs[3] + ' 個，平均一天採收幾個？', sum / 4, [sum / 3 === Math.round(sum / 3) ? sum / 3 : sum / 4 + 1, sum, (vs[0] + vs[3]) / 2 === sum / 4 ? sum / 4 + 2 : (vs[0] + vs[3]) / 2], '平均 ＝ 總數 ÷ 天數，要用括號把四天加起來。', '(' + vs.join(' ＋ ') + ') ÷ 4 ＝ ' + sum + ' ÷ 4 ＝ ' + sum / 4 + ' 個');
+  }
+  /* 五上 9 整數相除、幾分之一：用分數表示結果、整數 × 幾分之一 */
+  function hard5_9() {
+    var t = R(0, 2);
+    if (t === 0) { var L = R(2, 7), n = R(L + 1, 12);
+      if (gcd(L, n) !== 1) return hard5_9();
+      return HQ(n + ' 瓶相同大小的果汁共有 ' + L + ' 公升，1 瓶果汁有幾公升？（用分數表示）', L + '/' + n, [n + '/' + L, '1/' + n, '1/' + L], '把 ' + L + ' 公升平分成 ' + n + ' 瓶：' + L + ' ÷ ' + n + '，被除數當分子、除數當分母。', L + ' ÷ ' + n + ' ＝ ' + L + '/' + n + ' 公升'); }
+    if (t === 1) { var per = pick([6, 8, 10, 12]), m = R(per * 2 + 1, per * 6);
+      if (gcd(m, per) !== 1) return hard5_9(); // 和評量類題一樣（43/10），用不能約分的
+      return HQ('每 ' + per + ' 塊綠豆糕裝成一盒，糕餅店做了 ' + m + ' 塊，全部裝完，可以裝成幾盒？（用分數表示）', m + '/' + per, [per + '/' + m, Math.floor(m / per) + '', Math.ceil(m / per) + ''], '「全部裝完」：最後一盒沒有裝滿也算一部分，用分數表示 ' + m + ' ÷ ' + per + '。', m + ' ÷ ' + per + ' ＝ ' + m + '/' + per + ' 盒'); }
+    var thing = pick([['1 桶紅茶有', '公升', '店員拿了', '桶去泡奶茶，用了幾公升紅茶？'], ['1 包水餃有', '顆', '媽媽吃了', '包，吃了幾顆水餃？'], ['1 根竹子長', '公尺', '爺爺做竹椅用了', '根，用了幾公尺竹子？']]), d = pick([2, 3, 4, 5, 8]), whole = d * R(2, 8);
+    return HQ(thing[0] + ' ' + whole + ' ' + thing[1] + '，' + thing[2] + ' 1/' + d + ' ' + thing[3], whole / d, [whole * d, whole - d, d], '1/' + d + ' 就是平分成 ' + d + ' 份拿 1 份：' + whole + ' × 1/' + d + ' ＝ ' + whole + ' ÷ ' + d + '。', whole + ' × 1/' + d + ' ＝ ' + whole / d + ' ' + thing[1]);
+  }
+  /* 五上 10 扇形：剩下的扇形、幾分之幾圓、圓心角是幾分之幾圓、兩塊合起來 */
+  function hard5_10() {
+    var t = R(0, 3);
+    if (t === 0) { var c = 5 * R(5, 34);
+      return HQ('一個圓形披薩切掉一塊圓心角 ' + c + ' 度的扇形，剩下那一大塊扇形的圓心角是幾度？', 360 - c, [180 - c > 0 ? 180 - c : c + 180, c, 360 + c], '一整個圓的圓心角是 360 度，用減的。', '360 － ' + c + ' ＝ ' + (360 - c) + ' 度'); }
+    if (t === 1) { var den = pick([4, 5, 6, 8, 9, 10, 12]), num = R(1, den - 1);
+      if (gcd(num, den) !== 1) return hard5_10();
+      return HQ(num + '/' + den + ' 圓的扇形，圓心角是幾度？', 360 / den * num, [360 / den, 360 / num === Math.round(360 / num) ? 360 / num : 360 / den * num + 10, 180 / den * num], '先算 1/' + den + ' 圓是幾度（360 ÷ ' + den + '），再乘 ' + num + '。', '360 ÷ ' + den + ' × ' + num + ' ＝ ' + 360 / den * num + ' 度'); }
+    if (t === 2) { var dd = pick([4, 6, 8, 12]), nn = R(1, dd - 1);
+      if (gcd(nn, dd) !== 1) return hard5_10();
+      var deg = 360 / dd * nn;
+      return HQ('圓心角 ' + deg + ' 度的扇形，是幾分之幾圓？', nn + '/' + dd, [deg + '/360', nn + '/' + (dd * 2), (dd - nn) + '/' + dd], '幾分之幾圓 ＝ 圓心角 ÷ 360，再約成最簡分數。', deg + '/360 ＝ ' + nn + '/' + dd); }
+    var A = pick([4, 6, 8, 12]), B = pick([3, 4, 6, 8]);
+    return HQ('1/' + A + ' 圓和 1/' + B + ' 圓的兩塊扇形拼在一起，合起來的圓心角是幾度？', 360 / A + 360 / B, [360 / (A + B) === Math.round(360 / (A + B)) ? 360 / (A + B) : 360 / A, 360 / A * 360 / B > 999 ? 360 / B : 360 / A * 360 / B, 360 / A + 360 / B + 30], '分別算出兩塊的圓心角，再加起來。', '360 ÷ ' + A + ' ＋ 360 ÷ ' + B + ' ＝ ' + 360 / A + ' ＋ ' + 360 / B + ' ＝ ' + (360 / A + 360 / B) + ' 度');
+  }
+  /* 六上 3 小數除法：餘數的意義、除數比 1 小商變大、剪幾段 */
+  function hard6_3() {
+    var t = R(0, 2);
+    if (t === 0) { var b = pick([1.25, 1.5, 0.75, 0.6, 2.5]), k = R(2, 6), r = pick([.25, .3, .4, .5, .1]);
+      if (r >= b) return hard6_3();
+      var a = +(b * k + r).toFixed(2);
+      return HQ('有 ' + a + ' 公升果汁，每 ' + b + ' 公升裝成一瓶，可以裝滿幾瓶？還剩幾公升？', k + ' 瓶，剩 ' + dstr(r) + ' 公升', [k + ' 瓶，剩 ' + dstr(r * 100) + ' 公升', (k + 1) + ' 瓶，剩 0 公升', k + ' 瓶，剩 ' + dstr(r * 10) + ' 公升'], '小數點一起移動算出商，可是餘數要用「原來」的小數點：餘數是幾個 0.01 公升。', a + ' ÷ ' + b + ' ＝ ' + k + ' … ' + dstr(r) + '（驗算：' + b + ' × ' + k + ' ＋ ' + dstr(r) + ' ＝ ' + a + '）'); }
+    if (t === 1) { var x = dstr(R(20, 90) / 10), ds = shuffle([0.8, 1.6, 1, 2.5, 0.5, 1.2]), big = ds.filter(function (d) { return d < 1; })[0], others = ds.filter(function (d) { return d >= 1; }).slice(0, 2);
+      return HQ('下面哪一個算式的商比 ' + x + ' 大？', x + ' ÷ ' + big, others.map(function (d) { return x + ' ÷ ' + d; }), '除數比 1 小，商會比被除數大；除數等於 1，商等於被除數；除數比 1 大，商比被除數小。', '除數 ' + big + ' 比 1 小，所以 ' + x + ' ÷ ' + big + ' 的商比 ' + x + ' 大'); }
+    var seg = pick([0.25, 0.15, 0.3, 0.45, 0.75, 0.35]), n = R(4, 20), len = +(seg * n).toFixed(2);
+    return HQ('一條彩帶長 ' + len + ' 公尺，每 ' + seg + ' 公尺剪成一段，可以剪成幾段？', n, [n * 10, Math.round(n / 10) || n + 1, n + 1], '除數是二位小數，被除數和除數的小數點都向右移 2 位：' + Math.round(len * 100) + ' ÷ ' + Math.round(seg * 100) + '。', len + ' ÷ ' + seg + ' ＝ ' + Math.round(len * 100) + ' ÷ ' + Math.round(seg * 100) + ' ＝ ' + n + ' 段');
+  }
+  /* 六上 4 比與比值：用相等的比求部分量、比和總量、小數的最簡整數比 */
+  function hard6_4() {
+    var t = R(0, 3), a, b, k;
+    do { a = R(1, 7); b = R(2, 9); } while (a === b || gcd(a, b) !== 1);
+    k = R(2, 9);
+    if (t === 0) return HQ('紅筆和藍筆枝數的比是 ' + a + ':' + b + '。紅筆有 ' + a * k + ' 枝，藍筆有幾枝？', b * k, [a * k * b, b + k, a * k + b], '相等的比：' + a + ':' + b + ' ＝ ' + a * k + ':（　），前項乘以 ' + k + '，後項也要乘以 ' + k + '。', b + ' × ' + k + ' ＝ ' + b * k + ' 枝');
+    if (t === 1) { var tot = (a + b) * k * 2;
+      return HQ('長方形卡片的長和寬的比是 ' + Math.max(a, b) + ':' + Math.min(a, b) + '，周長是 ' + tot + ' 公分。長是幾公分？', Math.max(a, b) * k, [Math.max(a, b) * k * 2, tot / Math.max(a, b) === Math.round(tot / Math.max(a, b)) ? tot / Math.max(a, b) : Math.min(a, b) * k, Math.min(a, b) * k], '周長的一半是「一個長＋一個寬」＝ ' + tot / 2 + '，長和寬一共 ' + (a + b) + ' 份。', tot + ' ÷ 2 ＝ ' + tot / 2 + '，' + tot / 2 + ' ÷ ' + (a + b) + ' ＝ ' + k + '，長 ＝ ' + k + ' × ' + Math.max(a, b) + ' ＝ ' + Math.max(a, b) * k + ' 公分'); }
+    if (t === 2) { var sugar = R(2, 9) * 10, w = R(3, 9);
+      return HQ('糖和水的比是 1:' + w + '，用了 ' + sugar + ' 公克的糖，調好的糖水一共有幾公克？', sugar * (1 + w), [sugar * w, sugar + w, sugar * (w - 1)], '糖是 1 份、水是 ' + w + ' 份，糖水是（1 ＋ ' + w + '）份。', sugar + ' ×（1 ＋ ' + w + '）＝ ' + sugar * (1 + w) + ' 公克'); }
+    var pr = pick([[0.05, 0.5, '1:10'], [0.3, 0.45, '2:3'], [1.2, 0.8, '3:2'], [0.25, 1.5, '1:6'], [0.6, 0.15, '4:1'], [2.4, 1.6, '3:2']]);
+    var wr = { '1:10': ['5:50', '1:1', '10:1'], '2:3': ['30:45', '6:9', '3:2'], '3:2': ['12:8', '6:4', '2:3'], '1:6': ['25:150', '1:60', '6:1'], '4:1': ['60:15', '12:3', '1:4'] }[pr[2]];
+    return HQ(pr[0] + ':' + pr[1] + ' 的最簡整數比是多少？', pr[2], wr, '先把前項、後項都乘以 10 或 100 變成整數，再除以最大公因數。', pr[0] + ':' + pr[1] + ' → 乘成整數再約分 ＝ ' + pr[2]);
+  }
+  /* 六上 6 圓周長：測距輪、扇形周長、弧長 */
+  function hard6_6() {
+    var t = R(0, 2);
+    if (t === 0) { var d = pick([30, 40, 50, 60]), n = R(5, 40), m = +(d * 3.14 * n / 100).toFixed(4);
+      if (Math.abs(m * 100 - Math.round(m * 100)) > 1e-6) return hard6_6();
+      return HQ('測距輪的直徑是 ' + d + ' 公分，推著它轉了 ' + n + ' 圈，走了幾公尺？', m, [+(d * 3.14 * n).toFixed(2), +(d / 2 * 3.14 * n / 100).toFixed(4), +(d * n / 100).toFixed(2)], '輪子轉一圈走的長度就是圓周長（直徑 × 3.14），再乘圈數，最後公分換成公尺。', d + ' × 3.14 × ' + n + ' ＝ ' + dstr(d * 3.14 * n) + ' 公分 ＝ ' + dstr(m) + ' 公尺'); }
+    if (t === 1) { var r = R(2, 12), per = +(2 * r * 3.14 / 4 + 2 * r).toFixed(2);
+      return HQ('半徑 ' + r + ' 公分的 1/4 圓扇形，周長是幾公分？（圓周率用 3.14）', per, [+(2 * r * 3.14 / 4).toFixed(2), +(2 * r * 3.14 / 4 + r).toFixed(2), +(2 * r * 3.14).toFixed(2)], '扇形的周長 ＝ 弧長 ＋ 2 條半徑。弧長是圓周長的 1/4。', r + ' × 2 × 3.14 ÷ 4 ＋ ' + r + ' × 2 ＝ ' + dstr(2 * r * 3.14 / 4) + ' ＋ ' + 2 * r + ' ＝ ' + dstr(per) + ' 公分'); }
+    var c = pick([60, 90, 120, 150, 240]), dd = R(2, 10) * 2, arc = +(dd * 3.14 * c / 360).toFixed(4);
+    if (Math.abs(arc * 100 - Math.round(arc * 100)) > 1e-6) return hard6_6(); // 只出除得盡、最多二位小數的
+    return HQ('直徑 ' + dd + ' 公分的圓上，圓心角 ' + c + ' 度的扇形，弧長是幾公分？（圓周率用 3.14）', arc, [+(dd * 3.14).toFixed(2), +(dd / 2 * 3.14 * c / 360).toFixed(4), +(dd * 3.14 * c / 360 + dd).toFixed(4)], '圓心角 ' + c + ' 度是 ' + c + '/360 圓，弧長 ＝ 圓周長 × ' + c + '/360。', dd + ' × 3.14 × ' + c + '/360 ＝ ' + dstr(arc) + ' 公分');
+  }
+  /* 六上 7 比例尺：實際距離、圖上距離、求比例尺 */
+  function hard6_7() {
+    var t = R(0, 2);
+    if (t === 0) { var S = pick([5000, 10000, 20000, 50000]), cm = R(2, 9) + pick([0, .5]), m = cm * S / 100;
+      return HQ('地圖的比例尺是 1:' + S + '，圖上兩地相距 ' + cm + ' 公分，實際距離是幾公尺？', m, [cm * S, m / 10, m * 10], '圖上 1 公分代表實際 ' + S + ' 公分；算出實際幾公分後，÷ 100 換成公尺。', cm + ' × ' + S + ' ＝ ' + dstr(cm * S) + ' 公分 ＝ ' + dstr(m) + ' 公尺'); }
+    if (t === 1) { var S2 = pick([10000, 20000, 25000, 50000]), km = R(1, 5), cm2 = km * 100000 / S2;
+      return HQ('實際距離 ' + km + ' 公里，畫在比例尺 1:' + S2 + ' 的地圖上，圖上是幾公分？', cm2, [cm2 * 10, cm2 / 10, km * S2 / 1000], '先把 ' + km + ' 公里換成公分（' + km + ' × 100000），再 ÷ ' + S2 + '。', km * 100000 + ' ÷ ' + S2 + ' ＝ ' + dstr(cm2) + ' 公分'); }
+    var c3 = pick([2, 4, 5]), km3 = R(1, 4), sc = km3 * 100000 / c3;
+    return HQ('地圖上 ' + c3 + ' 公分代表實際 ' + km3 + ' 公里，這張地圖的比例尺是多少？', '1:' + sc, ['1:' + sc / 100, '1:' + sc * 10, c3 + ':' + km3], '比例尺 ＝ 圖上距離：實際距離，單位要一樣（都換成公分），再把前項變成 1。', c3 + ' 公分：' + km3 * 100000 + ' 公分 ＝ 1:' + sc);
+  }
+  /* 六上 8 怎樣解題：環形種樹、鋸木頭、火柴規律、握手 */
+  function hard6_8() {
+    var t = R(0, 3);
+    if (t === 0) { var g = pick([4, 5, 6, 8, 10]), L = g * R(8, 20);
+      return HQ('圓形池塘的周長是 ' + L + ' 公尺，沿著池塘每隔 ' + g + ' 公尺種一棵樹，一共要種幾棵？', L / g, [L / g + 1, L / g - 1, L], '圍成一圈的時候，起點和終點是同一棵樹，棵數 ＝ 間隔數。', L + ' ÷ ' + g + ' ＝ ' + L / g + ' 棵'); }
+    if (t === 1) { var p = R(3, 9), m = R(2, 6);
+      return HQ('把一根木頭鋸成 ' + p + ' 段，每鋸一次要 ' + m + ' 分鐘，一共要鋸幾分鐘？', (p - 1) * m, [p * m, (p + 1) * m, p + m], '鋸成 ' + p + ' 段只要鋸 ' + (p - 1) + ' 次（次數比段數少 1）。', '(' + p + ' － 1) × ' + m + ' ＝ ' + (p - 1) * m + ' 分鐘'); }
+    if (t === 2) { var n = R(5, 15);
+      return HQ('用火柴排一排正方形：1 個正方形要 4 根，2 個要 7 根，3 個要 10 根……照這樣排下去，排 ' + n + ' 個正方形要幾根火柴？', 3 * n + 1, [4 * n, 3 * n, 4 * n - 1 === 3 * n + 1 ? 4 * n : 4 * n - 1], '每多排 1 個正方形，只多 3 根（共用一邊）。第 1 個是 4 根，後面 ' + (n - 1) + ' 個每個 3 根。', '4 ＋ 3 × (' + n + ' － 1) ＝ ' + (3 * n + 1) + ' 根'); }
+    var k = R(4, 8);
+    return HQ(k + ' 個人見面，每 2 個人都要握一次手，一共要握幾次手？', k * (k - 1) / 2, [k * (k - 1), k * 2, k * (k - 1) / 2 + k], '第 1 個人和其他 ' + (k - 1) + ' 人各握 1 次，第 2 個人再和剩下的 ' + (k - 2) + ' 人握……加起來。', Array.from({ length: k - 1 }, function (_, i) { return k - 1 - i; }).join(' ＋ ') + ' ＝ ' + k * (k - 1) / 2 + ' 次');
+  }
   function mix(list) { return function () { return pick(list)(); }; }
 
   /* 跑酷的難度（初階、中階、進階）：依題型標 q.lv */
@@ -662,6 +791,8 @@
   var genCircumL = lv(genCircum, function (q) { return has(q, /^直徑 \d+ 公分的圓，圓周長/) ? 1 : has(q, /弧長/) ? 3 : 2; });
   var genScaleL = lv(genScale, function (q) { return has(q, /放大圖/) ? 1 : has(q, /比例尺是多少/) ? 3 : 2; });
   var genSolveL = lv(genSolve, function (q) { return has(q, /組合/) ? 1 : has(q, /重複|兩端都不種/) ? 3 : 2; });
+  genLineChartL = harder(genLineChartL, hard5_1); genDistAvgL = harder(genDistAvgL, hard5_6); genFracOfL = harder(genFracOfL, hard5_9); genSectorL = harder(genSectorL, hard5_10);
+  genDecDivRunL = harder(genDecDivRunL, hard6_3); genRatioL = harder(genRatioL, hard6_4); genCircumL = harder(genCircumL, hard6_6); genScaleL = harder(genScaleL, hard6_7); genSolveL = harder(genSolveL, hard6_8);
 
   var NINE = { id: '99', name: '九九乘法大冒險', ic: '🦊', stages: [{ id: '99', mode: 'nine', ic: '🗺️', label: '九九大冒險', name: '九九乘法大冒險', desc: '答對往前走，打倒乘法大魔王！' }] };
   function st(id, mode, name, desc, gen, extra) { var o = { id: id, mode: mode, name: name, desc: desc, gen: gen }; for (var k in extra || {}) o[k] = extra[k]; return o; }

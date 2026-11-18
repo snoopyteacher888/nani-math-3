@@ -795,6 +795,109 @@
   var genRulerPickB = lv(genRulerPick, function (q) { return /從 0 公分/.test(q.review) ? 1 : 3; });
 
   /* ---------- 加油小站：混合闖關 ---------- */
+
+  /* =====================================================
+   * 跑酷「進階」：依南一三上「學思達訓練贏」的挑戰題（題目比較長、要多想一步）。
+   * harder(原本的題目, 進階題)：原本的進階改放中階；四成是新的進階題（lv 3）。
+   * ===================================================== */
+  function H(text, ans, wrongs, hint, ex) {
+    return { text: text, say: text.replace(/(\d+)\/(\d+)/g, '$2分之$1'), answer: String(ans), options: opts(ans, wrongs.concat([typeof ans === 'number' ? ans + 10 : ans + ' ', typeof ans === 'number' ? ans + 1 : ans + '  '])), review: text,
+      hint: hint, explain: '<p class="ex-line">' + ex + '</p>' };
+  }
+  function harder(base, hard) {
+    return function () {
+      if (Math.random() < .4) { var h = hard(); h.lv = 3; return h; }
+      var q = base(); if (q.lv === 3) q.lv = 2; return q;
+    };
+  }
+  function hard3_1() { // 數到 10000：數字卡、數線跳、位值合起來
+    var t = R(0, 2);
+    if (t === 0) {
+      var ds; do { ds = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4); } while (ds.indexOf(0) < 0 && Math.random() < .7);
+      var big = +ds.slice().sort(function (a, b) { return b - a; }).join(''), asc = ds.slice().sort(function (a, b) { return a - b; });
+      if (asc[0] === 0) { var k = asc.findIndex(function (d) { return d > 0; }); asc.splice(0, 0, asc.splice(k, 1)[0]); }
+      var small = +asc.join(''), wantBig = Math.random() < .4, wrongSmall = +ds.slice().sort(function (a, b) { return a - b; }).join('');
+      return H('用數字卡 ' + ds.join('、') + ' 排成四位數，每張卡只能用一次。排出來' + (wantBig ? '最大' : '最小') + '的四位數是多少？', wantBig ? big : small,
+        wantBig ? [+String(big).split('').reverse().join(''), small] : [wrongSmall < 1000 ? String(wrongSmall).padStart(4, '0') : wrongSmall + 9, big, +String(small).split('').reverse().join('')],
+        wantBig ? '最大：大的數字放前面（千位）。' : '最小：小的數字放前面，可是 0 不能放在千位，不然就不是四位數了！', '答案是 ' + (wantBig ? big : small));
+    }
+    if (t === 1) {
+      var st = R(2000, 8000), h = R(2, 9), o = R(1, 99), end = st + h * 100 + o;
+      return H('在數線上，從 ' + st + ' 開始，往右連跳 ' + h + ' 個 100，再往右跳 ' + o + '，會跳到哪一個數？', end, [st + h * 10 + o, st + h * 100, st - h * 100 - o], '往右是變大：先加 ' + h + ' 個 100（＝' + h * 100 + '），再加 ' + o + '。', st + ' ＋ ' + h * 100 + ' ＋ ' + o + ' ＝ ' + end);
+    }
+    var th = R(1, 8), te = R(11, 19), on = R(1, 9), v = th * 1000 + te * 10 + on;
+    return H(th + ' 個一千、' + te + ' 個十和 ' + on + ' 個一，合起來是多少？', v, [+(th + '' + te + '' + on), th * 1000 + te * 100 + on, th * 1000 + te + on], te + ' 個十是 ' + te * 10 + '，要進到百位喔！', th * 1000 + ' ＋ ' + te * 10 + ' ＋ ' + on + ' ＝ ' + v);
+  }
+  function hard3_4() { // 幾毫米：比高低、長高多少、竹竿重疊
+    var t = R(0, 2);
+    if (t === 0) {
+      var c = R(2, 5), mm = c * 10 + pick([-3, -2, -1, 1, 2, 3]), win = mm > c * 10 ? '小頌' : '明明', d = Math.abs(mm - c * 10);
+      return H('明明的小白菜長到 ' + c + ' 公分，小頌的小白菜長到 ' + mm + ' 毫米。誰的比較高？高幾毫米？', win + '，' + d + ' 毫米', [(win === '小頌' ? '明明' : '小頌') + '，' + d + ' 毫米', win + '，' + (d + 10) + ' 毫米', (win === '小頌' ? '明明' : '小頌') + '，' + Math.abs(mm - c) + ' 毫米'],
+        '先換成一樣的單位：' + c + ' 公分 ＝ ' + c * 10 + ' 毫米，再比大小、相減。', c + ' 公分 ＝ ' + c * 10 + ' 毫米，' + Math.max(mm, c * 10) + ' － ' + Math.min(mm, c * 10) + ' ＝ ' + d + '，' + win + '高 ' + d + ' 毫米');
+    }
+    if (t === 1) {
+      var a = R(10, 25), b = R(a + 8, a + 25);
+      return H('小白菜第一天高 ' + Math.floor(a / 10) + ' 公分 ' + a % 10 + ' 毫米，十天後高 ' + Math.floor(b / 10) + ' 公分 ' + b % 10 + ' 毫米。小白菜長高了幾毫米？', b - a, [b, a + b, Math.floor(b / 10) - Math.floor(a / 10)],
+        '長高的高度 ＝ 最後的高度 － 第一天的高度。先都換成毫米。', b + ' － ' + a + ' ＝ ' + (b - a) + ' 毫米');
+    }
+    var p = R(150, 200), q = R(150, 210), ov = R(15, 30);
+    return H('兩枝竹竿，一枝長 ' + p + ' 毫米，另一枝長 ' + Math.floor(q / 10) + ' 公分 ' + q % 10 + ' 毫米。把它們綁在一起，重疊的地方長 ' + ov + ' 毫米。綁好的支架長幾毫米？', p + q - ov, [p + q, p + q + ov, p + Math.floor(q / 10) + q % 10 - ov],
+      '先把兩枝加起來，可是重疊的地方算了兩次，要減掉一次。', p + ' ＋ ' + q + ' ＝ ' + (p + q) + '，' + (p + q) + ' － ' + ov + ' ＝ ' + (p + q - ov) + ' 毫米');
+  }
+  function hard3_6() { // 除法：剩下的也要坐、兩班合起來、裝滿幾盒剩幾顆
+    var t = R(0, 2), k = R(3, 6);
+    if (t === 0) {
+      var n; do { n = R(20, 50); } while (n % k === 0 || Math.floor(n / k) > 9);
+      var q = Math.floor(n / k);
+      return H('三年級有 ' + n + ' 個小朋友要坐碰碰船，每艘最多坐 ' + k + ' 人。全部的人都要坐，最少需要幾艘碰碰船？', q + 1, [q, q + 2, n - k], '先算 ' + n + ' ÷ ' + k + '，剩下的人也要坐，要再多 1 艘。', n + ' ÷ ' + k + ' ＝ ' + q + ' … ' + n % k + '，' + q + ' ＋ 1 ＝ ' + (q + 1) + ' 艘');
+    }
+    if (t === 1) {
+      var a, b; do { a = R(20, 36); b = R(20, 36); } while (a % k === 0 || b % k === 0 || a === b || Math.ceil(a / k) > 9 || Math.ceil(b / k) > 9);
+      var A = Math.ceil(a / k), B = Math.ceil(b / k);
+      return H('1 班有 ' + a + ' 人，2 班有 ' + b + ' 人，要坐碰碰船，每艘最多坐 ' + k + ' 人，兩班分開坐。1 班和 2 班一共最少需要幾艘？', A + B, [Math.floor(a / k) + Math.floor(b / k), A + B + 1, A * B],
+        '兩班分開算：每一班剩下的人都要再多坐 1 艘，最後再加起來。', '1 班 ' + a + ' ÷ ' + k + ' → ' + A + ' 艘；2 班 ' + b + ' ÷ ' + k + ' → ' + B + ' 艘；' + A + ' ＋ ' + B + ' ＝ ' + (A + B) + ' 艘');
+    }
+    var per = R(4, 9), box = R(4, 9), r = R(1, per - 1), tot = per * box + r;
+    return H(tot + ' 顆糖，每 ' + per + ' 顆裝一盒，可以裝滿幾盒？還剩幾顆？', box + ' 盒，剩 ' + r + ' 顆', [(box + 1) + ' 盒，剩 0 顆', box + ' 盒，剩 ' + (r + per) + ' 顆', (box - 1) + ' 盒，剩 ' + (r + per) + ' 顆'],
+      '剩下的不夠裝一盒，餘數一定比 ' + per + ' 小。', tot + ' ÷ ' + per + ' ＝ ' + box + ' … ' + r);
+  }
+  function hard3_7() { // 公升和毫升：一壺裝幾杯、杯裝和壺裝哪個便宜、倒出又加入
+    var t = R(0, 2);
+    if (t === 0) {
+      var cup = pick([[350, 150], [150, 100], [200, 50], [400, 100], [100, 100]]), c = cup[0] + cup[1];
+      return H('一杯奶茶用 ' + cup[0] + ' 毫升紅茶和 ' + cup[1] + ' 毫升鮮奶。一個 1 公升的壺，可以裝滿幾杯這樣的奶茶？', 1000 / c, [1000 / cup[0] === Math.round(1000 / cup[0]) ? 1000 / cup[0] : 1000 / c + 1, 1000 / c * 2, 10], '先算一杯是幾毫升，1 公升 ＝ 1000 毫升，再想幾杯合起來是 1000 毫升。', cup[0] + ' ＋ ' + cup[1] + ' ＝ ' + c + ' 毫升，' + c + ' × ' + 1000 / c + ' ＝ 1000，可以裝 ' + 1000 / c + ' 杯');
+    }
+    if (t === 1) {
+      var cp = R(4, 7) * 10, pot = cp * 2 - R(1, 3) * 10;
+      return H('杯裝一杯 500 毫升賣 ' + cp + ' 元，壺裝一壺 1 公升賣 ' + pot + ' 元。要買 1 公升，買壺裝比買杯裝便宜幾元？', cp * 2 - pot, [cp - pot < 0 ? pot - cp : cp - pot + 1, cp * 2, pot], '1 公升 ＝ 2 杯 500 毫升，先算 2 杯要多少錢。', cp + ' × 2 ＝ ' + cp * 2 + '，' + cp * 2 + ' － ' + pot + ' ＝ ' + (cp * 2 - pot) + ' 元');
+    }
+    var L = R(1, 2), m = R(1, 9) * 100, out = R(3, 9) * 100, inn = R(1, 5) * 100, now = L * 1000 + m - out + inn;
+    return H('瓶子裡有 ' + L + ' 公升 ' + m + ' 毫升的水，倒出 ' + out + ' 毫升，又加入 ' + inn + ' 毫升。瓶子裡現在有幾毫升的水？', now, [L * 1000 + m - out - inn, L * 100 + m - out + inn, L * 1000 + m + out + inn], '先換成毫升：1 公升 ＝ 1000 毫升。倒出用減的，加入用加的。', L * 1000 + m + ' － ' + out + ' ＋ ' + inn + ' ＝ ' + now + ' 毫升');
+  }
+  function hard3_8() { // 分數：炸雞桶
+    var t = R(0, 1), n = pick([8, 9, 10, 12]);
+    if (t === 0) {
+      var a = R(2, 4), left = n - a - 2;
+      return H('一桶炸雞有 ' + n + ' 塊。小花吃了 ' + a + '/' + n + ' 桶，兩個同學各吃了 1/' + n + ' 桶。還剩下幾分之幾桶炸雞？', left + '/' + n, [(n - a - 1) + '/' + n, (a + 2) + '/' + n, left + '/' + (n - 2)],
+        '先算一共吃了幾塊：小花 ' + a + ' 塊，同學一人 1 塊、兩人 2 塊。', '吃了 ' + a + ' ＋ 2 ＝ ' + (a + 2) + ' 塊，' + n + ' － ' + (a + 2) + ' ＝ ' + left + ' 塊，就是 ' + left + '/' + n + ' 桶');
+    }
+    var p = R(2, 4);
+    return H('一桶炸雞有 ' + n + ' 塊，' + p + ' 個人各吃了 1 塊。他們一共吃了幾分之幾桶？', p + '/' + n, [(n - p) + '/' + n, '1/' + n, p + '/' + (n + p)], '一塊是 1/' + n + ' 桶，' + p + ' 塊就是 ' + p + ' 個 1/' + n + '。', p + ' 個 1/' + n + ' ＝ ' + p + '/' + n + ' 桶');
+  }
+  function hard3_9() { // 圓：步道是直徑、大圓裡放小圓、正方形裡的圓
+    var t = R(0, 2), r = R(3, 30);
+    if (t === 0) return H('一棟圓形建築物的半徑是 ' + r + ' 公尺。從建築物的一邊，穿過正中心走到另一邊的步道，最長是幾公尺？', r * 2, [r, r * 4, r + 2], '穿過圓心、兩端都在圓上的線是直徑，直徑是半徑的 2 倍。', r + ' × 2 ＝ ' + r * 2 + ' 公尺');
+    if (t === 1) { var s = R(2, 9); return H('一個大圓裡，剛好並排放進 2 個一樣大的小圓（2 個小圓的直徑合起來就是大圓的直徑）。小圓的半徑是 ' + s + ' 公分，大圓的半徑是幾公分？', s * 2, [s * 4, s, s * 3], '先算小圓直徑，再想大圓直徑是 2 個小圓直徑。', '小圓直徑 ' + s * 2 + '，大圓直徑 ' + s * 4 + '，大圓半徑 ' + s * 4 + ' ÷ 2 ＝ ' + s * 2 + ' 公分'); }
+    var a = 2 * R(3, 15);
+    return H('一個正方形裡剛好放進一個最大的圓（圓碰到正方形的四個邊），正方形的邊長是 ' + a + ' 公分。這個圓的半徑是幾公分？', a / 2, [a, a * 2, a / 2 + 1], '圓的直徑剛好等於正方形的邊長。', '直徑 ' + a + '，半徑 ' + a + ' ÷ 2 ＝ ' + a / 2 + ' 公分');
+  }
+  genReadWriteB = harder(genReadWriteB, hard3_1);
+  genMmB = harder(genMmB, hard3_4);
+  genDivRunB = harder(genDivRunB, hard3_6);
+  genLiterB = harder(genLiterB, hard3_7);
+  genFracRunB = harder(genFracRunB, hard3_8);
+  genCircleRunB = harder(genCircleRunB, hard3_9);
+
   function mix(list) { return function () { var q = pick(list)(); q.kind = undefined; return q; }; }
 
   /* ========== 關卡清單 ==========

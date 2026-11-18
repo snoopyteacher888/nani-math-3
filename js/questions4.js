@@ -448,6 +448,88 @@
       hint: '找出最高和最低的長條，相減。', explain: '<p class="ex-line">' + cats[mx] + ' ' + vals[mx] + ' － ' + cats[mn] + ' ' + vals[mn] + ' ＝ <b>' + df + '</b></p>', lv: 3 });
   }
 
+
+  /* =====================================================
+   * 跑酷「進階」：依翰林四上課課教案的學習目標，題目比較長、要多想一步。
+   * harder(原本的題目, 進階題)：原本的進階改放中階；四成是新的進階題（lv 3）。
+   * ===================================================== */
+  function H(text, ans, wrongs, hint, ex) {
+    return { text: text, say: sayFrac(text), answer: String(ans), options: opts(ans, wrongs.concat(typeof ans === 'number' ? [ans + 10, ans * 2] : [])), review: text, hint: hint, explain: '<p class="ex-line">' + ex + '</p>' };
+  }
+  function harder(base, hard) { return function () { if (Math.random() < .4) { var h = hard(); h.lv = 3; return h; } var q = base(); if (q.lv === 3) q.lv = 2; return q; }; }
+  var ZD = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  function hard4_1() { // 一億以內的數
+    var t = R(0, 2);
+    if (t === 0) { var w = R(2, 9) * 10000000, d = pick([1, 10, 100, 1000, 10000]), dn = { 1: '1', 10: '10', 100: '100', 1000: '1千', 10000: '1萬' }[d];
+      return H('一個數比 ' + w / 10000 + '萬 少 ' + dn + '，這個數是多少？', w - d, [w - d * 10, w + d, w - d / 10 === Math.round(w - d / 10) ? w - d / 10 : w - 2 * d], '從 ' + w + ' 往回數 ' + d + '，要借位喔。', w + ' － ' + d + ' ＝ ' + (w - d)); }
+    if (t === 1) { var a = R(3, 9), b = R(1, a - 1), v = a * 10000000 + (a - b) * 1000000;
+      return H('一個八位數，千萬位是 ' + a + '，百萬位比千萬位少 ' + b + '，其他位都是 0。這個數是多少？', v, [a * 10000000 + b * 1000000, a * 1000000 + (a - b) * 100000, a * 10000000 + (a + b) * 1000000], '八位數最左邊是千萬位，下一位是百萬位，後面 6 個 0。', '千萬位 ' + a + '、百萬位 ' + (a - b) + ' → ' + v); }
+    var n = R(2, 9), m = pick([1000, 10000]), tot = n * m * 100;
+    return H(n + '00 張' + (m === 1000 ? '千' : '萬') + '元鈔票，一共是多少元？', tot, [tot / 10, tot * 10, n * m], (m === 1000 ? '1 張是 1000 元' : '1 張是 10000 元') + '，' + n + '00 張就是 ' + n + '00 個 ' + m + '。', n + '00 × ' + m + ' ＝ ' + tot + ' 元');
+  }
+  function hard4_2() { // 乘法：三層的乘、付錢找錢
+    var t = R(0, 1);
+    if (t === 0) { var a = R(12, 30), b = R(12, 48), n = R(3, 15), tot = a * b * n;
+      return H('一箱有 ' + a + ' 盒，一盒有 ' + b + ' 顆糖。超市進了 ' + n + ' 箱，一共有幾顆糖？', tot, [a * b, a * b + n, (a + b) * n], '先算一箱幾顆（' + a + ' × ' + b + '），再乘 ' + n + ' 箱。', a + ' × ' + b + ' ＝ ' + a * b + '，' + a * b + ' × ' + n + ' ＝ ' + tot); }
+    var p = R(15, 45), q = R(12, 35), pay = (Math.floor(p * q / 1000) + 1) * 1000;
+    return H('一張門票 ' + p + ' 元，學校買了 ' + q + ' 張，付了 ' + pay + ' 元，可以找回多少元？', pay - p * q, [p * q, pay - p - q, pay - p * q + 100], '先算門票一共多少錢，再用付的錢減。', p + ' × ' + q + ' ＝ ' + p * q + '，' + pay + ' － ' + p * q + ' ＝ ' + (pay - p * q));
+  }
+  function hard4_3() { // 角度：和差、平分、時針
+    var t = R(0, 2);
+    if (t === 0) { var d = 2 * R(5, 30), big = (180 + d) / 2;
+      return H('兩個角拼成一個平角，其中一個角比另一個角大 ' + d + '°。大的那個角是幾度？', big + '°', [(180 - d) / 2 + '°', 180 - d + '°', 90 + d + '°'], '平角是 180°。先把多的 ' + d + '° 拿掉，剩下的平分成 2 個一樣大的角。', '(180 － ' + d + ') ÷ 2 ＝ ' + (180 - d) / 2 + '，大的角 ＝ ' + (180 - d) / 2 + ' ＋ ' + d + ' ＝ ' + big + '°'); }
+    if (t === 1) { var k = pick([3, 4, 5, 6]), e = 360 / k;
+      return H('把一個周角平分成 ' + k + ' 個一樣大的角，再把其中一個角平分成 2 個。平分後的小角是幾度？', e / 2 + '°', [e + '°', 360 / (k * 4) + '°', 180 / k * 2 + '°'], '周角 360°，先除以 ' + k + '，再除以 2。', '360 ÷ ' + k + ' ＝ ' + e + '，' + e + ' ÷ 2 ＝ ' + e / 2 + '°'); }
+    var a = R(1, 9), h = R(1, 3), b = a + h;
+    return H('時鐘從 ' + a + ' 點走到 ' + b + ' 點，時針轉了幾度？', h * 30 + '°', [h * 360 + '°', h * 6 + '°', h * 60 + '°'], '時針走一個數字是 30°（360° ÷ 12）。', '走了 ' + h + ' 個數字，' + h + ' × 30 ＝ ' + h * 30 + '°');
+  }
+  function hard4_5() { // 公里：跑操場、來回、剩下的路
+    var t = R(0, 2);
+    if (t === 0) { var lap = pick([200, 250, 400]), n = R(3, 9), ex = R(1, 3) * 50, tot = lap * n + ex, ans = Math.floor(tot / 1000) + ' 公里 ' + tot % 1000 + ' 公尺';
+      return H('操場一圈 ' + lap + ' 公尺，小明跑了 ' + n + ' 圈又 ' + ex + ' 公尺，一共跑了幾公里幾公尺？', ans, [Math.floor(tot / 100) + ' 公里 ' + tot % 100 + ' 公尺', Math.floor(tot / 1000) + ' 公里 ' + (tot % 1000 + ex) + ' 公尺', (Math.floor(tot / 1000) + 1) + ' 公里 ' + tot % 1000 + ' 公尺'], '先算一共幾公尺，滿 1000 公尺換成 1 公里。', lap + ' × ' + n + ' ＋ ' + ex + ' ＝ ' + tot + ' 公尺 ＝ ' + ans); }
+    if (t === 1) { var k = R(1, 2), m = R(1, 9) * 100, trips = R(2, 3), one = k * 1000 + m, tot2 = one * 2 * trips;
+      return H('家到學校是 ' + k + ' 公里 ' + m + ' 公尺。哥哥一天來回 ' + trips + ' 趟，一共走了幾公尺？', tot2, [one * trips, one * 2, (k * 100 + m) * 2 * trips], '「來回」是去一次、回來一次，一趟來回是 2 段路。', one + ' × 2 × ' + trips + ' ＝ ' + tot2 + ' 公尺'); }
+    var all = R(3, 9), walk = R(1, all - 1) * 1000 + R(1, 9) * 100 + R(1, 9) * 10, left = all * 1000 - walk;
+    return H('健行步道全長 ' + all + ' 公里，已經走了 ' + Math.floor(walk / 1000) + ' 公里 ' + walk % 1000 + ' 公尺，還剩幾公尺？', left, [all * 1000 + walk, left - 1000, all * 100 - walk % 1000], all + ' 公里 ＝ ' + all * 1000 + ' 公尺，換成公尺再相減。', all * 1000 + ' － ' + walk + ' ＝ ' + left + ' 公尺');
+  }
+  function hard4_6() { // 除法：裝滿幾包、存錢幾天、看書還要幾天
+    var t = R(0, 2);
+    if (t === 0) { var per = R(12, 36), q = R(40, 260), r = R(1, per - 1), n = per * q + r;
+      if (n > 9999) return hard4_6();
+      return H('一包裝 ' + per + ' 顆，' + n + ' 顆可以裝滿幾包？還剩幾顆？', q + ' 包，剩 ' + r + ' 顆', [(q + 1) + ' 包，剩 0 顆', q + ' 包，剩 ' + (r + per) + ' 顆', Math.floor(q / 10) + ' 包，剩 ' + r + ' 顆'], '用除的，剩下不夠一包的就是餘數。', n + ' ÷ ' + per + ' ＝ ' + q + ' … ' + r); }
+    if (t === 1) { var d = R(15, 45), days = R(12, 60), goal = d * days;
+      return H('妹妹每天存 ' + d + ' 元，要存到 ' + goal + ' 元，需要幾天？', days, [goal - d, days + 1, goal * d > 99999 ? days * 10 : goal * d], '每天存一樣多，用除的：' + goal + ' ÷ ' + d + '。', goal + ' ÷ ' + d + ' ＝ ' + days + ' 天'); }
+    var per2 = R(8, 25), read = R(3, 9), rest = R(3, 9), pages = per2 * (read + rest);
+    return H('一本書有 ' + pages + ' 頁，每天看 ' + per2 + ' 頁，已經看了 ' + read + ' 天。還要幾天才能看完？', rest, [read + rest, pages / per2 === rest ? rest + 1 : pages / per2, rest + 1], '先算還剩幾頁（' + pages + ' － ' + per2 + ' × ' + read + '），再除以每天看的頁數。', '(' + pages + ' － ' + per2 * read + ') ÷ ' + per2 + ' ＝ ' + (pages - per2 * read) + ' ÷ ' + per2 + ' ＝ ' + rest + ' 天');
+  }
+  function hard4_8() { // 併式：兩種東西一起買、先買再分
+    var t = R(0, 1);
+    if (t === 0) { var a = R(2, 5), pa = R(12, 35), b = R(2, 4), pb = R(30, 80), cost = a * pa + b * pb, pay = Math.ceil(cost / 100) * 100 + pick([0, 100, 200]);
+      if (pay === cost) pay += 100;
+      return H('買 ' + a + ' 枝 ' + pa + ' 元的筆和 ' + b + ' 本 ' + pb + ' 元的筆記本，付了 ' + pay + ' 元，找回多少元？', pay - cost, [pay - a * pa - pb, pay - (pa + pb) * a, cost], '先分別算筆和筆記本的錢，加起來，再用付的錢減。', pay + ' － (' + a + ' × ' + pa + ' ＋ ' + b + ' × ' + pb + ') ＝ ' + pay + ' － ' + cost + ' ＝ ' + (pay - cost)); }
+    var box = R(3, 6), per = R(8, 12), drink = R(1, 9), ppl = pick([2, 3, 4, 5]);
+    if ((box * per - drink) % ppl) return hard4_8();
+    var each = (box * per - drink) / ppl;
+    return H('爸爸買了 ' + box + ' 箱飲料，每箱 ' + per + ' 罐，先喝掉 ' + drink + ' 罐，剩下的平分給 ' + ppl + ' 個人，每人分到幾罐？', each, [box * per / ppl === Math.round(box * per / ppl) ? box * per / ppl : each + 1, box * per - drink, (box * per - drink) * ppl], '先算一共幾罐，減掉喝掉的，最後再平分。要加括號：(' + box + ' × ' + per + ' － ' + drink + ') ÷ ' + ppl + '。', '(' + box + ' × ' + per + ' － ' + drink + ') ÷ ' + ppl + ' ＝ ' + (box * per - drink) + ' ÷ ' + ppl + ' ＝ ' + each + ' 罐');
+  }
+  function hard4_9() { // 二位小數：剪兩次、整數倍、三人比身高
+    var t = R(0, 2);
+    if (t === 0) { var a = R(300, 600), b = R(40, 150), c = R(40, 150);
+      return H('一條緞帶長 ' + d2(a) + ' 公尺，剪下 ' + d2(b) + ' 公尺，又剪下 ' + d2(c) + ' 公尺，還剩幾公尺？', d2(a - b - c), [d2(a - b + c), d2(a - b), d2(a - b - c + 100)], '剪下兩次，兩段都要減掉。小數點要對齊。', d2(a) + ' － ' + d2(b) + ' － ' + d2(c) + ' ＝ ' + d2(a - b - c)); }
+    if (t === 1) { var v = R(105, 260), n = R(2, 6);
+      return H('一瓶果汁有 ' + d2(v) + ' 公升，' + n + ' 瓶一共有幾公升？', d2(v * n), [d2(v * n / 10), d2(v + n), d2(v * n + 10)], d2(v) + ' 的 ' + n + ' 倍，用乘的，小數點後面的位數不變。', d2(v) + ' × ' + n + ' ＝ ' + d2(v * n)); }
+    var s = R(130, 155), x = R(5, 25), y = R(10, 35);
+    return H('姐姐身高 ' + d2(s) + ' 公尺，妹妹比姐姐矮 ' + d2(x) + ' 公尺，哥哥又比妹妹高 ' + d2(y) + ' 公尺。哥哥身高幾公尺？', d2(s - x + y), [d2(s - x - y), d2(s + x + y), d2(s - x)], '先算妹妹（姐姐 － ' + d2(x) + '），再算哥哥（妹妹 ＋ ' + d2(y) + '）。', d2(s) + ' － ' + d2(x) + ' ＋ ' + d2(y) + ' ＝ ' + d2(s - x + y) + ' 公尺');
+  }
+  function hard4_10() { // 統計圖表：讀兩項再比
+    var cats = pick([['一班', '二班', '三班'], ['蘋果', '香蕉', '葡萄'], ['跑步', '游泳', '籃球']]), u = pick([2, 5, 10]);
+    var g = [R(3, 9), R(3, 9), R(3, 9)]; if (g[0] + g[1] <= g[2]) g[2] = Math.max(1, g[0] + g[1] - R(1, 4));
+    var v = g.map(function (x) { return x * u; }), diff = v[0] + v[1] - v[2];
+    return H('長條圖每一格代表 ' + u + ' 人。' + cats[0] + '的長條有 ' + g[0] + ' 格，' + cats[1] + '有 ' + g[1] + ' 格，' + cats[2] + '有 ' + g[2] + ' 格。' + cats[0] + '和' + cats[1] + '合起來，比' + cats[2] + '多幾人？', diff, [g[0] + g[1] - g[2], v[0] + v[1] + v[2], v[0] - v[2]], '格子數要先乘 ' + u + ' 變成人數（也可以先算格子再乘 ' + u + '）。', '(' + g[0] + ' ＋ ' + g[1] + ' － ' + g[2] + ') × ' + u + ' ＝ ' + diff + ' 人');
+  }
+  var genBigRWH = harder(genBigRWL, hard4_1), genMulZeroH = harder(genMulZero, hard4_2), genAngleCalcH = harder(genAngleCalc, hard4_3), genKmH = harder(genKm, hard4_5),
+    genDivZeroH = harder(genDivZero, hard4_6), genEquationH = harder(genEquation, hard4_8), genDecH = harder(genDec, hard4_9), genBarChartH = harder(genBarChart, hard4_10);
+
   /* =====================================================
    * 關卡
    * ===================================================== */
@@ -457,18 +539,18 @@
   var MOLE = function (waves) { return { label: '打地鼠', tut: 'mole-switch', waves: waves }; };
 
   var G4 = [NINE,
-    { id: 1, name: '一億以內的數', stages: [st('1-1', 'run', '大數讀寫', '中間的 0 別漏掉', genBigRWL), st('1-2', 'round', '大數比大小', '先比位數，再從最高位比', genBigCompare, Q)] },
-    { id: 2, name: '乘法', stages: [{ id: '2-1', mode: 'spot', name: '找出乘法的錯', desc: '十位乘出來要往左移一位', make: spotFrom(makeMul2) }, st('2-2', 'run', '末尾有 0 的乘法', '先乘，再補 0', genMulZero)] },
-    { id: 3, name: '角度', stages: [st('3-1', 'round', '看量角器', '對著 0 的那一圈讀', genProtractor, { tut: 'quiz', label: '選對答案' }), st('3-2', 'run', '平角、周角、旋轉', '平角 180°，周角 360°', genAngleCalc)] },
+    { id: 1, name: '一億以內的數', stages: [st('1-1', 'run', '大數讀寫', '中間的 0 別漏掉', genBigRWH), st('1-2', 'round', '大數比大小', '先比位數，再從最高位比', genBigCompare, Q)] },
+    { id: 2, name: '乘法', stages: [{ id: '2-1', mode: 'spot', name: '找出乘法的錯', desc: '十位乘出來要往左移一位', make: spotFrom(makeMul2) }, st('2-2', 'run', '末尾有 0 的乘法', '先乘，再補 0', genMulZeroH)] },
+    { id: 3, name: '角度', stages: [st('3-1', 'round', '看量角器', '對著 0 的那一圈讀', genProtractor, { tut: 'quiz', label: '選對答案' }), st('3-2', 'run', '平角、周角、旋轉', '平角 180°，周角 360°', genAngleCalcH)] },
     { id: 4, name: '假分數與帶分數', stages: [st('4-1', 'round', '假分數和帶分數互換', '分子 ÷ 分母', genMixedFill, F), st('4-2', 'mole', '真分數假分數打地鼠', '分子和分母一樣，也是假分數', null, MOLE(fracWaves))] },
-    { id: 5, name: '公里', stages: [st('5-1', 'run', '公里和公尺', '1 公里 ＝ 1000 公尺', genKm)] },
-    { id: 'p1', name: '學習加油讚一', stages: [st('p1', 'run', '闖關：1～5 單元', '大數、乘法、角度、公里', mix([genBigRWL, genMulZero, genAngleCalc, genKm]))] },
-    { id: 6, name: '除法', stages: [st('6-1', 'run', '商中間有 0', '不夠商的那一位要寫 0', genDivZero), st('6-2', 'round', '末尾有 0 的除法', '餘數要把 0 補回來', genDivTailZero, Z), st('6-3', 'round', '除法的關係', '被除數 ＝ 除數 × 商 ＋ 餘數', genDivRelation, Z)] },
+    { id: 5, name: '公里', stages: [st('5-1', 'run', '公里和公尺', '1 公里 ＝ 1000 公尺', genKmH)] },
+    { id: 'p1', name: '學習加油讚一', stages: [st('p1', 'run', '闖關：1～5 單元', '大數、乘法、角度、公里', mix([genBigRWH, genMulZeroH, genAngleCalcH, genKmH]))] },
+    { id: 6, name: '除法', stages: [st('6-1', 'run', '商中間有 0', '不夠商的那一位要寫 0', genDivZeroH), st('6-2', 'round', '末尾有 0 的除法', '餘數要把 0 補回來', genDivTailZero, Z), st('6-3', 'round', '除法的關係', '被除數 ＝ 除數 × 商 ＋ 餘數', genDivRelation, Z)] },
     { id: 7, name: '三角形與全等', stages: [st('7-1', 'round', '三角形分類', '看最大的角', genTriSort, S), st('7-2', 'round', '等腰、正三角形、全等', '正三角形也是等腰三角形', genTriSides, Z)] },
-    { id: 8, name: '兩步驟問題與併式', stages: [st('8-1', 'run', '列併式', '先算的加減要加括號', genEquation)] },
-    { id: 9, name: '二位小數', stages: [st('9-1', 'mole', '小數比大小打地鼠', '0.58 比 0.6 小喔', null, MOLE(decWaves)), st('9-2', 'run', '化聚與加減', '小數點要對齊', genDec)] },
-    { id: 10, name: '統計圖表', stages: [st('10-1', 'run', '看長條圖', '先看每一格代表多少', genBarChart)] },
-    { id: 'p2', name: '學習加油讚二', stages: [st('p2', 'run', '闖關：6～10 單元', '除法、併式、小數、長條圖', mix([genDivZero, genEquation, genDec, genBarChart]))] }
+    { id: 8, name: '兩步驟問題與併式', stages: [st('8-1', 'run', '列併式', '先算的加減要加括號', genEquationH)] },
+    { id: 9, name: '二位小數', stages: [st('9-1', 'mole', '小數比大小打地鼠', '0.58 比 0.6 小喔', null, MOLE(decWaves)), st('9-2', 'run', '化聚與加減', '小數點要對齊', genDecH)] },
+    { id: 10, name: '統計圖表', stages: [st('10-1', 'run', '看長條圖', '先看每一格代表多少', genBarChartH)] },
+    { id: 'p2', name: '學習加油讚二', stages: [st('p2', 'run', '闖關：6～10 單元', '除法、併式、小數、長條圖', mix([genDivZeroH, genEquationH, genDecH, genBarChartH]))] }
   ];
 
   root.MathQ.G4 = G4;
