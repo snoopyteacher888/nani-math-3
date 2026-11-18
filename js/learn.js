@@ -1,7 +1,7 @@
 /*
  * 減少亂猜、答錯學會怎麼算（跑酷和 10 題小遊戲共用）
  *
- * 1. App.readLock：題目出現後，選項先變灰，讀完題目才能點（題目越長等越久，2～8 秒）；
+ * 1. App.readLock：題目出現後，選項先變灰，讀完題目才能點（題目越長等越久，2～5 秒）；
  *    按 🔊 聽完題目也會馬上開放。開放後 1.5 秒內就答錯，提醒「先把題目讀完喔」。
  * 2. App.stepper：答錯後一步一步看解法：先想什麼 → 算式一行一行 → 最後才是答案，每一步都念出來。
  * 3. App.twinOf：找一題同類型、只換數字的題目，馬上再做一次（背答案沒有用）。
@@ -14,7 +14,7 @@
 
   /* ---------- 1. 讀完題目才能作答 ---------- */
   App.readLock = function (bar, getBtns, text) {
-    var len = App.plain(text || '').replace(/\s/g, '').length, sec = Math.max(2, Math.min(8, len / 4.5));
+    var len = App.plain(text || '').replace(/\s/g, '').length, sec = Math.max(2, Math.min(5, len / 4.5)); // 老師要求：最長 5 秒
     var st = { until: Date.now() + sec * 1000, open: false, openedAt: 0, timer: null };
     function set(locked) { getBtns().forEach(function (b) { b.classList.toggle('locked', locked); }); }
     function open() {
