@@ -7,13 +7,6 @@
 
   /* 年級：學習樂園的五、六年級數學還沒有課本單元，先用 ?grade=5 / ?grade=6 打開「只有九九乘法」的版本（自己的紀錄、預設不加注音） */
   var GRADE = (/[?&]grade=([3456])\b/.exec(location.search) || [])[1] || window.SITE_GRADE || '3'; // 每個網站的 js/site.js 設定年級
-  /* 不放單獨的年級連結（老師要求）：直接打開這個網站（不是從學習樂園首頁進來）時，轉到學習樂園首頁，
-   * 一樣打開這個年級的數學，上面有「回學習樂園」可以回首頁選別的。測試用的 ?debug、?noword 和本機不轉。 */
-  try {
-    if (window.top === window.self && /\.github\.io$/.test(location.hostname) && !/[?&](debug|noword)\b/.test(location.search)) {
-      location.replace('https://snoopyteacher888.github.io/sedu.learnspace/#/math-' + GRADE);
-    }
-  } catch (e) { /* 讀不到 window.top 就是在別的網頁裡，照常顯示 */ }
   var UNITS = GRADE === '4' ? window.MathQ.G4 : GRADE === '5' ? window.MathQ.G5 : GRADE === '6' ? window.MathQ.G6 : window.MathQ.UNITS; // 四、五、六年級：翰林版
   var STAGES = {};
   UNITS.forEach(function (u) { u.stages.forEach(function (s) { s.unit = u; s.mode = s.mode || 'run'; STAGES[s.id] = s; }); });
