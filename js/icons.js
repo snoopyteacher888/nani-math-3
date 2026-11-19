@@ -101,6 +101,10 @@
     '🥰': emo('happy', 'smile', '<path d="M19 6l-1-1a.7.7 0 0 1 1-1 .7.7 0 0 1 1 1z" fill="' + R + '"/>'), '😍': emo('heart', 'grin'),
     '😎': emo('shades', 'smile'), '🤐': emo('dot', 'zip'), '😐': emo('dot', 'flat'), '😕': emo('dot', 'frown'), '🤔': emo('dot', 'flat'), '😴': emo('happy', 'o')
   };
+  /* 全班：教室（黑板＋課桌椅）（老師要求，原本一家人的圖太醜） */
+  PEOPLE['👨‍👩‍👧‍👦'] = svg('<rect x="2.5" y="2.5" width="19" height="11" rx="1.2" fill="#3F7D5C" stroke="#8A5A3B" stroke-width="1.6"/><path d="M5.5 6.5h6M5.5 9.5h4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/><path d="M14 9.8l1.6 1.6 3-3.4" fill="none" stroke="' + Y + '" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 13.5h4" stroke="#fff" stroke-width="1"/>' +
+    '<rect x="3" y="16.5" width="7.5" height="2" rx=".6" fill="' + O + '"/><path d="M4 18.5v3M9.5 18.5v3" stroke="' + D + '" stroke-width="1.2"/>' +
+    '<rect x="13.5" y="16.5" width="7.5" height="2" rx=".6" fill="' + O + '"/><path d="M14.5 18.5v3M20 18.5v3" stroke="' + D + '" stroke-width="1.2"/>');
   Object.keys(PEOPLE).forEach(function (k) { if (!ICONS[k]) ICONS[k] = PEOPLE[k]; });
   var keys = Object.keys(ICONS).sort(function (a, b) { return b.length - a.length; });
   var RE = new RegExp('(' + keys.map(function (k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')️?', 'g');
